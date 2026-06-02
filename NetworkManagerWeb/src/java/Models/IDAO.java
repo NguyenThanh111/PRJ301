@@ -20,8 +20,6 @@ public interface IDAO<T, K> {
     
     public ArrayList<T> ListAll();
     
-    public T searchById(K id);
-    
-    
+    public ArrayList<T> searchByRoom(K id);
     
 }
