@@ -12,11 +12,11 @@ import java.util.ArrayList;
  */
 public interface IDAO<T, K> {
     
-    public void add(T t);
+    public boolean insert(T t);
     
-    public void update(T t);
+    public boolean update(T t);
     
-    public void remove(T t); //Just use Update not use Delete
+    public boolean remove(T t); //Just use Update not use Delete
     
     public ArrayList<T> ListAll();
     
