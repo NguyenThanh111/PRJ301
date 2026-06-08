@@ -8,6 +8,7 @@ public class NetworkDeviceDTO {
     private String owner;
     private String deviceType;
     private String status;
+    private int roomId;
 
     public NetworkDeviceDTO() {
     }
@@ -20,6 +21,17 @@ public class NetworkDeviceDTO {
         this.owner = owner;
         this.deviceType = deviceType;
         this.status = status;
+    }
+
+    public NetworkDeviceDTO(int deviceId, String deviceName, String macAddress, String ipAddress, String owner, String deviceType, String status, int roomId) {
+        this.deviceId = deviceId;
+        this.deviceName = deviceName;
+        this.macAddress = macAddress;
+        this.ipAddress = ipAddress;
+        this.owner = owner;
+        this.deviceType = deviceType;
+        this.status = status;
+        this.roomId = roomId;
     }
 
     public int getDeviceId() {
@@ -76,5 +88,13 @@ public class NetworkDeviceDTO {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public int getRoomId() {
+        return roomId;
+    }
+
+    public void setRoomId(int roomId) {
+        this.roomId = roomId;
     }
 }

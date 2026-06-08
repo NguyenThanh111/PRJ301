@@ -8,6 +8,7 @@ public class AccessPointDTO {
     private int connectedUsers;
     private String status;
     private String location;
+    private int roomId;
 
     public AccessPointDTO() {
     }
@@ -20,6 +21,17 @@ public class AccessPointDTO {
         this.connectedUsers = connectedUsers;
         this.status = status;
         this.location = location;
+    }
+
+    public AccessPointDTO(int apId, String apName, String ssid, String ipAddress, int connectedUsers, String status, String location, int roomId) {
+        this.apId = apId;
+        this.apName = apName;
+        this.ssid = ssid;
+        this.ipAddress = ipAddress;
+        this.connectedUsers = connectedUsers;
+        this.status = status;
+        this.location = location;
+        this.roomId = roomId;
     }
 
     public int getApId() {
@@ -76,5 +88,13 @@ public class AccessPointDTO {
 
     public void setLocation(String location) {
         this.location = location;
+    }
+
+    public int getRoomId() {
+        return roomId;
+    }
+
+    public void setRoomId(int roomId) {
+        this.roomId = roomId;
     }
 }

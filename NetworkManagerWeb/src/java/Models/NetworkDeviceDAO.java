@@ -18,15 +18,16 @@ public class NetworkDeviceDAO implements IDAO<NetworkDeviceDTO, Integer> {
                 rs.getString("ip_address"),
                 rs.getString("owner"),
                 rs.getString("device_type"),
-                rs.getString("status")
+                rs.getString("status"),
+                rs.getInt("room_id")
         );
     }
 
     @Override
     public boolean insert(NetworkDeviceDTO t) {
         String sql = "INSERT INTO NetworkDevice "
-                + "(device_name, mac_address, ip_address, owner, device_type, status) "
-                + "VALUES (?, ?, ?, ?, ?, ?)";
+                + "(device_name, mac_address, ip_address, owner, device_type, status, room_id) "
+                + "VALUES (?, ?, ?, ?, ?, ?, ?)";
         try {
             Connection connect = DbUtils.getConnection();
             PreparedStatement ps = connect.prepareStatement(sql);
@@ -36,6 +37,7 @@ public class NetworkDeviceDAO implements IDAO<NetworkDeviceDTO, Integer> {
             ps.setString(4, t.getOwner());
             ps.setString(5, t.getDeviceType());
             ps.setString(6, t.getStatus());
+            ps.setInt(7, t.getRoomId());
             return ps.executeUpdate() > 0;
         } catch (Exception e) {
             e.printStackTrace();
@@ -47,7 +49,7 @@ public class NetworkDeviceDAO implements IDAO<NetworkDeviceDTO, Integer> {
     public boolean update(NetworkDeviceDTO t) {
         String sql = "UPDATE NetworkDevice SET "
                 + "device_name = ?, mac_address = ?, ip_address = ?, "
-                + "owner = ?, device_type = ?, status = ? "
+                + "owner = ?, device_type = ?, status = ?, room_id = ? "
                 + "WHERE device_id = ?";
         try {
             Connection connect = DbUtils.getConnection();
@@ -58,7 +60,8 @@ public class NetworkDeviceDAO implements IDAO<NetworkDeviceDTO, Integer> {
             ps.setString(4, t.getOwner());
             ps.setString(5, t.getDeviceType());
             ps.setString(6, t.getStatus());
-            ps.setInt(7, t.getDeviceId());
+            ps.setInt(7, t.getRoomId());
+            ps.setInt(8, t.getDeviceId());
             return ps.executeUpdate() > 0;
         } catch (Exception e) {
             e.printStackTrace();

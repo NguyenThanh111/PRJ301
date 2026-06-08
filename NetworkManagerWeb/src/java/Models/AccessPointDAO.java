@@ -18,7 +18,8 @@ public class AccessPointDAO implements IDAO<AccessPointDTO, Integer> {
                 rs.getString("ip_address"),
                 rs.getInt("connected_users"),
                 rs.getString("status"),
-                rs.getString("location")
+                rs.getString("location"),
+                rs.getInt("room_id")
         );
     }
 
@@ -29,8 +30,8 @@ public class AccessPointDAO implements IDAO<AccessPointDTO, Integer> {
         }
 
         String sql = "INSERT INTO AccessPoint "
-                + "(ap_name, ssid, ip_address, connected_users, status, location) "
-                + "VALUES (?, ?, ?, ?, ?, ?)";
+                + "(ap_name, ssid, ip_address, connected_users, status, location, room_id) "
+                + "VALUES (?, ?, ?, ?, ?, ?, ?)";
         try {
             Connection connect = DbUtils.getConnection();
             PreparedStatement ps = connect.prepareStatement(sql);
@@ -40,6 +41,7 @@ public class AccessPointDAO implements IDAO<AccessPointDTO, Integer> {
             ps.setInt(4, t.getConnectedUsers());
             ps.setString(5, t.getStatus());
             ps.setString(6, t.getLocation());
+            ps.setInt(7, t.getRoomId());
             return ps.executeUpdate() > 0;
         } catch (Exception e) {
             e.printStackTrace();
@@ -55,7 +57,7 @@ public class AccessPointDAO implements IDAO<AccessPointDTO, Integer> {
 
         String sql = "UPDATE AccessPoint SET "
                 + "ap_name = ?, ssid = ?, ip_address = ?, "
-                + "connected_users = ?, status = ?, location = ? "
+                + "connected_users = ?, status = ?, location = ?, room_id = ? "
                 + "WHERE ap_id = ?";
         try {
             Connection connect = DbUtils.getConnection();
@@ -66,7 +68,8 @@ public class AccessPointDAO implements IDAO<AccessPointDTO, Integer> {
             ps.setInt(4, t.getConnectedUsers());
             ps.setString(5, t.getStatus());
             ps.setString(6, t.getLocation());
-            ps.setInt(7, t.getApId());
+            ps.setInt(7, t.getRoomId());
+            ps.setInt(8, t.getApId());
             return ps.executeUpdate() > 0;
         } catch (Exception e) {
             e.printStackTrace();
