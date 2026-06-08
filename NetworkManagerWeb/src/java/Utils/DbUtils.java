@@ -17,7 +17,7 @@ import java.util.logging.Logger;
  */
 public class DbUtils {
 //    Do not change this code
-    private static final String DB_NAME = "PRJ301-04";
+    private static final String DB_NAME = "network_simulation_db3";
     private static final String DB_USER_NAME = "sa";
     private static final String DB_PASSWORD = "12345";
 
