@@ -625,13 +625,7 @@
                                 </div>
                             </div>
 
-                            <% String[][] infraPages={ {"devices","bi-laptop","Network Devices","Device name, MAC
-                                address, IP, owner, type, status"}, {"accesspoints","bi-reception-4","Access Points","AP
-                                name, SSID, IP, connected users, status, room"},
-                                {"routers","bi-router","Routers","Router name, IP, MAC, model, firmware, status"},
-                                {"switches","bi-hdd-network","Switches","Switch name, total/used ports, IP, status"},
-                                {"vlan","bi-diagram-3","VLAN Management","VLAN name, subnet, purpose"},
-                                {"ipmanage","bi-globe","IP Address Management","IP address, assigned to, status"} }; %>
+                            <% String[][] infraPages={ {"devices","bi-laptop","Network Devices","Device name, MAC address, IP, owner, type, status"}, {"accesspoints","bi-reception-4","Access Points","AP name, SSID, IP, connected users, status, room"}, {"routers","bi-router","Routers","Router name, IP, MAC, model, firmware, status"}, {"switches","bi-hdd-network","Switches","Switch name, total/used ports, IP, status"}, {"vlan","bi-diagram-3","VLAN Management","VLAN name, subnet, purpose"}, {"ipmanage","bi-globe","IP Address Management","IP address, assigned to, status"} }; %>
                                 <% for (String[] p : infraPages) { %>
                                     <div class="page-section" id="page-<%= p[0] %>">
                                         <div class="section-card">
