@@ -2,11 +2,11 @@
     <%@page contentType="text/html" pageEncoding="UTF-8" %>
     <%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
         <%@page import="Models.UserDTO" %>
-            <% UserDTO currentUser=(UserDTO) session.getAttribute("user"); String role=(String)
+            <% /*UserDTO currentUser=(UserDTO) session.getAttribute("user"); String role=(String)
                 session.getAttribute("role"); if (currentUser==null || role==null || (!role.equalsIgnoreCase("Admin") &&
                 !role.equalsIgnoreCase("Technician"))) { response.sendRedirect("login.jsp"); return; } String
                 displayName=currentUser.getFullName() !=null ? currentUser.getFullName() : currentUser.getUserName();
-                boolean isAdmin=role.equalsIgnoreCase("Admin"); %>
+                boolean isAdmin=role.equalsIgnoreCase("Admin");*/ %> 
                 <!DOCTYPE html>
                 <html lang="en">
 
