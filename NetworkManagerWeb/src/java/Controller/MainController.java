@@ -41,6 +41,21 @@ public class MainController extends HttpServlet {
         String url;
 
         switch (action) {
+            //=================LOGIN=================
+            case "login":
+            case "dologin":
+                url = "LoginController";
+                break;
+            //=================GG-LOGIN=================
+            case "googleLogin":
+            case "handleGoogleLogin":
+                url = "GoogleLoginController";
+                break;                
+            //=================LOGOUT=================
+            case "logout":
+                url = "LoginCotyroller";
+                break;
+            //===============ROUTER==================
             case "routerList":
             case "routerAdd":
             case "routerEdit":
@@ -51,7 +66,7 @@ public class MainController extends HttpServlet {
             case "routerUpdateStatus":
                 url = "RouterServlet";
                 break;
-
+            //==============AccessPoint==============
             case "apList":
             case "apAdd":
             case "apEdit":
@@ -60,7 +75,7 @@ public class MainController extends HttpServlet {
             case "apDelete":
                 url = "AccessPointServlet";
                 break;
-
+            //=================SWITCH=================
             case "switchList":
             case "switchAdd":
             case "switchEdit":
@@ -69,7 +84,7 @@ public class MainController extends HttpServlet {
             case "switchDelete":
                 url = "SwitchServlet";
                 break;
-
+            //=================DEVICE=================
             case "deviceList":
             case "deviceAdd":
             case "deviceEdit":
@@ -78,9 +93,10 @@ public class MainController extends HttpServlet {
             case "deviceDelete":
                 url = "NetworkDeviceServlet";
                 break;
-
+                
+                //default is Login page!
             default:
-                url = "MainController?action=routerList";
+                url = "login.jsp";
                 break;
         }
 
