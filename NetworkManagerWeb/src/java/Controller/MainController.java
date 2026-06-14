@@ -35,7 +35,7 @@ public class MainController extends HttpServlet {
         String action = request.getParameter("action");
 
         if (action == null) {
-            action = "routerList";
+            action = "";
         }
 
         String url;
