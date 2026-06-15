@@ -93,6 +93,15 @@ public class MainController extends HttpServlet {
             case "deviceDelete":
                 url = "NetworkDeviceServlet";
                 break;
+             //===============Room==================
+            case "roomList":
+            case "roomAdd":
+            case "roomEdit":
+            case "roomInsert":
+            case "roomUpdate":
+            case "roomDelete":
+                url = "RoomServlet";
+                break;
                 
                 //default is Login page!
             default:
