@@ -18,17 +18,17 @@ public class BandwidthUsageDAO implements IDAO<BandwidthUsageDTO, Integer> {
     // ResultSet → BandwidthUsageDTO
     private BandwidthUsageDTO mapRow(ResultSet rs) throws SQLException {
         return new BandwidthUsageDTO(
-                rs.getInt("usageId"),
-                rs.getDouble("uploadSpeed"),
-                rs.getDouble("downloadSpeed"),
-                rs.getTimestamp("recordTime"),
-                rs.getInt("deviceId")
+                rs.getInt("usage_id"),
+                rs.getDouble("upload_speed"),
+                rs.getDouble("download_speed"),
+                rs.getTimestamp("record_time"),
+                rs.getInt("device_id")
         );
     }
     
     @Override
     public boolean insert(BandwidthUsageDTO t) {
-        String sql = "INSERT INTO BandwidthUsage (uploadSpeed, downloadSpeed, recordTime, deviceId) "
+        String sql = "INSERT INTO BandwidthUsage (upload_speed, download_speed, record_time, device_id) "
                    + "VALUES (?, ?, GETDATE(), ?)";
         try (Connection conn = DbUtils.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -44,7 +44,7 @@ public class BandwidthUsageDAO implements IDAO<BandwidthUsageDTO, Integer> {
 
     @Override
     public boolean remove(BandwidthUsageDTO t) {
-        String sql = "DELETE FROM BandwidthUsage WHERE usageId = ?";
+        String sql = "DELETE FROM BandwidthUsage WHERE usage_id = ?";
         try (Connection conn = DbUtils.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, t.getUsageId());
@@ -57,8 +57,8 @@ public class BandwidthUsageDAO implements IDAO<BandwidthUsageDTO, Integer> {
 
     @Override
     public boolean update(BandwidthUsageDTO t) {
-        String sql = "UPDATE BandwidthUsage SET uploadSpeed=?, downloadSpeed=?, deviceId=? "
-                   + "WHERE usageId=?";
+        String sql = "UPDATE BandwidthUsage SET upload_speed=?, download_speed=?, device_id=? "
+                   + "WHERE usage_id=?";
         try (Connection conn = DbUtils.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setDouble(1, t.getUploadSpeed());
@@ -75,7 +75,7 @@ public class BandwidthUsageDAO implements IDAO<BandwidthUsageDTO, Integer> {
     @Override
     public ArrayList<BandwidthUsageDTO> ListAll() {
         ArrayList<BandwidthUsageDTO> list = new ArrayList<>();
-        String sql = "SELECT * FROM BandwidthUsage ORDER BY recordTime DESC";
+        String sql = "SELECT * FROM BandwidthUsage ORDER BY usage_id ASC";
         try (Connection conn = DbUtils.getConnection();
              Statement st = conn.createStatement();
              ResultSet rs = st.executeQuery(sql)) {
@@ -90,7 +90,7 @@ public class BandwidthUsageDAO implements IDAO<BandwidthUsageDTO, Integer> {
 
     @Override
     public BandwidthUsageDTO searchById(Integer id) {
-        String sql = "SELECT * FROM BandwidthUsage WHERE usageId = ?";
+        String sql = "SELECT * FROM BandwidthUsage WHERE usage_id = ?";
         try (Connection conn = DbUtils.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, id);
@@ -107,7 +107,7 @@ public class BandwidthUsageDAO implements IDAO<BandwidthUsageDTO, Integer> {
     /** Tìm tất cả bản ghi theo deviceId */
     public ArrayList<BandwidthUsageDTO> findByDevice(int deviceId) {
         ArrayList<BandwidthUsageDTO> list = new ArrayList<>();
-        String sql = "SELECT * FROM BandwidthUsage WHERE deviceId = ? ORDER BY recordTime DESC";
+        String sql = "SELECT * FROM BandwidthUsage WHERE device_id = ? ORDER BY record_time DESC";
         try (Connection conn = DbUtils.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, deviceId);
@@ -124,7 +124,7 @@ public class BandwidthUsageDAO implements IDAO<BandwidthUsageDTO, Integer> {
 
     public ArrayList<BandwidthUsageDTO> findByDate(String date) {
         ArrayList<BandwidthUsageDTO> list = new ArrayList<>();
-        String sql = "SELECT * FROM BandwidthUsage WHERE CAST(recordTime AS DATE) = ? ORDER BY recordTime DESC";
+        String sql = "SELECT * FROM BandwidthUsage WHERE CAST(record_time AS DATE) = ? ORDER BY record_time DESC";
         try (Connection conn = DbUtils.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, date);
@@ -140,23 +140,23 @@ public class BandwidthUsageDAO implements IDAO<BandwidthUsageDTO, Integer> {
 
     public ArrayList<BandwidthUsageDTO> findTopUsage(int topN) {
         ArrayList<BandwidthUsageDTO> list = new ArrayList<>();
-        String sql = "SELECT TOP (?) deviceId, "
-                   + "SUM(uploadSpeed) AS uploadSpeed, "
-                   + "SUM(downloadSpeed) AS downloadSpeed, "
-                   + "MAX(recordTime) AS recordTime "
+        String sql = "SELECT TOP (?) device_id, "
+                   + "SUM(upload_speed) AS upload_speed, "
+                   + "SUM(download_speed) AS download_speed, "
+                   + "MAX(record_time) AS record_time "
                    + "FROM BandwidthUsage "
-                   + "GROUP BY deviceId "
-                   + "ORDER BY (SUM(uploadSpeed) + SUM(downloadSpeed)) DESC";
+                   + "GROUP BY device_id "
+                   + "ORDER BY (SUM(upload_speed) + SUM(download_speed)) DESC";
         try (Connection conn = DbUtils.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, topN);
             ResultSet rs = ps.executeQuery();
             while (rs.next()) {
                 BandwidthUsageDTO dto = new BandwidthUsageDTO();
-                dto.setDeviceId(rs.getInt("deviceId"));
-                dto.setUploadSpeed(rs.getDouble("uploadSpeed"));
-                dto.setDownloadSpeed(rs.getDouble("downloadSpeed"));
-                dto.setRecordTime(rs.getTimestamp("recordTime"));
+                dto.setDeviceId(rs.getInt("device_id"));
+                dto.setUploadSpeed(rs.getDouble("upload_speed"));
+                dto.setDownloadSpeed(rs.getDouble("download_speed"));
+                dto.setRecordTime(rs.getTimestamp("record_time"));
                 list.add(dto);
             }
         } catch (Exception e) {
@@ -167,14 +167,14 @@ public class BandwidthUsageDAO implements IDAO<BandwidthUsageDTO, Integer> {
 
     public ArrayList<BandwidthUsageDTO> generateReport(String fromDate, String toDate) {
         ArrayList<BandwidthUsageDTO> list = new ArrayList<>();
-        String sql = "SELECT 0 AS usageId, 0 AS deviceId, "
-                   + "SUM(uploadSpeed) AS uploadSpeed, "
-                   + "SUM(downloadSpeed) AS downloadSpeed, "
-                   + "CAST(recordTime AS DATE) AS recordTime "
+        String sql = "SELECT 0 AS usage_id, 0 AS device_id, "
+                   + "SUM(upload_speed) AS upload_speed, "
+                   + "SUM(download_speed) AS download_speed, "
+                   + "CAST(record_time AS DATE) AS record_time "
                    + "FROM BandwidthUsage "
-                   + "WHERE CAST(recordTime AS DATE) BETWEEN ? AND ? "
-                   + "GROUP BY CAST(recordTime AS DATE) "
-                   + "ORDER BY CAST(recordTime AS DATE)";
+                   + "WHERE CAST(record_time AS DATE) BETWEEN ? AND ? "
+                   + "GROUP BY CAST(record_time AS DATE) "
+                   + "ORDER BY CAST(record_time AS DATE)";
         try (Connection conn = DbUtils.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, fromDate);
@@ -182,9 +182,9 @@ public class BandwidthUsageDAO implements IDAO<BandwidthUsageDTO, Integer> {
             ResultSet rs = ps.executeQuery();
             while (rs.next()) {
                 BandwidthUsageDTO dto = new BandwidthUsageDTO();
-                dto.setUploadSpeed(rs.getDouble("uploadSpeed"));
-                dto.setDownloadSpeed(rs.getDouble("downloadSpeed"));
-                dto.setRecordTime(rs.getTimestamp("recordTime"));
+                dto.setUploadSpeed(rs.getDouble("upload_speed"));
+                dto.setDownloadSpeed(rs.getDouble("download_speed"));
+                dto.setRecordTime(rs.getTimestamp("record_time"));
                 list.add(dto);
             }
         } catch (Exception e) {

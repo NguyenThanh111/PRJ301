@@ -32,6 +32,14 @@
         <servlet-name>SystemLogController</servlet-name>
         <servlet-class>Controller.SystemLogController</servlet-class>
     </servlet>
+    <servlet>
+        <servlet-name>BandwidthServlet</servlet-name>
+        <servlet-class>Controller.BandwidthServlet</servlet-class>
+    </servlet>
+    <servlet>
+        <servlet-name>MaintenanceServlet</servlet-name>
+        <servlet-class>Controller.MaintenanceServlet</servlet-class>
+    </servlet>
     <servlet-mapping>
         <servlet-name>LoginController</servlet-name>
         <url-pattern>/LoginController</url-pattern>
@@ -63,6 +71,14 @@
     <servlet-mapping>
         <servlet-name>SystemLogController</servlet-name>
         <url-pattern>/SystemLogController</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>BandwidthServlet</servlet-name>
+        <url-pattern>/BandwidthServlet</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>MaintenanceServlet</servlet-name>
+        <url-pattern>/MaintenanceServlet</url-pattern>
     </servlet-mapping>
     <session-config>
         <session-timeout>

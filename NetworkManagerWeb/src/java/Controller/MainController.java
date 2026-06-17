@@ -93,6 +93,23 @@ public class MainController extends HttpServlet {
             case "deviceDelete":
                 url = "NetworkDeviceServlet";
                 break;
+            //===============BANDWIDTH===============
+            case "bandwidthList":
+            case "bandwidthAdd":
+            case "bandwidthInsert":
+            case "bandwidthDelete":
+                url = "BandwidthServlet";
+                break;
+            //==============MAINTENANCE==============
+            case "maintenanceList":
+            case "maintenanceAdd":
+            case "maintenanceEdit":
+            case "maintenanceInsert":
+            case "maintenanceUpdate":
+            case "maintenanceDelete":
+            case "maintenanceComplete":
+                url = "MaintenanceServlet";
+                break;
                 
                 //default is Login page!
             default:

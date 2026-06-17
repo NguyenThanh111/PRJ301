@@ -4,7 +4,14 @@
     <%@taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions"%>
         <%@page import="Models.RouterDAO" %>
         <%@page import="Models.RouterDTO" %>
+        <%@page import="Models.BandwidthUsageDAO" %>
+        <%@page import="Models.BandwidthUsageDTO" %>
+        <%@page import="Models.NetworkDeviceDAO" %>
+        <%@page import="Models.NetworkDeviceDTO" %>
+        <%@page import="Models.MaintenanceScheduleDAO" %>
+        <%@page import="Models.MaintenanceScheduleDTO" %>
         <%@page import="java.util.ArrayList" %>
+        <%@page import="java.util.HashMap" %>
         <c:set var="currentUser" value="${sessionScope.user}" />
         <c:set var="role" value="${sessionScope.role}" />
         <c:set var="roleLower" value="${fn:toLowerCase(role)}" />
@@ -16,6 +23,24 @@
         <%
             RouterDAO routerDAO = new RouterDAO();
             ArrayList<RouterDTO> routerList = routerDAO.ListAll();
+            
+            BandwidthUsageDAO bandwidthDAO = new BandwidthUsageDAO();
+            ArrayList<BandwidthUsageDTO> bandwidthList = bandwidthDAO.ListAll();
+            request.setAttribute("usages", bandwidthList);
+            
+            NetworkDeviceDAO deviceDAO = new NetworkDeviceDAO();
+            HashMap<Integer, String> deviceNames = new HashMap<>();
+            for (BandwidthUsageDTO usage : bandwidthList) {
+                if (!deviceNames.containsKey(usage.getDeviceId())) {
+                    NetworkDeviceDTO dev = deviceDAO.searchById(usage.getDeviceId());
+                    deviceNames.put(usage.getDeviceId(), dev != null ? dev.getDeviceName() : "Unknown");
+                }
+            }
+            request.setAttribute("deviceNames", deviceNames);
+            
+            MaintenanceScheduleDAO maintenanceDAO = new MaintenanceScheduleDAO();
+            ArrayList<MaintenanceScheduleDTO> tasks = maintenanceDAO.ListAll();
+            request.setAttribute("tasks", tasks);
         %>
                 <!DOCTYPE html>
                 <html lang="en">
@@ -781,9 +806,73 @@
                                             <div class="section-card">
                                                 <div class="section-card-header">
                                                     <h6><i class="bi bi-bar-chart-line me-2"></i>Bandwidth Usage</h6>
+                                                    <div class="d-flex gap-2">
+                                                        <a class="btn-theme text-decoration-none" href="MainController?action=bandwidthAdd&returnTo=dashboard">
+                                                            <i class="bi bi-plus-lg me-1"></i>Run Speed Test
+                                                        </a>
+                                                        <a class="btn-theme text-decoration-none" href="bandwidth-list.jsp">
+                                                            <i class="bi bi-box-arrow-up-right me-1"></i>Full View
+                                                        </a>
+                                                    </div>
                                                 </div>
-                                                <div class="section-card-body">
-                                                    <div class="placeholder-box">Bandwidth usage chart will appear here
+                                                <div class="section-card-body" style="padding:0;">
+                                                    <div style="overflow-x:auto;">
+                                                        <table class="rt-table">
+                                                            <thead>
+                                                                <tr>
+                                                                    <th><i class="bi bi-hash me-1"></i>ID</th>
+                                                                    <th><i class="bi bi-laptop me-1"></i>Device</th>
+                                                                    <th><i class="bi bi-cloud-arrow-up me-1"></i>Upload Speed</th>
+                                                                    <th><i class="bi bi-cloud-arrow-down me-1"></i>Download Speed</th>
+                                                                    <th><i class="bi bi-clock me-1"></i>Record Time</th>
+                                                                    <th><i class="bi bi-three-dots me-1"></i>Actions</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                <c:choose>
+                                                                    <c:when test="${not empty usages}">
+                                                                        <c:forEach var="item" items="${usages}">
+                                                                            <tr>
+                                                                                <td><span class="id-badge">#${item.usageId}</span></td>
+                                                                                <td>
+                                                                                    <div class="device-name">
+                                                                                        <div class="ri"><i class="bi bi-hdd-network-fill"></i></div>
+                                                                                        <span>
+                                                                                            <c:out value="${deviceNames[item.deviceId]}" default="Device ${item.deviceId}" />
+                                                                                            <span style="font-size:0.75rem; color:var(--text-muted); margin-left:5px;">(ID: ${item.deviceId})</span>
+                                                                                        </span>
+                                                                                    </div>
+                                                                                </td>
+                                                                                <td><span class="mono"><fmt:formatNumber value="${item.uploadSpeed}" maxFractionDigits="2"/> Mbps</span></td>
+                                                                                <td><span class="mono mono-down"><fmt:formatNumber value="${item.downloadSpeed}" maxFractionDigits="2"/> Mbps</span></td>
+                                                                                <td style="color:var(--text-muted)"><fmt:formatDate value="${item.recordTime}" pattern="yyyy-MM-dd HH:mm:ss" /></td>
+                                                                                <td>
+                                                                                    <div class="action-group">
+                                                                                        <form action="MainController" method="post" style="display:inline;">
+                                                                                            <input type="hidden" name="action" value="bandwidthDelete">
+                                                                                            <input type="hidden" name="usageId" value="${item.usageId}">
+                                                                                            <button type="submit" class="btn-icon btn-icon-delete" title="Delete record" onclick="return confirm('Delete this record?')">
+                                                                                                <i class="bi bi-trash3-fill"></i>
+                                                                                            </button>
+                                                                                        </form>
+                                                                                    </div>
+                                                                                </td>
+                                                                            </tr>
+                                                                        </c:forEach>
+                                                                    </c:when>
+                                                                    <c:otherwise>
+                                                                        <tr>
+                                                                            <td colspan="6">
+                                                                                <div class="rt-empty">
+                                                                                    <i class="bi bi-bar-chart-line"></i>
+                                                                                    No bandwidth usage records found.
+                                                                                </div>
+                                                                            </td>
+                                                                        </tr>
+                                                                    </c:otherwise>
+                                                                </c:choose>
+                                                            </tbody>
+                                                        </table>
                                                     </div>
                                                 </div>
                                             </div>
@@ -844,12 +933,105 @@
                                         <div class="page-section" id="page-maintenance">
                                             <div class="section-card">
                                                 <div class="section-card-header">
-                                                    <h6><i class="bi bi-tools me-2"></i>Maintenance Schedule</h6><button
-                                                        class="btn-theme"><i
-                                                            class="bi bi-plus-lg me-1"></i>Schedule</button>
+                                                    <h6><i class="bi bi-tools me-2"></i>Maintenance Schedule</h6>
+                                                    <div class="d-flex gap-2">
+                                                        <a class="btn-theme text-decoration-none" href="MainController?action=maintenanceAdd&returnTo=dashboard">
+                                                            <i class="bi bi-plus-lg me-1"></i>Schedule
+                                                        </a>
+                                                        <a class="btn-theme text-decoration-none" href="maintenance-list.jsp">
+                                                            <i class="bi bi-box-arrow-up-right me-1"></i>Full View
+                                                        </a>
+                                                    </div>
                                                 </div>
-                                                <div class="section-card-body">
-                                                    <div class="placeholder-box">Maintenance schedule will appear here
+                                                <div class="section-card-body" style="padding:0;">
+                                                    <div style="overflow-x:auto;">
+                                                        <table class="rt-table">
+                                                            <thead>
+                                                                <tr>
+                                                                    <th><i class="bi bi-hash me-1"></i>ID</th>
+                                                                    <th><i class="bi bi-card-text me-1"></i>Task Title</th>
+                                                                    <th><i class="bi bi-calendar-event me-1"></i>Start Time</th>
+                                                                    <th><i class="bi bi-calendar-check me-1"></i>End Time</th>
+                                                                    <th><i class="bi bi-activity me-1"></i>Status</th>
+                                                                    <th><i class="bi bi-three-dots me-1"></i>Actions</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                <c:choose>
+                                                                    <c:when test="${not empty tasks}">
+                                                                        <c:forEach var="item" items="${tasks}">
+                                                                            <tr>
+                                                                                <td><span class="id-badge">#${item.maintenanceId}</span></td>
+                                                                                <td>
+                                                                                    <div style="font-weight:600; color:#fff;">${item.title}</div>
+                                                                                    <div style="font-size:0.8rem; color:var(--text-muted);">${item.description}</div>
+                                                                                </td>
+                                                                                <td style="color:var(--text-muted)"><fmt:formatDate value="${item.startTime}" pattern="yyyy-MM-dd HH:mm" /></td>
+                                                                                <td style="color:var(--text-muted)">
+                                                                                    <c:if test="${not empty item.endTime}"><fmt:formatDate value="${item.endTime}" pattern="yyyy-MM-dd HH:mm" /></c:if>
+                                                                                    <c:if test="${empty item.endTime}">--</c:if>
+                                                                                </td>
+                                                                                <td>
+                                                                                    <jsp:useBean id="now" class="java.util.Date" />
+                                                                                    <c:set var="displayStatus" value="${item.status}" />
+                                                                                    <c:if test="${item.status eq 'PLANNED' or item.status eq 'IN_PROGRESS'}">
+                                                                                        <c:choose>
+                                                                                            <c:when test="${not empty item.endTime and item.endTime.time < now.time}">
+                                                                                                <c:set var="displayStatus" value="OVERDUE" />
+                                                                                            </c:when>
+                                                                                            <c:when test="${item.startTime.time < now.time and (empty item.endTime or item.endTime.time > now.time)}">
+                                                                                                <c:set var="displayStatus" value="IN_PROGRESS" />
+                                                                                            </c:when>
+                                                                                        </c:choose>
+                                                                                    </c:if>
+                                                                                    <c:choose>
+                                                                                        <c:when test="${displayStatus eq 'PLANNED'}"><span class="badge" style="background: rgba(96,165,250,0.15); color: #60a5fa; border: 1px solid rgba(96,165,250,0.3);"><i class="bi bi-calendar-event me-1"></i> PLANNED</span></c:when>
+                                                                                        <c:when test="${displayStatus eq 'IN_PROGRESS'}"><span class="badge" style="background: rgba(250,204,21,0.15); color: #facc15; border: 1px solid rgba(250,204,21,0.3);"><i class="bi bi-gear-wide-connected me-1"></i> IN_PROGRESS</span></c:when>
+                                                                                        <c:when test="${displayStatus eq 'COMPLETED'}"><span class="badge" style="background: rgba(52,211,153,0.15); color: #34d399; border: 1px solid rgba(52,211,153,0.3);"><i class="bi bi-check2-all me-1"></i> COMPLETED</span></c:when>
+                                                                                        <c:when test="${displayStatus eq 'CANCELED'}"><span class="badge bg-secondary">CANCELED</span></c:when>
+                                                                                        <c:when test="${displayStatus eq 'OVERDUE'}"><span class="badge" style="background: rgba(248,113,113,0.15); color: #f87171; border: 1px solid rgba(248,113,113,0.3);"><i class="bi bi-exclamation-triangle-fill me-1"></i> OVERDUE</span></c:when>
+                                                                                        <c:otherwise><span class="badge bg-secondary">${displayStatus}</span></c:otherwise>
+                                                                                    </c:choose>
+                                                                                </td>
+                                                                                <td>
+                                                                                    <div class="action-group">
+                                                                                        <c:if test="${item.status ne 'COMPLETED' && item.status ne 'CANCELED'}">
+                                                                                            <form action="MainController" method="post" style="display:inline;">
+                                                                                                <input type="hidden" name="action" value="maintenanceComplete">
+                                                                                                <input type="hidden" name="maintenanceId" value="${item.maintenanceId}">
+                                                                                                <button type="submit" class="btn-icon" style="color:var(--neon-green); border-color:rgba(52,211,153,0.3); background:rgba(52,211,153,0.1);" title="Mark as Completed" onclick="return confirm('Mark this task as completed?')">
+                                                                                                    <i class="bi bi-check-circle-fill"></i>
+                                                                                                </button>
+                                                                                        </form>
+                                                                                    </c:if>
+                                                                                    <a class="btn-icon" style="color:var(--neon-blue); border-color:rgba(96,165,250,0.3); background:rgba(96,165,250,0.1);" href="MainController?action=maintenanceEdit&maintenanceId=${item.maintenanceId}" title="Edit Task">
+                                                                                        <i class="bi bi-pencil-fill"></i>
+                                                                                    </a>
+                                                                                        <form action="MainController" method="post" style="display:inline;">
+                                                                                            <input type="hidden" name="action" value="maintenanceDelete">
+                                                                                            <input type="hidden" name="maintenanceId" value="${item.maintenanceId}">
+                                                                                            <button type="submit" class="btn-icon btn-icon-delete" title="Delete Task" onclick="return confirm('Delete this task?')">
+                                                                                                <i class="bi bi-trash3-fill"></i>
+                                                                                            </button>
+                                                                                        </form>
+                                                                                    </div>
+                                                                                </td>
+                                                                            </tr>
+                                                                        </c:forEach>
+                                                                    </c:when>
+                                                                    <c:otherwise>
+                                                                        <tr>
+                                                                            <td colspan="6">
+                                                                                <div class="rt-empty">
+                                                                                    <i class="bi bi-tools"></i>
+                                                                                    No maintenance tasks scheduled.
+                                                                                </div>
+                                                                            </td>
+                                                                        </tr>
+                                                                    </c:otherwise>
+                                                                </c:choose>
+                                                            </tbody>
+                                                        </table>
                                                     </div>
                                                 </div>
                                             </div>

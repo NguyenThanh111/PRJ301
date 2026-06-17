@@ -21,18 +21,18 @@ public class MaintenanceScheduleDAO implements IDAO<MaintenanceScheduleDTO, Inte
 
     private MaintenanceScheduleDTO mapRow(ResultSet rs) throws SQLException {
         return new MaintenanceScheduleDTO(
-                rs.getInt("maintenanceId"),
+                rs.getInt("maintenance_id"),
                 rs.getString("title"),
                 rs.getString("description"),
-                rs.getTimestamp("startTime"),
-                rs.getTimestamp("endTime"),   // nullable — trả về null nếu cột NULL
+                rs.getTimestamp("start_time"),
+                rs.getTimestamp("end_time"),   // nullable — trả về null nếu cột NULL
                 rs.getString("status")
         );
     }
     
     @Override
     public boolean insert(MaintenanceScheduleDTO t) {
-        String sql = "INSERT INTO MaintenanceSchedule (title, description, startTime, endTime, status) "
+        String sql = "INSERT INTO MaintenanceSchedule (title, description, start_time, end_time, status) "
                    + "VALUES (?, ?, ?, ?, ?)";
         try (Connection conn = DbUtils.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -51,7 +51,7 @@ public class MaintenanceScheduleDAO implements IDAO<MaintenanceScheduleDTO, Inte
 
     @Override
     public boolean remove(MaintenanceScheduleDTO t) {
-        String sql = "DELETE FROM MaintenanceSchedule WHERE maintenanceId = ?";
+        String sql = "DELETE FROM MaintenanceSchedule WHERE maintenance_id = ?";
         try (Connection conn = DbUtils.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, t.getMaintenanceId());
@@ -64,8 +64,8 @@ public class MaintenanceScheduleDAO implements IDAO<MaintenanceScheduleDTO, Inte
 
     @Override
     public boolean update(MaintenanceScheduleDTO t) {
-        String sql = "UPDATE MaintenanceSchedule SET title=?, description=?, startTime=?, endTime=?, status=? "
-                   + "WHERE maintenanceId=?";
+        String sql = "UPDATE MaintenanceSchedule SET title=?, description=?, start_time=?, end_time=?, status=? "
+                   + "WHERE maintenance_id=?";
         try (Connection conn = DbUtils.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, t.getTitle());
@@ -85,7 +85,7 @@ public class MaintenanceScheduleDAO implements IDAO<MaintenanceScheduleDTO, Inte
     @Override
     public ArrayList<MaintenanceScheduleDTO> ListAll() {
         ArrayList<MaintenanceScheduleDTO> list = new ArrayList<>();
-        String sql = "SELECT * FROM MaintenanceSchedule ORDER BY startTime DESC";
+        String sql = "SELECT * FROM MaintenanceSchedule ORDER BY maintenance_id ASC";
         try (Connection conn = DbUtils.getConnection();
              Statement st = conn.createStatement();
              ResultSet rs = st.executeQuery(sql)) {
@@ -100,7 +100,7 @@ public class MaintenanceScheduleDAO implements IDAO<MaintenanceScheduleDTO, Inte
 
     @Override
     public MaintenanceScheduleDTO searchById(Integer id) {
-        String sql = "SELECT * FROM MaintenanceSchedule WHERE maintenanceId = ?";
+        String sql = "SELECT * FROM MaintenanceSchedule WHERE maintenance_id = ?";
         try (Connection conn = DbUtils.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, id);
@@ -118,8 +118,8 @@ public class MaintenanceScheduleDAO implements IDAO<MaintenanceScheduleDTO, Inte
     public ArrayList<MaintenanceScheduleDTO> findUpcoming() {
         ArrayList<MaintenanceScheduleDTO> list = new ArrayList<>();
         String sql = "SELECT * FROM MaintenanceSchedule "
-                   + "WHERE startTime >= GETDATE() AND status IN ('PLANNED','IN_PROGRESS') "
-                   + "ORDER BY startTime ASC";
+                   + "WHERE start_time >= GETDATE() AND status IN ('PLANNED','IN_PROGRESS') "
+                   + "ORDER BY start_time ASC";
         try (Connection conn = DbUtils.getConnection();
              Statement st = conn.createStatement();
              ResultSet rs = st.executeQuery(sql)) {
@@ -133,7 +133,7 @@ public class MaintenanceScheduleDAO implements IDAO<MaintenanceScheduleDTO, Inte
     }
 
     public boolean updateStatus(int maintenanceId, String newStatus) {
-        String sql = "UPDATE MaintenanceSchedule SET status=? WHERE maintenanceId=?";
+        String sql = "UPDATE MaintenanceSchedule SET status=? WHERE maintenance_id=?";
         try (Connection conn = DbUtils.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, newStatus);
