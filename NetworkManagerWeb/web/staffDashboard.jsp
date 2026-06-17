@@ -369,6 +369,37 @@
                                 margin-left: 0;
                             }
                         }
+
+                        /* ── Router table (dashboard inline) ── */
+                        .rt-table { width:100%; border-collapse:collapse; font-size:0.82rem; }
+                        .rt-table thead tr { background:rgba(22,31,54,0.95); border-bottom:1px solid var(--border); }
+                        .rt-table thead th { padding:11px 13px; color:var(--text-muted); font-weight:600; font-size:0.7rem; letter-spacing:.08em; text-transform:uppercase; white-space:nowrap; }
+                        .rt-table tbody tr { border-bottom:1px solid rgba(42,53,85,0.35); transition:background .15s; }
+                        .rt-table tbody tr:last-child { border-bottom:none; }
+                        .rt-table tbody tr:hover { background:rgba(139,92,246,0.06); }
+                        .rt-table tbody td { padding:11px 13px; color:var(--text-primary); vertical-align:middle; }
+                        .rt-id { display:inline-flex; align-items:center; justify-content:center; background:rgba(96,165,250,0.1); border:1px solid rgba(96,165,250,0.22); color:#60a5fa; border-radius:5px; padding:1px 8px; font-size:.72rem; font-weight:700; font-family:monospace; }
+                        .rt-name { display:flex; align-items:center; gap:8px; }
+                        .rt-name-icon { width:27px; height:27px; background:linear-gradient(135deg,rgba(139,92,246,.18),rgba(96,165,250,.18)); border:1px solid rgba(139,92,246,.28); border-radius:6px; display:flex; align-items:center; justify-content:center; font-size:13px; color:#8b5cf6; flex-shrink:0; }
+                        .rt-ip { font-family:'Courier New',monospace; font-size:.78rem; color:#22d3ee; background:rgba(34,211,238,.07); border-radius:4px; padding:1px 6px; display:inline-block; }
+                        .rt-mac { font-family:'Courier New',monospace; font-size:.76rem; color:var(--text-muted); background:rgba(154,166,199,.07); border-radius:4px; padding:1px 6px; display:inline-block; }
+                        .rt-status-form { display:flex; gap:5px; align-items:center; }
+                        .rt-sel { background:rgba(22,31,54,.9); border:1px solid var(--border); color:var(--text-primary); border-radius:6px; padding:4px 8px; font-size:.72rem; outline:none; cursor:pointer; transition:border-color .2s; }
+                        .rt-sel:focus { border-color:#8b5cf6; }
+                        .rt-sel option { background:#0b1020; }
+                        .rt-upd { background:rgba(52,211,153,.1); border:1px solid rgba(52,211,153,.28); color:#34d399; border-radius:6px; padding:4px 8px; font-size:.7rem; font-weight:600; cursor:pointer; transition:all .18s; white-space:nowrap; }
+                        .rt-upd:hover { background:rgba(52,211,153,.22); }
+                        .rt-actions { display:flex; gap:4px; align-items:center; }
+                        .rt-btn { display:inline-flex; align-items:center; justify-content:center; width:29px; height:29px; border-radius:6px; border:1px solid transparent; font-size:13px; text-decoration:none; transition:all .18s; background:transparent; cursor:pointer; }
+                        .rt-btn-edit { border-color:rgba(96,165,250,.28); color:#60a5fa; background:rgba(96,165,250,.07); }
+                        .rt-btn-edit:hover { background:rgba(96,165,250,.2); box-shadow:0 0 8px rgba(96,165,250,.3); color:#60a5fa; }
+                        .rt-btn-restart { border-color:rgba(251,191,36,.28); color:#fbbf24; background:rgba(251,191,36,.07); }
+                        .rt-btn-restart:hover { background:rgba(251,191,36,.2); box-shadow:0 0 8px rgba(251,191,36,.3); color:#fbbf24; }
+                        .rt-btn-del { border-color:rgba(248,113,113,.28); color:#f87171; background:rgba(248,113,113,.07); }
+                        .rt-btn-del:hover { background:rgba(248,113,113,.2); box-shadow:0 0 8px rgba(248,113,113,.3); color:#f87171; }
+                        .rt-empty { padding:48px 24px; text-align:center; color:var(--text-muted); }
+                        .rt-empty i { font-size:40px; color:var(--border); display:block; margin-bottom:10px; }
+                        .rt-room { display:inline-flex; align-items:center; justify-content:center; background:rgba(139,92,246,.08); border:1px solid rgba(139,92,246,.22); color:#8b5cf6; border-radius:5px; padding:1px 8px; font-size:.72rem; font-weight:700; font-family:monospace; }
                     </style>
                 </head>
 
@@ -670,66 +701,77 @@
                                             <div class="section-card">
                                                 <div class="section-card-header">
                                                     <h6><i class="bi bi-router me-2"></i>Routers</h6>
-                                                    <a class="btn-theme text-decoration-none" href="MainController?action=routerAdd&returnTo=dashboard">
+                                                    <a class="btn-theme text-decoration-none" href="MainController?action=routerList">
+                                                        <i class="bi bi-box-arrow-up-right me-1"></i>Full View
+                                                    </a>
+                                                    <a class="btn-theme text-decoration-none ms-1" href="MainController?action=routerAdd&returnTo=dashboard">
                                                         <i class="bi bi-plus-lg me-1"></i>Add New
                                                     </a>
                                                 </div>
-                                                <div class="section-card-body">
-                                                    <div class="table-responsive">
-                                                        <table class="table table-dark table-striped table-hover align-middle mb-0">
+                                                <div class="section-card-body" style="padding:0;">
+                                                    <div style="overflow-x:auto;">
+                                                        <table class="rt-table">
                                                             <thead>
                                                                 <tr>
-                                                                    <th>ID</th>
-                                                                    <th>Name</th>
-                                                                    <th>IP</th>
-                                                                    <th>MAC</th>
-                                                                    <th>Model</th>
-                                                                    <th>Firmware</th>
-                                                                    <th>Status</th>
-                                                                    <th>Location</th>
-                                                                    <th>Room</th>
-                                                                    <th>Actions</th>
+                                                                    <th><i class="bi bi-hash me-1"></i>ID</th>
+                                                                    <th><i class="bi bi-router me-1"></i>Name</th>
+                                                                    <th><i class="bi bi-globe me-1"></i>IP Address</th>
+                                                                    <th><i class="bi bi-ethernet me-1"></i>MAC</th>
+                                                                    <th><i class="bi bi-cpu me-1"></i>Model</th>
+                                                                    <th><i class="bi bi-code-slash me-1"></i>Firmware</th>
+                                                                    <th><i class="bi bi-activity me-1"></i>Status</th>
+                                                                    <th><i class="bi bi-geo-alt me-1"></i>Location</th>
+                                                                    <th><i class="bi bi-door-open me-1"></i>Room</th>
+                                                                    <th><i class="bi bi-three-dots me-1"></i>Actions</th>
                                                                 </tr>
                                                             </thead>
                                                             <tbody>
                                                                 <% if (routerList != null && !routerList.isEmpty()) {
                                                                     for (RouterDTO router : routerList) { %>
                                                                         <tr>
-                                                                            <td><%= router.getRouterId() %></td>
-                                                                            <td><%= router.getRouterName() %></td>
-                                                                            <td><%= router.getIpAddress() %></td>
-                                                                            <td><%= router.getMacAddress() %></td>
-                                                                            <td><%= router.getModel() %></td>
-                                                                            <td><%= router.getFirmware() %></td>
+                                                                            <td><span class="rt-id">#<%= router.getRouterId() %></span></td>
                                                                             <td>
-                                                                                <form action="MainController" method="post" class="d-flex gap-2">
+                                                                                <div class="rt-name">
+                                                                                    <div class="rt-name-icon"><i class="bi bi-router-fill"></i></div>
+                                                                                    <span style="font-weight:600;"><%= router.getRouterName() %></span>
+                                                                                </div>
+                                                                            </td>
+                                                                            <td><span class="rt-ip"><%= router.getIpAddress() %></span></td>
+                                                                            <td><span class="rt-mac"><%= router.getMacAddress() %></span></td>
+                                                                            <td style="color:var(--text-muted);font-size:.78rem;"><%= router.getModel() %></td>
+                                                                            <td style="color:var(--text-muted);font-size:.76rem;"><%= router.getFirmware() %></td>
+                                                                            <td>
+                                                                                <form action="MainController" method="post" class="rt-status-form">
                                                                                     <input type="hidden" name="action" value="routerUpdateStatus">
                                                                                     <input type="hidden" name="id" value="<%= router.getRouterId() %>">
                                                                                     <input type="hidden" name="returnTo" value="dashboard">
-                                                                                    <select class="form-select form-select-sm bg-dark text-light border-secondary" name="status">
-                                                                                        <option value="ONLINE" <%= "ONLINE".equalsIgnoreCase(router.getStatus()) ? "selected" : "" %>>ONLINE</option>
-                                                                                        <option value="OFFLINE" <%= "OFFLINE".equalsIgnoreCase(router.getStatus()) ? "selected" : "" %>>OFFLINE</option>
-                                                                                        <option value="MAINTENANCE" <%= "MAINTENANCE".equalsIgnoreCase(router.getStatus()) ? "selected" : "" %>>MAINTENANCE</option>
+                                                                                    <select class="rt-sel" name="status">
+                                                                                        <option value="ONLINE" <%= "ONLINE".equalsIgnoreCase(router.getStatus()) ? "selected" : "" %>>🟢 ONLINE</option>
+                                                                                        <option value="OFFLINE" <%= "OFFLINE".equalsIgnoreCase(router.getStatus()) ? "selected" : "" %>>🔴 OFFLINE</option>
+                                                                                        <option value="MAINTENANCE" <%= "MAINTENANCE".equalsIgnoreCase(router.getStatus()) ? "selected" : "" %>>🟡 MAINTENANCE</option>
                                                                                     </select>
-                                                                                    <button class="btn btn-sm btn-outline-success" type="submit">Update</button>
+                                                                                    <button class="rt-upd" type="submit" title="Update status"><i class="bi bi-check2"></i></button>
                                                                                 </form>
                                                                             </td>
-                                                                            <td><%= router.getLocation() %></td>
-                                                                            <td><%= router.getRoomId() %></td>
+                                                                            <td style="color:var(--text-muted);font-size:.78rem;">
+                                                                                <i class="bi bi-geo-alt-fill" style="color:#d946ef;margin-right:3px;"></i><%= router.getLocation() %>
+                                                                            </td>
+                                                                            <td><span class="rt-room"><%= router.getRoomId() %></span></td>
                                                                             <td>
-                                                                                <a class="btn btn-sm btn-outline-light" href="MainController?action=routerEdit&id=<%= router.getRouterId() %>&returnTo=dashboard">Edit</a>
-                                                                                <a class="btn btn-sm btn-outline-warning" href="MainController?action=routerRestart&id=<%= router.getRouterId() %>&returnTo=dashboard">Restart</a>
-                                                                                <a class="btn btn-sm btn-outline-danger" href="MainController?action=routerDelete&routerId=<%= router.getRouterId() %>&returnTo=dashboard">Delete</a>
+                                                                                <div class="rt-actions">
+                                                                                    <a class="rt-btn rt-btn-edit" href="MainController?action=routerEdit&id=<%= router.getRouterId() %>&returnTo=dashboard" title="Edit"><i class="bi bi-pencil-fill"></i></a>
+                                                                                    <a class="rt-btn rt-btn-restart" href="MainController?action=routerRestart&id=<%= router.getRouterId() %>&returnTo=dashboard" title="Restart"><i class="bi bi-arrow-clockwise"></i></a>
+                                                                                    <a class="rt-btn rt-btn-del" href="MainController?action=routerDelete&routerId=<%= router.getRouterId() %>&returnTo=dashboard" title="Delete" onclick="return confirm('Delete router &lt;<%= router.getRouterName() %>&gt;?')"><i class="bi bi-trash3-fill"></i></a>
+                                                                                </div>
                                                                             </td>
                                                                         </tr>
                                                                 <%  }
                                                                 } else { %>
                                                                     <tr>
                                                                         <td colspan="10">
-                                                                            <div class="placeholder-box my-0">
-                                                                                <i class="bi bi-router" style="font-size:26px;"></i><br>
-                                                                                Router list will appear here<br>
-                                                                                <small>Router name, IP, MAC, model, firmware, status</small>
+                                                                            <div class="rt-empty">
+                                                                                <i class="bi bi-router"></i>
+                                                                                No routers found. Add your first router.
                                                                             </div>
                                                                         </td>
                                                                     </tr>
@@ -825,13 +867,13 @@
                                                 <div class="section-card-header">
                                                     <h6>
                                                         <i class="bi bi-building me-2"></i>
-                                                        Quản lý phòng
+                                                        Room Management
                                                     </h6>
 
                                                     <a class="btn-theme text-decoration-none"
                                                        href="MainController?action=roomAdd&returnTo=dashboard">
                                                         <i class="bi bi-plus-lg me-1"></i>
-                                                        Thêm phòng
+                                                        Add Room
                                                     </a>
                                                 </div>
 
@@ -839,15 +881,14 @@
                                                     <div class="table-responsive">
 
                                                         <table class="table table-dark table-striped table-hover align-middle mb-0">
-
                                                             <thead>
                                                                 <tr>
                                                                     <th>ID</th>
-                                                                    <th>Tên phòng</th>
-                                                                    <th>Tòa nhà</th>
-                                                                    <th>Tầng</th>
-                                                                    <th>Sức chứa</th>
-                                                                    <th>Thao tác</th>
+                                                                    <th>Room Name</th>
+                                                                    <th>Building</th>
+                                                                    <th>Floor</th>
+                                                                    <th>Capacity</th>
+                                                                    <th>Actions</th>
                                                                 </tr>
                                                             </thead>
 
@@ -859,21 +900,43 @@
                                                                 <tr>
                                                                     <td><%= room.getRoomId() %></td>
                                                                     <td><%= room.getRoomName() %></td>
-                                                                    <td><%= room.getBuilding() %></td>
+                                                                    <td><%= room.getBuilding() == null
+                                                                            ? "Not specified"
+                                                                            : room.getBuilding() %></td>
                                                                     <td><%= room.getFloor() %></td>
                                                                     <td><%= room.getCapacity() %></td>
 
                                                                     <td>
-                                                                        <a class="btn btn-sm btn-outline-light"
-                                                                           href="MainController?action=roomEdit&id=<%= room.getRoomId() %>&returnTo=dashboard">
-                                                                            Sửa
-                                                                        </a>
+                                                                        <div class="d-flex gap-2">
 
-                                                                        <a class="btn btn-sm btn-outline-danger"
-                                                                           href="MainController?action=roomDelete&roomId=<%= room.getRoomId() %>&returnTo=dashboard"
-                                                                           onclick="return confirm('Bạn có chắc muốn xóa phòng này không?');">
-                                                                            Xóa
-                                                                        </a>
+                                                                            <a class="btn btn-sm btn-outline-light"
+                                                                               href="MainController?action=roomEdit&id=<%= room.getRoomId() %>&returnTo=dashboard">
+                                                                                Edit
+                                                                            </a>
+
+                                                                            <form action="MainController"
+                                                                                  method="post"
+                                                                                  onsubmit="return confirm('Are you sure you want to delete this room?');">
+
+                                                                                <input type="hidden"
+                                                                                       name="action"
+                                                                                       value="roomDelete">
+
+                                                                                <input type="hidden"
+                                                                                       name="roomId"
+                                                                                       value="<%= room.getRoomId() %>">
+
+                                                                                <input type="hidden"
+                                                                                       name="returnTo"
+                                                                                       value="dashboard">
+
+                                                                                <button class="btn btn-sm btn-outline-danger"
+                                                                                        type="submit">
+                                                                                    Delete
+                                                                                </button>
+                                                                            </form>
+
+                                                                        </div>
                                                                     </td>
                                                                 </tr>
 
@@ -885,9 +948,10 @@
                                                                 <tr>
                                                                     <td colspan="6">
                                                                         <div class="placeholder-box my-0">
-                                                                            <i class="bi bi-building" style="font-size:26px;"></i>
+                                                                            <i class="bi bi-building"
+                                                                               style="font-size:26px;"></i>
                                                                             <br>
-                                                                            Chưa có dữ liệu phòng.
+                                                                            No rooms found.
                                                                         </div>
                                                                     </td>
                                                                 </tr>
@@ -896,8 +960,8 @@
                                                                 }
                                                                 %>
                                                             </tbody>
-
                                                         </table>
+
                                                     </div>
                                                 </div>
                                             </div>

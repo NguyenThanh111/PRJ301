@@ -1,4 +1,4 @@
-```jsp
+<%@taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions"%>
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
 
@@ -11,11 +11,6 @@
                 ? requestScope.returnTo
                 : param.returnTo}" />
 
-<!--
-    Edit mode khi:
-    1. Servlet gửi room sang
-    2. Hoặc formRoom có roomId do cập nhật bị lỗi validation
--->
 <c:set var="editMode"
        value="${not empty room
                 or (not empty formRoom and formRoom.roomId > 0)}" />
@@ -96,37 +91,32 @@
                        value="${returnTo}">
             </c:if>
 
+            
             <div class="row g-3">
 
                 <div class="col-md-6">
-                    <label class="form-label">
-                        Room Name
-                    </label>
+                    <label class="form-label">Room Name</label>
 
                     <input class="form-control"
                            type="text"
                            name="roomName"
-                           value="<c:out value='${valueRoom.roomName}'/>"
+                           value="${fn:escapeXml(valueRoom.roomName)}"
                            maxlength="100"
                            required>
                 </div>
 
                 <div class="col-md-6">
-                    <label class="form-label">
-                        Building
-                    </label>
+                    <label class="form-label">Building</label>
 
                     <input class="form-control"
                            type="text"
                            name="building"
-                           value="<c:out value='${valueRoom.building}'/>"
+                           value="${fn:escapeXml(valueRoom.building)}"
                            maxlength="100">
                 </div>
 
                 <div class="col-md-6">
-                    <label class="form-label">
-                        Floor
-                    </label>
+                    <label class="form-label">Floor</label>
 
                     <input class="form-control"
                            type="number"
@@ -139,9 +129,7 @@
                 </div>
 
                 <div class="col-md-6">
-                    <label class="form-label">
-                        Capacity
-                    </label>
+                    <label class="form-label">Capacity</label>
 
                     <input class="form-control"
                            type="number"
@@ -183,4 +171,4 @@
 
 </body>
 </html>
-```
+

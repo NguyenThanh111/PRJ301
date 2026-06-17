@@ -36,6 +36,10 @@
         <servlet-name>SystemLogController</servlet-name>
         <servlet-class>Controller.SystemLogController</servlet-class>
     </servlet>
+    <servlet>
+        <servlet-name>VLANServlet</servlet-name>
+        <servlet-class>Controller.VLANServlet</servlet-class>
+    </servlet>
     <servlet-mapping>
         <servlet-name>LoginController</servlet-name>
         <url-pattern>/LoginController</url-pattern>
@@ -71,6 +75,10 @@
     <servlet-mapping>
         <servlet-name>SystemLogController</servlet-name>
         <url-pattern>/SystemLogController</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>VLANServlet</servlet-name>
+        <url-pattern>/VLANServlet</url-pattern>
     </servlet-mapping>
     <session-config>
         <session-timeout>
