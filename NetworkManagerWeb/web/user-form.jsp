@@ -383,7 +383,7 @@
 
                                 <form id="registerForm" action="RegisterUserController" method="post"
                                     autocomplete="off">
-                                    <input type="hidden" name="source" value="<%= isGoogleSource ? " google" : "normal"
+                                    <input type="hidden" name="source" value="<%= isGoogleSource ? "google" : "normal"
                                         %>"/>
 
                                     <div class="field">

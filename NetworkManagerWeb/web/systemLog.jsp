@@ -1,6 +1,7 @@
 <%-- staffDashboard.jsp - Dashboard for staff members --%>
 <%@page contentType="text/html" pageEncoding="UTF-8" %>
     <%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+    <%@taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions"%>
     <%@taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt"%>
         <%@page import="Models.UserDTO" %>
             <% UserDTO currentUser=(UserDTO) session.getAttribute("user"); String role=(String)
@@ -8,6 +9,8 @@
                 !role.equalsIgnoreCase("Technician"))) { response.sendRedirect("login.jsp"); return; } String
                 displayName=currentUser.getFullName() !=null ? currentUser.getFullName() : currentUser.getUserName();
                 boolean isAdmin=role.equalsIgnoreCase("Admin"); %>
+                <c:set var="displayName" value="${empty sessionScope.user.fullName ? sessionScope.user.userName : sessionScope.user.fullName}" />
+                <c:set var="isAdmin" value="${fn:toLowerCase(sessionScope.role) eq 'admin'}" />
                 <!DOCTYPE html>
                 <html lang="en">
 
@@ -398,94 +401,8 @@
 
                 <body>
 
-                    <nav class="sidebar">
-                        <div class="sidebar-brand">
-                            <div class="sidebar-brand-icon"><i class="bi bi-diagram-3-fill"></i></div>
-                            <div class="brand-title">Network<br>Manager</div>
-                        </div>
-
-                        <div class="sidebar-section-label">Overview</div>
-                        <button class="nav-item-link active" onclick="showPage('dashboard', this)">
-                            <i class="bi bi-speedometer2"></i> Dashboard
-                        </button>
-
-                        <div class="sidebar-section-label">Infrastructure</div>
-                        <button class="nav-item-link" onclick="showPage('devices', this)">
-                            <i class="bi bi-laptop"></i> Network Devices
-                        </button>
-                        <button class="nav-item-link" onclick="showPage('accesspoints', this)">
-                            <i class="bi bi-reception-4"></i> Access Points
-                        </button>
-                        <button class="nav-item-link" onclick="showPage('routers', this)">
-                            <i class="bi bi-router"></i> Routers
-                        </button>
-                        <button class="nav-item-link" onclick="showPage('switches', this)">
-                            <i class="bi bi-hdd-network"></i> Switches
-                        </button>
-                        <button class="nav-item-link" onclick="showPage('vlan', this)">
-                            <i class="bi bi-diagram-3"></i> VLAN
-                        </button>
-                        <button class="nav-item-link" onclick="showPage('ipmanage', this)">
-                            <i class="bi bi-globe"></i> IP Management
-                        </button>
-
-                        <div class="sidebar-section-label">Monitoring</div>
-                        <button class="nav-item-link" onclick="showPage('bandwidth', this)">
-                            <i class="bi bi-bar-chart-line"></i> Bandwidth Usage
-                        </button>
-                        <button class="nav-item-link" onclick="showPage('wifianalytics', this)">
-                            <i class="bi bi-graph-up"></i> WiFi Analytics
-                        </button>
-                        <button class="nav-item-link" onclick="showPage('alerts', this)">
-                            <i class="bi bi-exclamation-triangle"></i> Network Alerts
-                            <span class="ms-auto badge"
-                                style="background:rgba(239,68,68,0.2);color:#fda4af;font-size:10px;">3</span>
-                        </button>
-
-                        <div class="sidebar-section-label">Management</div>
-                        <button class="nav-item-link" onclick="showPage('tickets', this)">
-                            <i class="bi bi-ticket-perforated"></i> Support Tickets
-                        </button>
-                        <button class="nav-item-link" onclick="showPage('maintenance', this)">
-                            <i class="bi bi-tools"></i> Maintenance
-                        </button>
-                        <button class="nav-item-link" onclick="showPage('rooms', this)">
-                            <i class="bi bi-building"></i> Rooms
-                        </button>
-
-                        <% if (isAdmin) { %>
-                            <div class="sidebar-section-label">Administration</div>
-                            <a href="UserController?action=list" class="nav-item-link text-decoration-none">
-                                <i class="bi bi-people"></i> Manage Users
-                            </a>
-                            <a href="AuthLogController" class="nav-item-link text-decoration-none">
-                                <i class="bi bi-shield-check"></i> Auth Logs
-                            </a>
-                            <a href="SystemLogController" class="nav-item-link text-decoration-none active">
-                                <i class="bi bi-journal-text"></i> System Logs
-                            </a>
-                        <% } %>
-
-                                <div class="sidebar-footer">
-                                    <div class="d-flex align-items-center gap-2 mb-2">
-                                        <div class="user-avatar <%= isAdmin ? " admin-avatar" : "tech-avatar" %>">
-                                            <%= displayName.charAt(0) %>
-                                        </div>
-                                        <div>
-                                            <div style="font-size:13px;font-weight:600;color:#e8ecff;">
-                                                <%= displayName %>
-                                            </div>
-                                            <div style="font-size:11px;color:#8ea0cb;">
-                                                <%= role %>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <a href="LoginController?action=logout" class="nav-item-link text-danger"
-                                        style="padding-left:0;">
-                                        <i class="bi bi-box-arrow-left"></i> Sign Out
-                                    </a>
-                                </div>
-                    </nav>
+                    <c:set var="sidebarActive" value="systemlogs" scope="request" />
+                    <%@include file="sidebar.jsp" %>
 
                     <div class="main-content">
                         <div class="topbar">

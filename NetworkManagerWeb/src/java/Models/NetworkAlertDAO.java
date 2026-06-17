@@ -20,30 +20,28 @@ import java.util.ArrayList;
  */
 public class NetworkAlertDAO implements IDAO<NetworkAlertDTO, Integer>{
     private NetworkAlertDTO mapRow(ResultSet rs) throws SQLException {
-        int alertId       = rs.getInt("alertId");
-        String alertType  = rs.getString("alertType");
+        int alertId       = rs.getInt("alert_id");
+        String alertType  = rs.getString("alert_type");
         String message    = rs.getString("message");
         String severity   = rs.getString("severity");
-        Timestamp created = rs.getTimestamp("createdAt");
+        Timestamp created = rs.getTimestamp("created_at");
 
-        // Đọc nullable FK
-        Integer routerId = (Integer) rs.getObject("routerId");
-        Integer apId     = (Integer) rs.getObject("apId");
-        Integer switchId = (Integer) rs.getObject("switchId");
+        Integer routerId = (Integer) rs.getObject("router_id");
+        Integer apId     = (Integer) rs.getObject("ap_id");
+        Integer switchId = (Integer) rs.getObject("switch_id");
 
         return new NetworkAlertDTO(alertId, alertType, message, severity, created, routerId, apId, switchId);
     }
 
     @Override
     public boolean insert(NetworkAlertDTO t) {
-        String sql = "INSERT INTO NetworkAlert (alertType, message, severity, createdAt, routerId, apId, switchId) "
+        String sql = "INSERT INTO NetworkAlert (alert_type, message, severity, created_at, router_id, ap_id, switch_id) "
                    + "VALUES (?, ?, ?, GETDATE(), ?, ?, ?)";
         try (Connection conn = DbUtils.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, t.getAlertType());
             ps.setString(2, t.getMessage());
             ps.setString(3, t.getSeverity() != null ? t.getSeverity() : "INFO");
-            // Nullable FKs
             if (t.getRouterId() != null) ps.setInt(4, t.getRouterId()); else ps.setNull(4, Types.INTEGER);
             if (t.getApId()     != null) ps.setInt(5, t.getApId());     else ps.setNull(5, Types.INTEGER);
             if (t.getSwitchId() != null) ps.setInt(6, t.getSwitchId()); else ps.setNull(6, Types.INTEGER);
@@ -55,7 +53,7 @@ public class NetworkAlertDAO implements IDAO<NetworkAlertDTO, Integer>{
     }
 
     public boolean remove(NetworkAlertDTO t) {
-        String sql = "DELETE FROM NetworkAlert WHERE alertId = ?";
+        String sql = "DELETE FROM NetworkAlert WHERE alert_id = ?";
         try (Connection conn = DbUtils.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, t.getAlertId());
@@ -67,8 +65,8 @@ public class NetworkAlertDAO implements IDAO<NetworkAlertDTO, Integer>{
     }
 
     public boolean update(NetworkAlertDTO t) {
-        String sql = "UPDATE NetworkAlert SET alertType=?, message=?, severity=?, routerId=?, apId=?, switchId=? "
-                   + "WHERE alertId=?";
+        String sql = "UPDATE NetworkAlert SET alert_type=?, message=?, severity=?, router_id=?, ap_id=?, switch_id=? "
+                   + "WHERE alert_id=?";
         try (Connection conn = DbUtils.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, t.getAlertType());
@@ -88,7 +86,7 @@ public class NetworkAlertDAO implements IDAO<NetworkAlertDTO, Integer>{
     @Override
     public ArrayList<NetworkAlertDTO> ListAll() {
         ArrayList<NetworkAlertDTO> list = new ArrayList<>();
-        String sql = "SELECT * FROM NetworkAlert ORDER BY createdAt DESC";
+        String sql = "SELECT * FROM NetworkAlert ORDER BY created_at DESC";
         try (Connection conn = DbUtils.getConnection();
              Statement st = conn.createStatement();
              ResultSet rs = st.executeQuery(sql)) {
@@ -103,7 +101,7 @@ public class NetworkAlertDAO implements IDAO<NetworkAlertDTO, Integer>{
 
     @Override
     public NetworkAlertDTO searchById(Integer id) {
-        String sql = "SELECT * FROM NetworkAlert WHERE alertId = ?";
+        String sql = "SELECT * FROM NetworkAlert WHERE alert_id = ?";
         try (Connection conn = DbUtils.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, id);
@@ -117,17 +115,13 @@ public class NetworkAlertDAO implements IDAO<NetworkAlertDTO, Integer>{
         return null;
     }
 
-    /**
-     * Tìm alerts theo thiết bị — truyền đúng tham số, hai cái còn lại null.
-     * Ví dụ: findByDevice(5, null, null) → tìm alert của Router 5
-     */
     public ArrayList<NetworkAlertDTO> findByDevice(Integer routerId, Integer apId, Integer switchId) {
         ArrayList<NetworkAlertDTO> list = new ArrayList<>();
         StringBuilder sql = new StringBuilder("SELECT * FROM NetworkAlert WHERE 1=1");
-        if (routerId != null) sql.append(" AND routerId = ?");
-        if (apId     != null) sql.append(" AND apId = ?");
-        if (switchId != null) sql.append(" AND switchId = ?");
-        sql.append(" ORDER BY createdAt DESC");
+        if (routerId != null) sql.append(" AND router_id = ?");
+        if (apId     != null) sql.append(" AND ap_id = ?");
+        if (switchId != null) sql.append(" AND switch_id = ?");
+        sql.append(" ORDER BY created_at DESC");
 
         try (Connection conn = DbUtils.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql.toString())) {
@@ -145,10 +139,9 @@ public class NetworkAlertDAO implements IDAO<NetworkAlertDTO, Integer>{
         return list;
     }
 
-    /** Tìm alerts theo mức độ nghiêm trọng: INFO | WARNING | CRITICAL */
     public ArrayList<NetworkAlertDTO> findBySeverity(String severity) {
         ArrayList<NetworkAlertDTO> list = new ArrayList<>();
-        String sql = "SELECT * FROM NetworkAlert WHERE severity = ? ORDER BY createdAt DESC";
+        String sql = "SELECT * FROM NetworkAlert WHERE severity = ? ORDER BY created_at DESC";
         try (Connection conn = DbUtils.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, severity);
@@ -162,12 +155,8 @@ public class NetworkAlertDAO implements IDAO<NetworkAlertDTO, Integer>{
         return list;
     }
 
-    /**
-     * Đánh dấu alert đã được giải quyết (xóa khỏi hệ thống).
-     * Nếu muốn chỉ "đánh dấu resolved" thay vì xóa, cần thêm cột isResolved vào DB.
-     */
     public boolean resolveAlert(int alertId) {
-        String sql = "DELETE FROM NetworkAlert WHERE alertId = ?";
+        String sql = "DELETE FROM NetworkAlert WHERE alert_id = ?";
         try (Connection conn = DbUtils.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, alertId);
@@ -177,5 +166,19 @@ public class NetworkAlertDAO implements IDAO<NetworkAlertDTO, Integer>{
         }
         return false;
     }
+    
+    public int countAll() {
+    String sql = "SELECT COUNT(*) AS total FROM NetworkAlert";
+    try (Connection conn = DbUtils.getConnection();
+         PreparedStatement ps = conn.prepareStatement(sql);
+         ResultSet rs = ps.executeQuery()) {
+        if (rs.next()) {
+            return rs.getInt("total");
+        }
+    } catch (Exception e) {
+        e.printStackTrace();
+    }
+    return 0;
+}
 
 }

@@ -15,7 +15,6 @@ import java.util.ArrayList;
  */
 public class BandwidthUsageDAO implements IDAO<BandwidthUsageDTO, Integer> {
 
-    // ResultSet → BandwidthUsageDTO
     private BandwidthUsageDTO mapRow(ResultSet rs) throws SQLException {
         return new BandwidthUsageDTO(
                 rs.getInt("usage_id"),
@@ -75,7 +74,7 @@ public class BandwidthUsageDAO implements IDAO<BandwidthUsageDTO, Integer> {
     @Override
     public ArrayList<BandwidthUsageDTO> ListAll() {
         ArrayList<BandwidthUsageDTO> list = new ArrayList<>();
-        String sql = "SELECT * FROM BandwidthUsage ORDER BY usage_id ASC";
+        String sql = "SELECT * FROM BandwidthUsage ORDER BY record_time DESC";
         try (Connection conn = DbUtils.getConnection();
              Statement st = conn.createStatement();
              ResultSet rs = st.executeQuery(sql)) {
@@ -104,7 +103,6 @@ public class BandwidthUsageDAO implements IDAO<BandwidthUsageDTO, Integer> {
         return null;
     }
 
-    /** Tìm tất cả bản ghi theo deviceId */
     public ArrayList<BandwidthUsageDTO> findByDevice(int deviceId) {
         ArrayList<BandwidthUsageDTO> list = new ArrayList<>();
         String sql = "SELECT * FROM BandwidthUsage WHERE device_id = ? ORDER BY record_time DESC";
@@ -140,10 +138,10 @@ public class BandwidthUsageDAO implements IDAO<BandwidthUsageDTO, Integer> {
 
     public ArrayList<BandwidthUsageDTO> findTopUsage(int topN) {
         ArrayList<BandwidthUsageDTO> list = new ArrayList<>();
-        String sql = "SELECT TOP (?) device_id, "
-                   + "SUM(upload_speed) AS upload_speed, "
-                   + "SUM(download_speed) AS download_speed, "
-                   + "MAX(record_time) AS record_time "
+        String sql = "SELECT TOP (?) device_id AS deviceId, "
+                   + "SUM(upload_speed) AS uploadSpeed, "
+                   + "SUM(download_speed) AS downloadSpeed, "
+                   + "MAX(record_time) AS recordTime "
                    + "FROM BandwidthUsage "
                    + "GROUP BY device_id "
                    + "ORDER BY (SUM(upload_speed) + SUM(download_speed)) DESC";
@@ -167,10 +165,10 @@ public class BandwidthUsageDAO implements IDAO<BandwidthUsageDTO, Integer> {
 
     public ArrayList<BandwidthUsageDTO> generateReport(String fromDate, String toDate) {
         ArrayList<BandwidthUsageDTO> list = new ArrayList<>();
-        String sql = "SELECT 0 AS usage_id, 0 AS device_id, "
-                   + "SUM(upload_speed) AS upload_speed, "
-                   + "SUM(download_speed) AS download_speed, "
-                   + "CAST(record_time AS DATE) AS record_time "
+        String sql = "SELECT 0 AS usageId, 0 AS deviceId, "
+                   + "SUM(upload_speed) AS uploadSpeed, "
+                   + "SUM(download_speed) AS downloadSpeed, "
+                   + "CAST(record_time AS DATE) AS recordTime "
                    + "FROM BandwidthUsage "
                    + "WHERE CAST(record_time AS DATE) BETWEEN ? AND ? "
                    + "GROUP BY CAST(record_time AS DATE) "

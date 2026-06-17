@@ -17,7 +17,7 @@ import java.util.ArrayList;
 public class MaintenanceRouterDAO {
 
     public boolean addRouter(int maintenanceId, int routerId) {
-        String sql = "INSERT INTO MaintenanceRouter (maintenanceId, routerId) VALUES (?, ?)";
+        String sql = "INSERT INTO MaintenanceRouter (maintenance_id, router_id) VALUES (?, ?)";
         try (Connection conn = DbUtils.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, maintenanceId);
@@ -31,7 +31,7 @@ public class MaintenanceRouterDAO {
 
 
     public boolean removeRouter(int maintenanceId, int routerId) {
-        String sql = "DELETE FROM MaintenanceRouter WHERE maintenanceId = ? AND routerId = ?";
+        String sql = "DELETE FROM MaintenanceRouter WHERE maintenance_id = ? AND router_id = ?";
         try (Connection conn = DbUtils.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, maintenanceId);
@@ -46,13 +46,13 @@ public class MaintenanceRouterDAO {
 
     public ArrayList<Integer> findRoutersByMaintenance(int maintenanceId) {
         ArrayList<Integer> list = new ArrayList<>();
-        String sql = "SELECT routerId FROM MaintenanceRouter WHERE maintenanceId = ?";
+        String sql = "SELECT router_id FROM MaintenanceRouter WHERE maintenance_id = ?";
         try (Connection conn = DbUtils.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, maintenanceId);
             ResultSet rs = ps.executeQuery();
             while (rs.next()) {
-                list.add(rs.getInt("routerId"));
+                list.add(rs.getInt("router_id"));
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -63,13 +63,13 @@ public class MaintenanceRouterDAO {
 
     public ArrayList<Integer> findMaintenancesByRouter(int routerId) {
         ArrayList<Integer> list = new ArrayList<>();
-        String sql = "SELECT maintenanceId FROM MaintenanceRouter WHERE routerId = ?";
+        String sql = "SELECT maintenance_id FROM MaintenanceRouter WHERE router_id = ?";
         try (Connection conn = DbUtils.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, routerId);
             ResultSet rs = ps.executeQuery();
             while (rs.next()) {
-                list.add(rs.getInt("maintenanceId"));
+                list.add(rs.getInt("maintenance_id"));
             }
         } catch (Exception e) {
             e.printStackTrace();

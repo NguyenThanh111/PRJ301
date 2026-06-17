@@ -60,7 +60,7 @@ public class UserDAO implements IDAO<UserDTO, Integer>{
             ps.setString(2, t.getPassword());
             ps.setString(3, t.getFullName());
             ps.setString(4, t.getEmail());
-            ps.setBoolean(5, t.isStatus());
+            ps.setString(5, t.isStatus() ? "ACTIVE" : "INACTIVE");
             ps.setInt(6, t.getUserId());
             
             return ps.executeUpdate() > 0;
