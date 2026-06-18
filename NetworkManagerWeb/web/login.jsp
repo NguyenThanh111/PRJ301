@@ -403,6 +403,16 @@
                                     </div>
                                     <% } %>
 
+                                <% String successMsg = (String) request.getAttribute("success"); %>
+                                <% if (successMsg != null && !successMsg.isEmpty()) { %>
+                                    <div class="alert-success" style="border: 1px solid rgba(16, 185, 129, 0.45); background: rgba(16, 185, 129, 0.12); color: #a7f3d0; border-radius: var(--radius-md); font-size: 13px; padding: 10px 12px; margin-bottom: 14px; display: flex; gap: 8px; align-items: center;">
+                                        <i class="bi bi-check-circle-fill"></i>
+                                        <span>
+                                            <%= successMsg %>
+                                        </span>
+                                    </div>
+                                <% } %>
+
                                         <c:if test="${not empty error}">
                                             <div class="alert-error">
                                                 <i class="bi bi-exclamation-triangle-fill"></i>

@@ -40,8 +40,8 @@ public class RegisterUserController extends HttpServlet {
         try {
             UserDAO userDAO = new UserDAO();
 
-            if (isBlank(username) || isBlank(password) || isBlank(confirmPassword) || isBlank(email)) {
-                request.setAttribute("error", "Username, email, password and confirm password are required.");
+            if (isBlank(username) || isBlank(password) || isBlank(confirmPassword) || isBlank(email) || isBlank(fullName)) {
+                request.setAttribute("error", "All fields are required.");
                 request.setAttribute("source", "normal");
                 request.getRequestDispatcher(url).forward(request, response);
                 return;

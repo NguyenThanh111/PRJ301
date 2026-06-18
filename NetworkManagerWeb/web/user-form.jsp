@@ -387,11 +387,11 @@
                                         %>"/>
 
                                     <div class="field">
-                                        <label for="fullName">Full name <span class="hint">(can be blank)</span></label>
+                                        <label for="fullName">Full name</label>
                                         <div class="input-wrap">
                                             <i class="bi bi-person-badge-fill"></i>
                                             <input id="fullName" type="text" name="fullName" value="<%= fullNameVal %>"
-                                                placeholder="Your full name" />
+                                                placeholder="Your full name" required />
                                         </div>
                                     </div>
 
