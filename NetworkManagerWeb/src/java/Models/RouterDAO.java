@@ -1,211 +1,243 @@
 package Models;
 
-import Utils.DbUtils;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.sql.Types;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Consumer;
+import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
+import javax.persistence.EntityTransaction;
+import javax.persistence.Persistence;
+import javax.persistence.TypedQuery;
 
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
-/**
- *
- * @author User
- */
 public class RouterDAO implements IDAO<RouterDTO, Integer> {
 
-    private RouterDTO mapRow(ResultSet rs) throws SQLException {
-        return new RouterDTO(
-                rs.getInt("router_id"),
-                rs.getString("router_name"),
-                rs.getString("ip_address"),
-                rs.getString("mac_address"),
-                rs.getString("model"),
-                rs.getString("firmware"),
-                rs.getString("status"),
-                rs.getString("location"),
-                rs.getInt("room_id")
-        );
+    private static final String INACTIVE_STATUS = "INACTIVE";
+    private static final String PERSISTENCE_UNIT_NAME = "NetworkManagerWebPU";
+    private static final EntityManagerFactory FACTORY
+            = Persistence.createEntityManagerFactory(PERSISTENCE_UNIT_NAME);
+
+    public RouterDAO() {
+    }
+
+    private EntityManager getEntityManager() {
+        return FACTORY.createEntityManager();
+    }
+
+    private boolean executeInTransaction(Consumer<EntityManager> action) {
+        EntityManager em = getEntityManager();
+        EntityTransaction tx = em.getTransaction();
+
+        try {
+            tx.begin();
+            action.accept(em);
+            tx.commit();
+            return true;
+        } catch (Exception e) {
+            if (tx.isActive()) {
+                tx.rollback();
+            }
+            e.printStackTrace();
+            return false;
+        } finally {
+            em.close();
+        }
     }
 
     @Override
     public boolean insert(RouterDTO t) {
-        String sql = "INSERT INTO Router "
-                + "(router_name, ip_address, mac_address, model, firmware, status, location, room_id) "
-                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
-        try (Connection connect = DbUtils.getConnection()) {
-            Integer inactiveRouterId = findInactiveRouterId(connect, t);
-            if (inactiveRouterId != null) {
-                return updateExistingRouter(connect, inactiveRouterId, t);
+        if (t == null) {
+            return false;
+        }
+
+        return executeInTransaction(em -> {
+            RouterDTO inactiveRouter = findInactiveRouter(em, t);
+            if (inactiveRouter != null) {
+                copyRouterData(inactiveRouter, t);
+                t.setRouterId(inactiveRouter.getRouterId());
+                return;
             }
 
-            PreparedStatement ps = connect.prepareStatement(sql);
-            ps.setString(1, t.getRouterName());
-            ps.setString(2, t.getIpAddress());
-            ps.setString(3, t.getMacAddress());
-            ps.setString(4, t.getModel());
-            ps.setString(5, t.getFirmware());
-            ps.setString(6, t.getStatus());
-            ps.setString(7, t.getLocation());
-            if (t.getRoomId() > 0) {
-                ps.setInt(8, t.getRoomId());
-            } else {
-                ps.setNull(8, Types.INTEGER);
-            }
-            return ps.executeUpdate() > 0;
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return false;
+            em.persist(t);
+        });
     }
 
-    private Integer findInactiveRouterId(Connection connect, RouterDTO router) throws SQLException {
-        String sql = "SELECT TOP 1 router_id FROM Router "
-                + "WHERE status = 'INACTIVE' AND (ip_address = ? OR mac_address = ?) "
-                + "ORDER BY router_id";
-        PreparedStatement ps = connect.prepareStatement(sql);
-        ps.setString(1, router.getIpAddress());
-        ps.setString(2, router.getMacAddress());
-        ResultSet rs = ps.executeQuery();
-        if (rs.next()) {
-            return rs.getInt("router_id");
-        }
-        return null;
-    }
-
-    private boolean updateExistingRouter(Connection connect, int routerId, RouterDTO router) throws SQLException {
-        String sql = "UPDATE Router SET "
-                + "router_name = ?, ip_address = ?, mac_address = ?, "
-                + "model = ?, firmware = ?, status = ?, location = ?, room_id = ? "
-                + "WHERE router_id = ?";
-        PreparedStatement ps = connect.prepareStatement(sql);
-        ps.setString(1, router.getRouterName());
-        ps.setString(2, router.getIpAddress());
-        ps.setString(3, router.getMacAddress());
-        ps.setString(4, router.getModel());
-        ps.setString(5, router.getFirmware());
-        ps.setString(6, router.getStatus());
-        ps.setString(7, router.getLocation());
-        if (router.getRoomId() > 0) {
-            ps.setInt(8, router.getRoomId());
-        } else {
-            ps.setNull(8, Types.INTEGER);
-        }
-        ps.setInt(9, routerId);
-        return ps.executeUpdate() > 0;
+    public boolean add(RouterDTO t) {
+        return insert(t);
     }
 
     @Override
     public boolean update(RouterDTO t) {
-        String sql = "UPDATE Router SET "
-                + "router_name = ?, ip_address = ?, mac_address = ?, "
-                + "model = ?, firmware = ?, status = ?, location = ?, room_id = ? "
-                + "WHERE router_id = ?";
-        try {
-            Connection connect = DbUtils.getConnection();
-            PreparedStatement ps = connect.prepareStatement(sql);
-            ps.setString(1, t.getRouterName());
-            ps.setString(2, t.getIpAddress());
-            ps.setString(3, t.getMacAddress());
-            ps.setString(4, t.getModel());
-            ps.setString(5, t.getFirmware());
-            ps.setString(6, t.getStatus());
-            ps.setString(7, t.getLocation());
-            if (t.getRoomId() > 0) {
-                ps.setInt(8, t.getRoomId());
-            } else {
-                ps.setNull(8, Types.INTEGER);
-            }
-            ps.setInt(9, t.getRouterId());
-            return ps.executeUpdate() > 0;
-        } catch (Exception e) {
-            e.printStackTrace();
+        if (t == null || t.getRouterId() <= 0) {
+            return false;
         }
-        return false;
+
+        return executeInTransaction(em -> {
+            RouterDTO router = em.find(RouterDTO.class, t.getRouterId());
+            if (router == null) {
+                throw new IllegalArgumentException("Router not found");
+            }
+
+            copyRouterData(router, t);
+        });
     }
 
     @Override
     public boolean remove(RouterDTO t) {
+        if (t == null) {
+            return false;
+        }
         return softDelete(t.getRouterId());
     }
 
     @Override
     public ArrayList<RouterDTO> ListAll() {
-        ArrayList<RouterDTO> list = new ArrayList<>();
-        String sql = "SELECT * FROM Router WHERE status <> 'INACTIVE'";
+        EntityManager em = getEntityManager();
         try {
-            Connection connect = DbUtils.getConnection();
-            Statement st = connect.createStatement();
-            ResultSet rs = st.executeQuery(sql);
-
-            while (rs.next()) {
-                list.add(mapRow(rs));
-
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
+            return new ArrayList<>(
+                    em.createQuery(
+                            "SELECT r FROM RouterDTO r WHERE r.status <> :status ORDER BY r.routerId",
+                            RouterDTO.class)
+                            .setParameter("status", INACTIVE_STATUS)
+                            .getResultList()
+            );
+        } finally {
+            em.close();
         }
-        return list;
+    }
+
+    public ArrayList<RouterDTO> listAll() {
+        return ListAll();
     }
 
     @Override
     public RouterDTO searchById(Integer id) {
-        String sql = "SELECT * FROM Router WHERE router_id = ?";
-        System.out.println(sql);
-        try {
-            Connection connect = DbUtils.getConnection();
-            PreparedStatement ps = connect.prepareStatement(sql);
-            ps.setInt(1, id);
-            ResultSet rs = ps.executeQuery();
-            if (rs.next()) {
-                return mapRow(rs);
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
+        if (id == null || id <= 0) {
+            return null;
         }
-        return null;
+
+        EntityManager em = getEntityManager();
+        try {
+            return em.find(RouterDTO.class, id);
+        } finally {
+            em.close();
+        }
+    }
+
+    public RouterDTO searchByID(String id) {
+        if (!hasText(id)) {
+            return null;
+        }
+
+        try {
+            return searchById(Integer.parseInt(id.trim()));
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
+
+    public ArrayList<RouterDTO> searchByName(String name) {
+        EntityManager em = getEntityManager();
+        try {
+            return new ArrayList<>(
+                    em.createQuery(
+                            "SELECT r FROM RouterDTO r "
+                            + "WHERE r.routerName LIKE :name AND r.status <> :status "
+                            + "ORDER BY r.routerId",
+                            RouterDTO.class)
+                            .setParameter("name", "%" + (name == null ? "" : name.trim()) + "%")
+                            .setParameter("status", INACTIVE_STATUS)
+                            .getResultList()
+            );
+        } finally {
+            em.close();
+        }
     }
 
     public boolean softDelete(int routerID) {
-        String sql = "UPDATE Router SET status = 'INACTIVE' WHERE router_id = ?";
-        try (
-                 Connection conn = DbUtils.getConnection();  PreparedStatement ps = conn.prepareStatement(sql)) {
+        return updateStatus(routerID, INACTIVE_STATUS);
+    }
 
-            ps.setInt(1, routerID);
-            return ps.executeUpdate() > 0;
-
-        } catch (Exception e) {
-            e.printStackTrace();
+    public boolean hardDelete(int routerID) {
+        if (routerID <= 0) {
+            return false;
         }
-        return false;
+
+        return executeInTransaction(em -> {
+            RouterDTO router = em.find(RouterDTO.class, routerID);
+            if (router == null) {
+                throw new IllegalArgumentException("Router not found");
+            }
+
+            em.remove(router);
+        });
     }
 
     public boolean updateStatus(int routerId, String status) {
-        String sql = "UPDATE Router SET status = ? WHERE router_id = ?";
-
-        try (
-                 Connection conn = DbUtils.getConnection();  PreparedStatement ps = conn.prepareStatement(sql)) {
-
-            ps.setString(1, status);
-            ps.setInt(2, routerId);
-
-            return ps.executeUpdate() > 0;
-
-        } catch (Exception e) {
-            e.printStackTrace();
+        if (routerId <= 0 || !hasText(status)) {
+            return false;
         }
 
-        return false;
+        return executeInTransaction(em -> {
+            RouterDTO router = em.find(RouterDTO.class, routerId);
+            if (router == null) {
+                throw new IllegalArgumentException("Router not found");
+            }
+
+            router.setStatus(status.trim());
+        });
     }
 
     public boolean restartRouter(int routerId) {
         return updateStatus(routerId, "MAINTENANCE");
     }
 
+    private RouterDTO findInactiveRouter(EntityManager em, RouterDTO router) {
+        boolean hasIpAddress = hasText(router.getIpAddress());
+        boolean hasMacAddress = hasText(router.getMacAddress());
+        if (!hasIpAddress && !hasMacAddress) {
+            return null;
+        }
+
+        StringBuilder jpql = new StringBuilder(
+                "SELECT r FROM RouterDTO r WHERE r.status = :status AND (");
+        if (hasIpAddress) {
+            jpql.append("r.ipAddress = :ipAddress");
+        }
+        if (hasMacAddress) {
+            if (hasIpAddress) {
+                jpql.append(" OR ");
+            }
+            jpql.append("r.macAddress = :macAddress");
+        }
+        jpql.append(") ORDER BY r.routerId");
+
+        TypedQuery<RouterDTO> query = em.createQuery(jpql.toString(), RouterDTO.class)
+                .setParameter("status", INACTIVE_STATUS)
+                .setMaxResults(1);
+
+        if (hasIpAddress) {
+            query.setParameter("ipAddress", router.getIpAddress().trim());
+        }
+        if (hasMacAddress) {
+            query.setParameter("macAddress", router.getMacAddress().trim());
+        }
+
+        List<RouterDTO> routers = query.getResultList();
+        return routers.isEmpty() ? null : routers.get(0);
+    }
+
+    private void copyRouterData(RouterDTO target, RouterDTO source) {
+        target.setRouterName(source.getRouterName());
+        target.setIpAddress(source.getIpAddress());
+        target.setMacAddress(source.getMacAddress());
+        target.setModel(source.getModel());
+        target.setFirmware(source.getFirmware());
+        target.setStatus(source.getStatus());
+        target.setLocation(source.getLocation());
+        target.setRoomId(source.getRoomIdValue());
+    }
+
+    private boolean hasText(String value) {
+        return value != null && !value.trim().isEmpty();
+    }
 }
