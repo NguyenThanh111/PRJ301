@@ -50,7 +50,7 @@ public class GoogleLoginController extends HttpServlet {
                 return;
             }
 
-            if (!user.isStatus()) {
+            if (!user.isActive()) {
                 request.setAttribute("error", "⚠ Your account is locked.");
                 request.getRequestDispatcher("login.jsp").forward(request, response);
                 return;
@@ -124,7 +124,7 @@ public class GoogleLoginController extends HttpServlet {
                 return;
             }
 
-            if (!user.isStatus()) {
+            if (!user.isActive()) {
                 request.setAttribute("error", "⚠ Your account is locked.");
                 request.getRequestDispatcher("login.jsp").forward(request, response);
                 return;

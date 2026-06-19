@@ -339,6 +339,25 @@
                         text-transform: uppercase;
                     }
 
+                    .back-home {
+                        text-align: center;
+                        margin-top: 14px;
+                    }
+
+                    .back-home a {
+                        color: #93a0c8;
+                        font-size: 12px;
+                        text-decoration: none;
+                        display: inline-flex;
+                        align-items: center;
+                        gap: 6px;
+                        transition: color .2s;
+                    }
+
+                    .back-home a:hover {
+                        color: #caa7ff;
+                    }
+
                     @media (max-width: 980px) {
                         .auth-shell {
                             grid-template-columns: 1fr;
@@ -465,6 +484,11 @@
                                             <a href="user-form.jsp?source=normal">Create a new account</a>
                                         </p>
 
+                                        <div class="back-home">
+                                            <a href="<c:url value='/home'/>">
+                                                <i class="bi bi-arrow-left"></i> Back to Homepage
+                                            </a>
+                                        </div>
                                         <div class="foot-note">University Network Management System</div>
                         </div>
                     </section>

@@ -613,6 +613,11 @@
                                     margin-left: 0;
                                 }
                             }
+                        .pagination-controls { display: flex; align-items: center; gap: 8px; }
+                        .pagination-controls .page-btn { width: 32px; height: 32px; border-radius: 8px; border: 1px solid var(--border); background: rgba(139, 92, 246, 0.15); color: #e8ddff; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.15s ease; font-size: 14px; }
+                        .pagination-controls .page-btn:hover { background: rgba(139, 92, 246, 0.3); border-color: rgba(139, 92, 246, 0.6); }
+                        .pagination-controls .page-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+                        .pagination-controls .page-info { font-size: 12px; color: var(--text-muted); min-width: 70px; text-align: center; }
                         </style>
                     </head>
 
@@ -893,10 +898,15 @@
                                                     <c:otherwise>0 records</c:otherwise>
                                                 </c:choose>
                                             </span>
+                                            <div class="pagination-controls">
+                                                <button class="page-btn" onclick="prevPage('wifiAnalytics-table')" id="wifiAnalytics-table-prev"><i class="bi bi-chevron-left"></i></button>
+                                                <span class="page-info" id="wifiAnalytics-table-page-info">Page 1 of 1</span>
+                                                <button class="page-btn" onclick="nextPage('wifiAnalytics-table')" id="wifiAnalytics-table-next"><i class="bi bi-chevron-right"></i></button>
+                                            </div>
                                         </div>
                                     </div>
                                     <div style="overflow-x:auto;">
-                                        <table class="rt-table">
+                                        <table class="rt-table" id="wifiAnalytics-table">
                                             <thead>
                                                 <tr>
                                                     <th><i class="bi bi-hash me-1"></i>ID</th>
@@ -1131,7 +1141,44 @@
                                 });
                             }
 
+                            // Pagination
+                            const PAGE_SIZE = 10;
+                            const paginationState = {};
+
+                            function initPagination(tableId) {
+                                const tbody = document.querySelector('#' + tableId + ' tbody');
+                                if (!tbody) return;
+                                const rows = Array.from(tbody.querySelectorAll('tr'));
+                                const total = Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
+                                paginationState[tableId] = { current: 1, total: total, rows: rows };
+                                showPageForTable(tableId);
+                            }
+
+                            function showPageForTable(tableId) {
+                                const state = paginationState[tableId];
+                                if (!state) return;
+                                const start = (state.current - 1) * PAGE_SIZE;
+                                const end = start + PAGE_SIZE;
+                                state.rows.forEach(function(r, i) {
+                                    r.style.display = (i >= start && i < end) ? '' : 'none';
+                                });
+                                document.getElementById(tableId + '-page-info').textContent = 'Page ' + state.current + ' of ' + state.total;
+                                document.getElementById(tableId + '-prev').disabled = state.current <= 1;
+                                document.getElementById(tableId + '-next').disabled = state.current >= state.total;
+                            }
+
+                            function prevPage(tableId) {
+                                const state = paginationState[tableId];
+                                if (state && state.current > 1) { state.current--; showPageForTable(tableId); }
+                            }
+
+                            function nextPage(tableId) {
+                                const state = paginationState[tableId];
+                                if (state && state.current < state.total) { state.current++; showPageForTable(tableId); }
+                            }
+
                             document.addEventListener('DOMContentLoaded', () => {
+                                initPagination('wifiAnalytics-table');
                                 refreshChart();
 
                                 // Pre-select AP in chart if viewing AP analytics

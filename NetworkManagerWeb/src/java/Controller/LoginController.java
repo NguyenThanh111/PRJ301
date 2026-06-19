@@ -66,7 +66,7 @@ public class LoginController extends HttpServlet {
                 request.getRemoteAddr(), null));
         request.setAttribute("error", "⚠ Invalid username/email or password");
 
-    } else if (!user.isStatus()) {
+    } else if (!user.isActive()) {
         logDAO.insert(new AuthenticationLogDTO(username, AuthenticationLogDTO.STATUS_FAILED,
                 request.getRemoteAddr(), user.getUserId()));
         request.setAttribute("error", "⚠ Your account is locked");

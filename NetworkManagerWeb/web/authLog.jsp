@@ -396,6 +396,11 @@
                         }
                         .badge-status-active { background: rgba(74, 222, 128, 0.16); color: #4ade80; padding: 4px 10px; border-radius: 999px; font-size: 11px; font-weight: 700; border: 1px solid rgba(74, 222, 128, 0.4); display: inline-block; }
                         .badge-status-inactive { background: rgba(239, 68, 68, 0.16); color: #f87171; padding: 4px 10px; border-radius: 999px; font-size: 11px; font-weight: 700; border: 1px solid rgba(239, 68, 68, 0.4); display: inline-block; }
+                        .pagination-controls { display: flex; align-items: center; gap: 8px; }
+                        .pagination-controls .page-btn { width: 32px; height: 32px; border-radius: 8px; border: 1px solid var(--border); background: rgba(139, 92, 246, 0.15); color: #e8ddff; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.15s ease; font-size: 14px; }
+                        .pagination-controls .page-btn:hover { background: rgba(139, 92, 246, 0.3); border-color: rgba(139, 92, 246, 0.6); }
+                        .pagination-controls .page-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+                        .pagination-controls .page-info { font-size: 12px; color: var(--text-muted); min-width: 70px; text-align: center; }
                     </style>
                 </head>
 
@@ -424,10 +429,15 @@
                                                 <div class="section-card">
                                                     <div class="section-card-header">
                                                         <h6><i class="bi bi-shield-check me-2"></i>Authentication Logs</h6>
+                                                        <div class="pagination-controls">
+                                                            <button class="page-btn" onclick="prevPage('authLog-table')" id="authLog-table-prev"><i class="bi bi-chevron-left"></i></button>
+                                                            <span class="page-info" id="authLog-table-page-info">Page 1 of 1</span>
+                                                            <button class="page-btn" onclick="nextPage('authLog-table')" id="authLog-table-next"><i class="bi bi-chevron-right"></i></button>
+                                                        </div>
                                                     </div>
                                                     <div class="section-card-body">
                                                         <div class="table-responsive">
-                                                            <table class="table-dark-custom">
+                                                            <table class="table-dark-custom" id="authLog-table">
                                                                 <thead>
                                                                     <tr>
                                                                         <th>Log ID</th>
@@ -580,8 +590,45 @@
 
 
 
+                        // Pagination
+                        const PAGE_SIZE = 10;
+                        const paginationState = {};
+
+                        function initPagination(tableId) {
+                            const tbody = document.querySelector('#' + tableId + ' tbody');
+                            if (!tbody) return;
+                            const rows = Array.from(tbody.querySelectorAll('tr'));
+                            const total = Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
+                            paginationState[tableId] = { current: 1, total: total, rows: rows };
+                            showPageForTable(tableId);
+                        }
+
+                        function showPageForTable(tableId) {
+                            const state = paginationState[tableId];
+                            if (!state) return;
+                            const start = (state.current - 1) * PAGE_SIZE;
+                            const end = start + PAGE_SIZE;
+                            state.rows.forEach(function(r, i) {
+                                r.style.display = (i >= start && i < end) ? '' : 'none';
+                            });
+                            document.getElementById(tableId + '-page-info').textContent = 'Page ' + state.current + ' of ' + state.total;
+                            document.getElementById(tableId + '-prev').disabled = state.current <= 1;
+                            document.getElementById(tableId + '-next').disabled = state.current >= state.total;
+                        }
+
+                        function prevPage(tableId) {
+                            const state = paginationState[tableId];
+                            if (state && state.current > 1) { state.current--; showPageForTable(tableId); }
+                        }
+
+                        function nextPage(tableId) {
+                            const state = paginationState[tableId];
+                            if (state && state.current < state.total) { state.current++; showPageForTable(tableId); }
+                        }
+
                         // Populate Edit User Modal
                         document.addEventListener('DOMContentLoaded', function() {
+                            initPagination('authLog-table');
                             var editUserModal = document.getElementById('editUserModal');
                             if (editUserModal) {
                                 editUserModal.addEventListener('show.bs.modal', function (event) {

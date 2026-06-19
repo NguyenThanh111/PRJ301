@@ -1,192 +1,182 @@
-
 package Models;
 
-
-import Utils.DbUtils;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Consumer;
+import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
+import javax.persistence.EntityTransaction;
+import javax.persistence.Persistence;
+import javax.persistence.TypedQuery;
 
+public class UserDAO implements IDAO<UserDTO, Integer> {
 
-public class UserDAO implements IDAO<UserDTO, Integer>{
-    
-    private UserDTO mapRow(ResultSet rs) throws SQLException {
-        UserDTO user = new UserDTO();
-        user.setUserId(rs.getInt("user_id"));
-        user.setUserName(rs.getString("username"));
-        user.setPassword(rs.getString("password"));
-        user.setFullName(rs.getString("full_name"));
-        user.setEmail(rs.getString("email"));
-        user.setStatus(user.takeStatus(rs.getString("status")));
-        
-        return user;
+    private static final String PERSISTENCE_UNIT_NAME = "NetworkManagerWebPU";
+    private static final EntityManagerFactory FACTORY
+            = Persistence.createEntityManagerFactory(PERSISTENCE_UNIT_NAME);
+
+    public UserDAO() {
+    }
+
+    private EntityManager getEntityManager() {
+        return FACTORY.createEntityManager();
+    }
+
+    private boolean executeInTransaction(Consumer<EntityManager> action) {
+        EntityManager em = getEntityManager();
+        EntityTransaction tx = em.getTransaction();
+
+        try {
+            tx.begin();
+            action.accept(em);
+            tx.commit();
+            return true;
+        } catch (Exception e) {
+            if (tx.isActive()) {
+                tx.rollback();
+            }
+            e.printStackTrace();
+            return false;
+        } finally {
+            em.close();
+        }
     }
 
     @Override
     public boolean insert(UserDTO t) {
-        String sql = "INSERT INTO [user] "
-                + "(username, password, full_name, email) "
-                + "VALUES (?,?,?,?)";
-        
-        try{
-            Connection connect = DbUtils.getConnection();
-            PreparedStatement ps = connect.prepareStatement(sql);
-            ps.setString(1, t.getUserName());
-            ps.setString(2, t.getPassword());
-            ps.setString(3, t.getFullName());
-            ps.setString(4, t.getEmail());
-            
-            return ps.executeUpdate() > 0;
-        }catch(Exception e){
-            e.printStackTrace();
+        if (t == null) {
+            return false;
         }
-        return false;
+        return executeInTransaction(em -> em.persist(t));
     }
 
     @Override
     public boolean update(UserDTO t) {
-        String sql = "UPDATE [user] SET "
-                + "username = ?, password = ?, full_name = ?, "
-                + "email = ?, status = ? "
-                + "WHERE user_id = ?";
-        try{
-            Connection connect = DbUtils.getConnection();
-            PreparedStatement ps = connect.prepareStatement(sql);
-            
-            ps.setString(1, t.getUserName());
-            ps.setString(2, t.getPassword());
-            ps.setString(3, t.getFullName());
-            ps.setString(4, t.getEmail());
-            ps.setString(5, t.isStatus() ? "ACTIVE" : "INACTIVE");
-            ps.setInt(6, t.getUserId());
-            
-            return ps.executeUpdate() > 0;
-            
-        }catch(Exception e){
-            e.printStackTrace();
+        if (t == null || t.getUserId() <= 0) {
+            return false;
         }
-        return false;
+        return executeInTransaction(em -> {
+            UserDTO user = em.find(UserDTO.class, t.getUserId());
+            if (user == null) {
+                throw new IllegalArgumentException("User not found");
+            }
+            copyUserData(user, t);
+        });
     }
 
     @Override
     public boolean remove(UserDTO t) {
+        if (t == null) {
+            return false;
+        }
         return softDelete(t.getUserId());
     }
 
-    //================= Duyet toan bo User ======================
     @Override
     public ArrayList<UserDTO> ListAll() {
-        ArrayList<UserDTO> list = new ArrayList<>();
-        String sql = "SELECT * FROM [user]";
-        try{
-            Connection connect = DbUtils.getConnection();
-            Statement st = connect.createStatement();
-            ResultSet rs = st.executeQuery(sql); //lay du lieu tu Table [user]
-            
-            while(rs.next()){ //duyet qua tung dong trong table
-                list.add(mapRow(rs)); //add thong tin tung dong vao list
-                        //mapRow la chuyen doi du lieu tu table thanh Object
-            }
-        }catch(Exception e){
-            e.printStackTrace();
+        EntityManager em = getEntityManager();
+        try {
+            return new ArrayList<>(
+                    em.createQuery("SELECT u FROM UserDTO u ORDER BY u.userId", UserDTO.class)
+                            .getResultList()
+            );
+        } finally {
+            em.close();
         }
-        return list;
     }
-    
-    //================= Tim kiem User bang ID =====================
+
     @Override
     public UserDTO searchById(Integer id) {
-        String sql = "SELECT * FROM [user] WHERE user_id=?";
-        System.out.println(sql);
-        try {
-            Connection conn = DbUtils.getConnection();
-            //Statement st = conn.createStatement();
-            PreparedStatement ps = conn.prepareStatement(sql);
-            ps.setInt(1, id);
-            ResultSet rs = ps.executeQuery();
-            // Da lay duoc du lieu tu Table User
-            if (rs.next()) {
-                return mapRow(rs);
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
+        if (id == null || id <= 0) {
+            return null;
         }
-        return null;
+        EntityManager em = getEntityManager();
+        try {
+            return em.find(UserDTO.class, id);
+        } finally {
+            em.close();
+        }
     }
-    
-    //============ Tim kiem bang username ===================
+
     public UserDTO searchByNameOrEmail(String input) {
-        String sql = "SELECT * FROM [user] WHERE (username = ? OR email = ?)";
-        System.out.println(sql);
-        try {
-            Connection conn = DbUtils.getConnection();
-            //Statement st = conn.createStatement();
-            PreparedStatement pst = conn.prepareStatement(sql);
-            pst.setString(1, input);
-            pst.setString(2, input);
-            ResultSet rs = pst.executeQuery();
-            // Da lay duoc du lieu tu Table User
-            if (rs.next()) {
-                return mapRow(rs);
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
+        if (!hasText(input)) {
+            return null;
         }
-        return null;
+        EntityManager em = getEntityManager();
+        try {
+            TypedQuery<UserDTO> query = em.createQuery(
+                    "SELECT u FROM UserDTO u WHERE u.username = :input OR u.email = :input",
+                    UserDTO.class)
+                    .setParameter("input", input.trim())
+                    .setMaxResults(1);
+            List<UserDTO> users = query.getResultList();
+            return users.isEmpty() ? null : users.get(0);
+        } finally {
+            em.close();
+        }
     }
-    
-    //================ Kiem tra login =======================
-    public boolean checklogin(String username, String password){
+
+    public boolean checklogin(String username, String password) {
+        if (!hasText(username) || !hasText(password)) {
+            return false;
+        }
         UserDTO user = searchByNameOrEmail(username);
-        if(user == null){
+        if (user == null) {
             return false;
         }
-        if(!user.isStatus()){ //neu status = 0
+        if (!user.isActive()) {
             return false;
         }
-        if(!user.getPassword().equals(password)){ //neu password khong dung
-            return false;
-        }
-        return true;
-    }
-    
-    //================= Xoa User (Doi Status thanh invalid) =============
-    public boolean softDelete(int userID) {
-        String sql = "UPDATE [user] SET status = 0 WHERE user_id = ?";
-        try (Connection conn = DbUtils.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-
-            ps.setInt(1, userID);
-            return ps.executeUpdate() > 0;
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return false;
+        return user.getPassword().equals(password);
     }
 
-    
-    //============ Tim kiem danh sach bang keyword ===================
-    public ArrayList<UserDTO> searchListByKeyword(String keyword) {
-        ArrayList<UserDTO> list = new ArrayList<>();
-        String sql = "SELECT * FROM [user] WHERE username LIKE ? OR email LIKE ? OR full_name LIKE ?";
-        try {
-            Connection conn = DbUtils.getConnection();
-            PreparedStatement pst = conn.prepareStatement(sql);
-            String searchPattern = "%" + keyword + "%";
-            pst.setString(1, searchPattern);
-            pst.setString(2, searchPattern);
-            pst.setString(3, searchPattern);
-            ResultSet rs = pst.executeQuery();
-            while (rs.next()) {
-                list.add(mapRow(rs));
+    public boolean softDelete(int userId) {
+        return updateStatus(userId, "INACTIVE");
+    }
+
+    public boolean updateStatus(int userId, String status) {
+        if (userId <= 0 || !hasText(status)) {
+            return false;
+        }
+        return executeInTransaction(em -> {
+            UserDTO user = em.find(UserDTO.class, userId);
+            if (user == null) {
+                throw new IllegalArgumentException("User not found");
             }
-        } catch (Exception e) {
-            e.printStackTrace();
+            user.setStatus(status.trim());
+        });
+    }
+
+    public ArrayList<UserDTO> searchListByKeyword(String keyword) {
+        if (!hasText(keyword)) {
+            return new ArrayList<>();
         }
-        return list;
+        EntityManager em = getEntityManager();
+        try {
+            String pattern = "%" + keyword.trim() + "%";
+            return new ArrayList<>(
+                    em.createQuery(
+                            "SELECT u FROM UserDTO u "
+                            + "WHERE u.username LIKE :keyword OR u.email LIKE :keyword OR u.fullName LIKE :keyword "
+                            + "ORDER BY u.userId",
+                            UserDTO.class)
+                            .setParameter("keyword", pattern)
+                            .getResultList()
+            );
+        } finally {
+            em.close();
+        }
+    }
+
+    private void copyUserData(UserDTO target, UserDTO source) {
+        target.setUsername(source.getUsername());
+        target.setPassword(source.getPassword());
+        target.setFullName(source.getFullName());
+        target.setEmail(source.getEmail());
+        target.setStatus(source.getStatus());
+    }
+
+    private boolean hasText(String value) {
+        return value != null && !value.trim().isEmpty();
     }
 }

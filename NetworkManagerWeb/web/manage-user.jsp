@@ -395,6 +395,11 @@
                         }
                         .badge-status-active { background: rgba(74, 222, 128, 0.16); color: #4ade80; padding: 4px 10px; border-radius: 999px; font-size: 11px; font-weight: 700; border: 1px solid rgba(74, 222, 128, 0.4); display: inline-block; }
                         .badge-status-inactive { background: rgba(239, 68, 68, 0.16); color: #f87171; padding: 4px 10px; border-radius: 999px; font-size: 11px; font-weight: 700; border: 1px solid rgba(239, 68, 68, 0.4); display: inline-block; }
+                        .pagination-controls { display: flex; align-items: center; gap: 8px; }
+                        .pagination-controls .page-btn { width: 32px; height: 32px; border-radius: 8px; border: 1px solid var(--border); background: rgba(139, 92, 246, 0.15); color: #e8ddff; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.15s ease; font-size: 14px; }
+                        .pagination-controls .page-btn:hover { background: rgba(139, 92, 246, 0.3); border-color: rgba(139, 92, 246, 0.6); }
+                        .pagination-controls .page-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+                        .pagination-controls .page-info { font-size: 12px; color: var(--text-muted); min-width: 70px; text-align: center; }
                     </style>
                 </head>
 
@@ -424,7 +429,14 @@
                                                 <div class="section-card">
                                                     <div class="section-card-header">
                                                         <h6><i class="bi bi-people me-2"></i>User Management</h6>
-                                                        <button class="btn-theme" data-bs-toggle="modal" data-bs-target="#addUserModal"><i class="bi bi-person-plus me-1"></i>Add User</button>
+                                                        <div class="d-flex align-items-center gap-2">
+                                                            <div class="pagination-controls">
+                                                                <button class="page-btn" onclick="prevPage('users-table')" id="users-table-prev"><i class="bi bi-chevron-left"></i></button>
+                                                                <span class="page-info" id="users-table-page-info">Page 1 of 1</span>
+                                                                <button class="page-btn" onclick="nextPage('users-table')" id="users-table-next"><i class="bi bi-chevron-right"></i></button>
+                                                            </div>
+                                                            <button class="btn-theme" data-bs-toggle="modal" data-bs-target="#addUserModal"><i class="bi bi-person-plus me-1"></i>Add User</button>
+                                                        </div>
                                                     </div>
                                                     <div class="section-card-body">
                                                         <div class="d-flex justify-content-between mb-3">
@@ -438,7 +450,7 @@
                                                             </form>
                                                         </div>
                                                         <div class="table-responsive">
-                                                            <table class="table-dark-custom">
+                                                            <table class="table-dark-custom" id="users-table">
                                                                 <thead>
                                                                     <tr>
                                                                         <th>ID</th>
@@ -461,15 +473,15 @@
                                                                                     <td>${user.email}</td>
                                                                                     <td>${roleMap[user.userId]}</td>
                                                                                     <td>
-                                                                                        <span class="${user.status ? 'badge-status-active' : 'badge-status-inactive'}">
-                                                                                            ${user.status ? 'ACTIVE' : 'INACTIVE'}
+                                                                                        <span class="${user.active ? 'badge-status-active' : 'badge-status-inactive'}">
+                                                                                            ${user.status}
                                                                                         </span>
                                                                                     </td>
                                                                                     <td>
                                                                                         <c:if test="${roleMap[user.userId] ne 'Admin'}">
                                                                                         <button type="button" class="btn-theme me-1" style="border-color: rgba(245, 158, 11, 0.5); background: rgba(245, 158, 11, 0.2); color: #fde68a; padding: 4px 8px; font-size: 11px;" data-bs-toggle="modal" data-bs-target="#editUserModal"
                                                                                                 data-id="${user.userId}" data-username="${user.userName}" data-fullname="${user.fullName}" 
-                                                                                                data-email="${user.email}" data-password="${user.password}" data-status="${user.status}" data-role="${roleMap[user.userId]}">
+                                                                                                data-email="${user.email}" data-password="${user.password}" data-status="${user.active}" data-role="${roleMap[user.userId]}">
                                                                                             <i class="bi bi-pencil-square"></i> Edit
                                                                                         </button>
                                                                                         <form action="UserController" method="POST" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this user?');">
@@ -627,8 +639,45 @@
 
 
 
+                        // Pagination
+                        const PAGE_SIZE = 10;
+                        const paginationState = {};
+
+                        function initPagination(tableId) {
+                            const tbody = document.querySelector('#' + tableId + ' tbody');
+                            if (!tbody) return;
+                            const rows = Array.from(tbody.querySelectorAll('tr'));
+                            const total = Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
+                            paginationState[tableId] = { current: 1, total: total, rows: rows };
+                            showPageForTable(tableId);
+                        }
+
+                        function showPageForTable(tableId) {
+                            const state = paginationState[tableId];
+                            if (!state) return;
+                            const start = (state.current - 1) * PAGE_SIZE;
+                            const end = start + PAGE_SIZE;
+                            state.rows.forEach(function(r, i) {
+                                r.style.display = (i >= start && i < end) ? '' : 'none';
+                            });
+                            document.getElementById(tableId + '-page-info').textContent = 'Page ' + state.current + ' of ' + state.total;
+                            document.getElementById(tableId + '-prev').disabled = state.current <= 1;
+                            document.getElementById(tableId + '-next').disabled = state.current >= state.total;
+                        }
+
+                        function prevPage(tableId) {
+                            const state = paginationState[tableId];
+                            if (state && state.current > 1) { state.current--; showPageForTable(tableId); }
+                        }
+
+                        function nextPage(tableId) {
+                            const state = paginationState[tableId];
+                            if (state && state.current < state.total) { state.current++; showPageForTable(tableId); }
+                        }
+
                         // Populate Edit User Modal
                             document.addEventListener('DOMContentLoaded', function() {
+                            initPagination('users-table');
                             var editUserModal = document.getElementById('editUserModal');
                             if (editUserModal) {
                                 editUserModal.addEventListener('show.bs.modal', function (event) {

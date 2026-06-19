@@ -82,12 +82,17 @@
                             box-sizing: border-box;
                         }
 
+                        html {
+                            background-color: var(--bg-0);
+                        }
+
                         body {
                             margin: 0;
                             background:
                                 linear-gradient(rgba(5, 8, 18, 0.82), rgba(6, 9, 20, 0.78)),
                                 radial-gradient(circle at 12% 12%, rgba(139, 92, 246, 0.16), transparent 28%),
                                 url('theme/original-d5209459af4999984ad44693bbcb28f7.webp') center/cover fixed no-repeat;
+                            background-color: var(--bg-0);
                             color: var(--text-primary);
                             min-height: 100vh;
                             font-family: "Segoe UI", Arial, sans-serif;

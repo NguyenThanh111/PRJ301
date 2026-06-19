@@ -1,101 +1,105 @@
-
 package Models;
 
-import Utils.DbUtils;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.function.Consumer;
+import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
+import javax.persistence.EntityTransaction;
+import javax.persistence.Persistence;
 
+public class RoleDAO implements IDAO<RoleDTO, Integer> {
 
-public class RoleDAO implements IDAO<RoleDTO, Integer>{
-    
-    private RoleDTO mapRow(ResultSet rs) throws SQLException {
-        return new RoleDTO(
-                rs.getInt("role_id"),
-                rs.getString("role_name"),
-                rs.getString("description")
-        );
+    private static final String PERSISTENCE_UNIT_NAME = "NetworkManagerWebPU";
+    private static final EntityManagerFactory FACTORY
+            = Persistence.createEntityManagerFactory(PERSISTENCE_UNIT_NAME);
+
+    public RoleDAO() {
+    }
+
+    private EntityManager getEntityManager() {
+        return FACTORY.createEntityManager();
+    }
+
+    private boolean executeInTransaction(Consumer<EntityManager> action) {
+        EntityManager em = getEntityManager();
+        EntityTransaction tx = em.getTransaction();
+
+        try {
+            tx.begin();
+            action.accept(em);
+            tx.commit();
+            return true;
+        } catch (Exception e) {
+            if (tx.isActive()) {
+                tx.rollback();
+            }
+            e.printStackTrace();
+            return false;
+        } finally {
+            em.close();
+        }
     }
 
     @Override
     public boolean insert(RoleDTO t) {
-        String sql = "INSERT INTO Role "
-                + "(role_name, decription) "
-                + "VALUES (?, ?)";
-        try{
-            Connection connect = DbUtils.getConnection();
-            PreparedStatement ps = connect.prepareStatement(sql);
-            ps.setString(1, t.getRoleName());
-            ps.setString(2, t.getDescription());            
-            return ps.executeUpdate() > 0;
-        }catch(Exception e){
-            e.printStackTrace();
+        if (t == null) {
+            return false;
         }
-        return false;
+        return executeInTransaction(em -> em.persist(t));
     }
 
     @Override
     public boolean update(RoleDTO t) {
-        String sql = "UPDATE Role SET "
-                + "role_name = ?, decription = ? WHERE role_id = ?";
-        try{
-            Connection connect = DbUtils.getConnection();
-            PreparedStatement ps = connect.prepareStatement(sql);
-            ps.setString(1, t.getRoleName());
-            ps.setString(2, t.getDescription());   
-            ps.setInt(3, t.getRoleId());
-            return ps.executeUpdate() > 0;
-        }catch(Exception e){
-            e.printStackTrace();
+        if (t == null || t.getRoleId() <= 0) {
+            return false;
         }
-        return false;
+        return executeInTransaction(em -> {
+            RoleDTO role = em.find(RoleDTO.class, t.getRoleId());
+            if (role == null) {
+                throw new IllegalArgumentException("Role not found");
+            }
+            role.setRoleName(t.getRoleName());
+            role.setDescription(t.getDescription());
+        });
     }
 
     @Override
     public boolean remove(RoleDTO t) {
-        return false; // 
+        if (t == null || t.getRoleId() <= 0) {
+            return false;
+        }
+        return executeInTransaction(em -> {
+            RoleDTO role = em.find(RoleDTO.class, t.getRoleId());
+            if (role == null) {
+                throw new IllegalArgumentException("Role not found");
+            }
+            em.remove(role);
+        });
     }
 
     @Override
     public ArrayList<RoleDTO> ListAll() {
-        ArrayList<RoleDTO> list = new ArrayList<>();
-        String sql = "SELECT * FROM Role";
-        try{
-            Connection connect = DbUtils.getConnection();
-            Statement st = connect.createStatement();
-            ResultSet rs = st.executeQuery(sql); //lay du lieu tu Table [user]
-            
-            while(rs.next()){ //duyet qua tung dong trong table
-                list.add(mapRow(rs)); //add thong tin tung dong vao list
-                        //mapRow la chuyen doi du lieu tu table thanh Object
-            }
-        }catch(Exception e){
-            e.printStackTrace();
+        EntityManager em = getEntityManager();
+        try {
+            return new ArrayList<>(
+                    em.createQuery("SELECT r FROM RoleDTO r ORDER BY r.roleId", RoleDTO.class)
+                            .getResultList()
+            );
+        } finally {
+            em.close();
         }
-        return list;
     }
 
     @Override
     public RoleDTO searchById(Integer id) {
-        String sql = "SELECT * FROM Role WHERE role_id=?";
-        System.out.println(sql);
-        try {
-            Connection conn = DbUtils.getConnection();
-            //Statement st = conn.createStatement();
-            PreparedStatement ps = conn.prepareStatement(sql);
-            ps.setInt(1, id);
-            ResultSet rs = ps.executeQuery();
-            // Da lay duoc du lieu tu Table User
-            if (rs.next()) {
-                return mapRow(rs);
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
+        if (id == null || id <= 0) {
+            return null;
         }
-        return null;
+        EntityManager em = getEntityManager();
+        try {
+            return em.find(RoleDTO.class, id);
+        } finally {
+            em.close();
+        }
     }
-    
 }

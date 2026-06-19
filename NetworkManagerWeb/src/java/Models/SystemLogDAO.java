@@ -1,147 +1,101 @@
-
 package Models;
 
-import Utils.DbUtils;
-import java.sql.Connection;
 import java.sql.Date;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Types;
 import java.util.ArrayList;
-
+import java.util.List;
+import java.util.function.Consumer;
+import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
+import javax.persistence.EntityTransaction;
+import javax.persistence.Persistence;
 
 public class SystemLogDAO {
-    //HELPER
-    private SystemLogDTO maprow(ResultSet rs) throws SQLException{
-        SystemLogDTO log = new SystemLogDTO();
-        log.setLogId(rs.getInt("log_id"));
-        log.setAction(rs.getString("action"));
-        log.setCreatedAt(rs.getTimestamp("created_at"));
-        log.setDetails(rs.getString("details"));
- 
-        // performed_by is nullable — same wasNull() pattern as AuthenticationLogDAO
-        int uid = rs.getInt("performed_by");
-        log.setPerformedBy(rs.wasNull() ? null : uid);
- 
-        return log;
+
+    private static final String PERSISTENCE_UNIT_NAME = "NetworkManagerWebPU";
+    private static final EntityManagerFactory FACTORY
+            = Persistence.createEntityManagerFactory(PERSISTENCE_UNIT_NAME);
+
+    public SystemLogDAO() {
     }
-    //SQL QUERIES:
-    private static final String SQL_INSERT =
-            "INSERT INTO SystemLog (action, details, performed_by) " +
-            "VALUES (?, ?, ?)";
- 
-    private static final String SQL_FIND_ALL =
-            "SELECT log_id, action, created_at, details, performed_by " +
-            "FROM SystemLog " +
-            "ORDER BY created_at DESC";
- 
-        // CAST(created_at AS DATE) strips the time part so we compare only the date
-    private static final String SQL_FIND_BY_DATE =
-            "SELECT log_id, action, created_at, details, performed_by " +
-            "FROM SystemLog " +
-            "WHERE CAST(created_at AS DATE) = ? " +
-            "ORDER BY created_at DESC";
- 
-    private static final String SQL_FIND_BY_USER =
-            "SELECT log_id, action, created_at, details, performed_by " +
-            "FROM SystemLog " +
-            "WHERE performed_by = ? " +
-            "ORDER BY created_at DESC";
-    
-    
-   //====================== FUNCTIONS: ======================
-    
-    public boolean insert(SystemLogDTO log){
-        try{
-            Connection connect = DbUtils.getConnection();
-            PreparedStatement ps = connect.prepareStatement(SQL_INSERT);
-            
-            ps.setString(1, log.getAction());
- 
-            // details is nullable
-            if (log.getDetails() != null) {
-                ps.setString(2, log.getDetails());
-            } else {
-                ps.setNull(2, Types.NVARCHAR);
+
+    private EntityManager getEntityManager() {
+        return FACTORY.createEntityManager();
+    }
+
+    private boolean executeInTransaction(Consumer<EntityManager> action) {
+        EntityManager em = getEntityManager();
+        EntityTransaction tx = em.getTransaction();
+
+        try {
+            tx.begin();
+            action.accept(em);
+            tx.commit();
+            return true;
+        } catch (Exception e) {
+            if (tx.isActive()) {
+                tx.rollback();
             }
- 
-            // performedBy is nullable (e.g., automated system actions)
-            if (log.getPerformedBy() != null) {
-                ps.setInt(3, log.getPerformedBy());
-            } else {
-                ps.setNull(3, Types.INTEGER);
-            }
- 
-            return ps.executeUpdate() > 0;
-            
-        }catch(Exception e){
             e.printStackTrace();
             return false;
+        } finally {
+            em.close();
         }
     }
-    
-    // Find all logs
+
+    public boolean insert(SystemLogDTO log) {
+        if (log == null) {
+            return false;
+        }
+        return executeInTransaction(em -> em.persist(log));
+    }
+
     public ArrayList<SystemLogDTO> findAll() {
-        ArrayList<SystemLogDTO> list = new ArrayList<>();
-
+        EntityManager em = getEntityManager();
         try {
-            Connection connect = DbUtils.getConnection();
-            PreparedStatement ps = connect.prepareStatement(SQL_FIND_ALL);
-            ResultSet rs = ps.executeQuery();
-
-            while (rs.next()) {
-                list.add(maprow(rs));
-            }
-
-        } catch (Exception e) {
-            e.printStackTrace();
+            return new ArrayList<>(
+                    em.createQuery(
+                            "SELECT s FROM SystemLogDTO s ORDER BY s.createdAt DESC",
+                            SystemLogDTO.class)
+                            .getResultList()
+            );
+        } finally {
+            em.close();
         }
-
-        return list;
-    } 
-    
-    //find all user's logs
-    public ArrayList<SystemLogDTO> findByUser(int userId){
-        ArrayList<SystemLogDTO> list = new ArrayList<>();
-
-        try {
-            Connection connect = DbUtils.getConnection();
-            PreparedStatement ps = connect.prepareStatement(SQL_FIND_BY_USER);
-            
-            ps.setInt(1, userId);
-            
-            try(ResultSet rs = ps.executeQuery()){
-                while(rs.next()){
-                    list.add(maprow(rs));
-                }
-            }
-
-            
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        return list;
     }
-    
-    //find logs by date
-    public ArrayList<SystemLogDTO> findByDate(Date date){
-        ArrayList<SystemLogDTO> list = new ArrayList<>();
-        
-        try{
-            Connection connect = DbUtils.getConnection();
-            PreparedStatement ps = connect.prepareStatement(SQL_FIND_BY_DATE);
-            
-            ps.setDate(1,date);
-            try(ResultSet rs = ps.executeQuery()){
-                while(rs.next()){
-                    list.add(maprow(rs));
-                }
-            }
-        }catch(Exception e){
-            e.printStackTrace();
+
+    public ArrayList<SystemLogDTO> findByUser(int userId) {
+        EntityManager em = getEntityManager();
+        try {
+            List<SystemLogDTO> logs = em.createQuery(
+                    "SELECT s FROM SystemLogDTO s WHERE s.performedBy = :userId ORDER BY s.createdAt DESC",
+                    SystemLogDTO.class)
+                    .setParameter("userId", userId)
+                    .getResultList();
+            return new ArrayList<>(logs);
+        } finally {
+            em.close();
         }
-        return list;
+    }
+
+    public ArrayList<SystemLogDTO> findByDate(Date date) {
+        if (date == null) {
+            return new ArrayList<>();
+        }
+        EntityManager em = getEntityManager();
+        try {
+            java.sql.Timestamp start = new java.sql.Timestamp(date.getTime());
+            java.sql.Timestamp end = new java.sql.Timestamp(date.getTime() + 86_400_000L);
+            List<SystemLogDTO> logs = em.createQuery(
+                    "SELECT s FROM SystemLogDTO s "
+                    + "WHERE s.createdAt >= :start AND s.createdAt < :end "
+                    + "ORDER BY s.createdAt DESC",
+                    SystemLogDTO.class)
+                    .setParameter("start", start)
+                    .setParameter("end", end)
+                    .getResultList();
+            return new ArrayList<>(logs);
+        } finally {
+            em.close();
+        }
     }
 }
