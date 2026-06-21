@@ -4,20 +4,40 @@
  */
 package Models;
 
-import Controller.*;
 import java.sql.Date;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.Table;
 
 /**
  *
  * @author nvtv0
  */
+@Entity
+@Table(name = "WiFiAnalytics")
 public class WiFiAnalyticsDTO {
 
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "analytics_id")
     private int analyticsId;
+
+    @Column(name = "total_users")
     private int totalUsers;
+
+    @Column(name = "peak_users")
     private int peakUsers;
+
+    @Column(name = "avg_speed")
     private double avgSpeed;
+
+    @Column(name = "analytics_date")
     private Date analyticsDate;
+
+    @Column(name = "ap_id")
     private int apId; 
 
     public WiFiAnalyticsDTO() {

@@ -857,10 +857,89 @@
                                         </div>
 
                                         <div class="page-section" id="page-maintenance">
+                                            <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+                                            
+                                            <!-- KPI Row -->
+                                            <div class="row g-3 mb-3">
+                                                <div class="col-6 col-lg-3">
+                                                    <div class="stat-card">
+                                                        <div class="stat-icon" style="background:rgba(251,191,36,.15);color:#fbbf24;"><i class="bi bi-tools"></i></div>
+                                                        <div class="stat-value" style="color:#fde68a;" id="kpi-total">0</div>
+                                                        <div class="stat-label">Total Schedules</div>
+                                                        <div class="stat-delta" style="color:var(--text-muted);">All time tasks</div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-6 col-lg-3">
+                                                    <div class="stat-card">
+                                                        <div class="stat-icon" style="background:rgba(96,165,250,.12);color:#60a5fa;"><i class="bi bi-calendar-event"></i></div>
+                                                        <div class="stat-value" style="color:#bfdbfe;" id="kpi-planned">0</div>
+                                                        <div class="stat-label">Planned</div>
+                                                        <div class="stat-delta" style="color:var(--text-muted);">Upcoming tasks</div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-6 col-lg-3">
+                                                    <div class="stat-card">
+                                                        <div class="stat-icon" style="background:rgba(245,158,11,.12);color:#f59e0b;"><i class="bi bi-gear-wide-connected"></i></div>
+                                                        <div class="stat-value" style="color:#fde68a;" id="kpi-inprogress">0</div>
+                                                        <div class="stat-label">In Progress</div>
+                                                        <div class="stat-delta" style="color:var(--text-muted);">Currently executing</div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-6 col-lg-3">
+                                                    <div class="stat-card">
+                                                        <div class="stat-icon" style="background:rgba(52,211,153,.12);color:#34d399;"><i class="bi bi-check2-circle"></i></div>
+                                                        <div class="stat-value" style="color:#6ee7b7;" id="kpi-completed">0</div>
+                                                        <div class="stat-label">Completed</div>
+                                                        <div class="stat-delta" style="color:var(--text-muted);">Finished tasks</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Chart Row -->
+                                            <div class="row g-3 mb-3">
+                                                <div class="col-12">
+                                                    <div class="section-card h-100">
+                                                        <div class="section-card-header">
+                                                            <h6><i class="bi bi-pie-chart me-2" style="color:var(--neon-amber);"></i>Status Distribution</h6>
+                                                        </div>
+                                                        <div class="section-card-body">
+                                                            <div class="chart-wrap" style="position: relative; height: 300px;">
+                                                                <canvas id="dashMaintenanceChart"></canvas>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <style>
+                                                .sev-tabs { display: flex; gap: 8px; flex-wrap: wrap; padding: 14px 18px; border-bottom: 1px solid var(--border); }
+                                                .sev-tab { border-radius: 8px; padding: 6px 14px; font-size: 12px; font-weight: 700; cursor: pointer; transition: .18s; display: inline-flex; align-items: center; gap: 7px; border: 1px solid var(--border); background: rgba(22, 31, 54, .6); color: var(--text-muted); text-decoration: none; user-select: none; }
+                                                .sev-tab:hover { color: #e5ddff; filter: brightness(1.1); }
+                                                .sev-tab.tab-all.active { background: rgba(139, 92, 246, .25); border-color: rgba(139, 92, 246, .6); color: #f0ebff; }
+                                                .sev-tab.tab-planned.active { background: rgba(96, 165, 250, .2); border-color: rgba(96, 165, 250, .6); color: #bae6fd; }
+                                                .sev-tab.tab-inprogress.active { background: rgba(251, 191, 36, .18); border-color: rgba(251, 191, 36, .6); color: #fde68a; }
+                                                .sev-tab.tab-completed.active { background: rgba(52, 211, 153, .18); border-color: rgba(52, 211, 153, .6); color: #a7f3d0; }
+                                                .sev-count { display: inline-flex; align-items: center; justify-content: center; min-width: 20px; height: 20px; border-radius: 10px; font-size: 10px; padding: 0 6px; font-weight: 800; }
+                                                .sev-count-all { background: rgba(139, 92, 246, .3); color: #e0d6ff; }
+                                                .sev-count-planned { background: rgba(96, 165, 250, .3); color: #bae6fd; }
+                                                .sev-count-inprogress { background: rgba(251, 191, 36, .3); color: #fde68a; }
+                                                .sev-count-completed { background: rgba(52, 211, 153, .3); color: #a7f3d0; }
+                                                .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+                                                .dot-planned { background: var(--neon-blue); box-shadow: 0 0 6px var(--neon-blue); }
+                                                .dot-inprogress { background: var(--neon-amber); box-shadow: 0 0 6px var(--neon-amber); animation: blink 1.4s infinite; }
+                                                .dot-completed { background: var(--neon-emerald); }
+                                                @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
+                                                .desc-box { font-size:0.75rem; color:var(--text-muted); margin-top:6px; line-height:1.5; white-space:pre-wrap; word-wrap:break-word; background:rgba(15,23,42,0.6); padding:8px 12px; border-radius:6px; border-left: 2px solid rgba(139,92,246,0.4); }
+                                                .btn-icon { display:inline-flex; align-items:center; justify-content:center; width:32px; height:32px; border-radius:8px; border:1px solid transparent; transition:all .2s; background:transparent; cursor:pointer; }
+                                                .btn-icon:hover { filter: brightness(1.2); }
+                                            </style>
                                             <div class="section-card">
-                                                <div class="section-card-header">
+                                                <div class="section-card-header" style="flex-wrap: wrap; gap: 15px;">
                                                     <h6><i class="bi bi-tools me-2"></i>Maintenance Schedule</h6>
-                                                    <div class="d-flex gap-2">
+                                                    <div class="d-flex gap-2 ms-auto align-items-center" style="flex-wrap: wrap;">
+                                                        <div class="search-wrap" style="position:relative; width: 220px;">
+                                                            <i class="bi bi-search" style="position:absolute; left:12px; top:50%; transform:translateY(-50%); color:var(--text-muted); font-size:14px;"></i>
+                                                            <input type="text" id="dash-maintenance-search" class="form-control" placeholder="Search tasks..." style="background:rgba(15,23,42,0.6); border:1px solid var(--border); color:#fff; border-radius:8px; padding-left:36px; height:36px; font-size:0.85rem;" onkeyup="applyMaintenanceFilter()">
+                                                        </div>
                                                         <a class="btn-theme text-decoration-none" href="MainController?action=maintenanceAdd&returnTo=dashboard">
                                                             <i class="bi bi-plus-lg me-1"></i>Schedule
                                                         </a>
@@ -869,9 +948,25 @@
                                                         </a>
                                                     </div>
                                                 </div>
+
+                                                <div class="sev-tabs" id="dash-maintenance-tabs">
+                                                    <div class="sev-tab tab-all active" onclick="filterDashTasks('ALL', this)">
+                                                        <i class="bi bi-grid-fill"></i> All <span class="sev-count sev-count-all" id="cnt-all">0</span>
+                                                    </div>
+                                                    <div class="sev-tab tab-planned" onclick="filterDashTasks('PLANNED', this)">
+                                                        <span class="dot dot-planned"></span> Planned <span class="sev-count sev-count-planned" id="cnt-planned">0</span>
+                                                    </div>
+                                                    <div class="sev-tab tab-inprogress" onclick="filterDashTasks('IN_PROGRESS', this)">
+                                                        <span class="dot dot-inprogress"></span> In Progress <span class="sev-count sev-count-inprogress" id="cnt-inprogress">0</span>
+                                                    </div>
+                                                    <div class="sev-tab tab-completed" onclick="filterDashTasks('COMPLETED', this)">
+                                                        <span class="dot dot-completed"></span> Completed <span class="sev-count sev-count-completed" id="cnt-completed">0</span>
+                                                    </div>
+                                                </div>
+
                                                 <div class="section-card-body" style="padding:0;">
                                                     <div style="overflow-x:auto;">
-                                                        <table class="rt-table">
+                                                        <table class="rt-table" id="dash-maintenance-table">
                                                             <thead>
                                                                 <tr>
                                                                     <th><i class="bi bi-hash me-1"></i>ID</th>
@@ -886,70 +981,76 @@
                                                                 <c:choose>
                                                                     <c:when test="${not empty tasks}">
                                                                         <c:forEach var="item" items="${tasks}">
-                                                                            <tr>
-                                                                                <td><span class="id-badge">#${item.maintenanceId}</span></td>
-                                                                                <td>
-                                                                                    <div style="font-weight:600; color:#fff;">${item.title}</div>
-                                                                                    <div style="font-size:0.8rem; color:var(--text-muted);">${item.description}</div>
+                                                                            <jsp:useBean id="now" class="java.util.Date" />
+                                                                            <c:set var="displayStatus" value="${item.status}" />
+                                                                            <c:if test="${item.status eq 'PLANNED' or item.status eq 'IN_PROGRESS'}">
+                                                                                <c:choose>
+                                                                                    <c:when test="${not empty item.endTime and item.endTime.time < now.time}">
+                                                                                        <c:set var="displayStatus" value="OVERDUE" />
+                                                                                    </c:when>
+                                                                                    <c:when test="${item.startTime.time < now.time and (empty item.endTime or item.endTime.time > now.time)}">
+                                                                                        <c:set var="displayStatus" value="IN_PROGRESS" />
+                                                                                    </c:when>
+                                                                                </c:choose>
+                                                                            </c:if>
+
+                                                                            <tr class="task-row" data-status="${displayStatus}">
+                                                                                <td><span class="rt-id" style="font-size:0.8rem; background:rgba(96,165,250,0.1); border:1px solid rgba(96,165,250,0.22); color:#60a5fa; border-radius:5px; padding:2px 8px; font-weight:700; font-family:monospace;">#${item.maintenanceId}</span></td>
+                                                                                <td style="max-width:350px;">
+                                                                                    <div style="font-weight:600; color:#fff; display:flex; align-items:center; gap:8px;">
+                                                                                        <i class="bi bi-tools" style="color:var(--neon-purple);"></i> ${item.title}
+                                                                                    </div>
+                                                                                    <div class="desc-box">${item.description}</div>
                                                                                 </td>
-                                                                                <td style="color:var(--text-muted)"><fmt:formatDate value="${item.startTime}" pattern="yyyy-MM-dd HH:mm" /></td>
-                                                                                <td style="color:var(--text-muted)">
+                                                                                <td style="color:var(--text-muted); font-size:0.85rem;"><fmt:formatDate value="${item.startTime}" pattern="yyyy-MM-dd HH:mm" /></td>
+                                                                                <td style="color:var(--text-muted); font-size:0.85rem;">
                                                                                     <c:if test="${not empty item.endTime}"><fmt:formatDate value="${item.endTime}" pattern="yyyy-MM-dd HH:mm" /></c:if>
                                                                                     <c:if test="${empty item.endTime}">--</c:if>
                                                                                 </td>
                                                                                 <td>
-                                                                                    <jsp:useBean id="now" class="java.util.Date" />
-                                                                                    <c:set var="displayStatus" value="${item.status}" />
-                                                                                    <c:if test="${item.status eq 'PLANNED' or item.status eq 'IN_PROGRESS'}">
-                                                                                        <c:choose>
-                                                                                            <c:when test="${not empty item.endTime and item.endTime.time < now.time}">
-                                                                                                <c:set var="displayStatus" value="OVERDUE" />
-                                                                                            </c:when>
-                                                                                            <c:when test="${item.startTime.time < now.time and (empty item.endTime or item.endTime.time > now.time)}">
-                                                                                                <c:set var="displayStatus" value="IN_PROGRESS" />
-                                                                                            </c:when>
-                                                                                        </c:choose>
-                                                                                    </c:if>
                                                                                     <c:choose>
-                                                                                        <c:when test="${displayStatus eq 'PLANNED'}"><span class="badge" style="background: rgba(96,165,250,0.15); color: #60a5fa; border: 1px solid rgba(96,165,250,0.3);"><i class="bi bi-calendar-event me-1"></i> PLANNED</span></c:when>
-                                                                                        <c:when test="${displayStatus eq 'IN_PROGRESS'}"><span class="badge" style="background: rgba(250,204,21,0.15); color: #facc15; border: 1px solid rgba(250,204,21,0.3);"><i class="bi bi-gear-wide-connected me-1"></i> IN_PROGRESS</span></c:when>
-                                                                                        <c:when test="${displayStatus eq 'COMPLETED'}"><span class="badge" style="background: rgba(52,211,153,0.15); color: #34d399; border: 1px solid rgba(52,211,153,0.3);"><i class="bi bi-check2-all me-1"></i> COMPLETED</span></c:when>
-                                                                                        <c:when test="${displayStatus eq 'CANCELED'}"><span class="badge bg-secondary">CANCELED</span></c:when>
-                                                                                        <c:when test="${displayStatus eq 'OVERDUE'}"><span class="badge" style="background: rgba(248,113,113,0.15); color: #f87171; border: 1px solid rgba(248,113,113,0.3);"><i class="bi bi-exclamation-triangle-fill me-1"></i> OVERDUE</span></c:when>
+                                                                                        <c:when test="${displayStatus eq 'PLANNED'}"><span class="badge" style="background: rgba(96,165,250,0.15); color: #60a5fa; border: 1px solid rgba(96,165,250,0.3); padding:6px 10px; font-size:0.7rem;"><i class="bi bi-calendar-event me-1"></i> PLANNED</span></c:when>
+                                                                                        <c:when test="${displayStatus eq 'IN_PROGRESS'}"><span class="badge" style="background: rgba(250,204,21,0.15); color: #facc15; border: 1px solid rgba(250,204,21,0.3); padding:6px 10px; font-size:0.7rem; animation:blink 1.5s infinite;"><i class="bi bi-gear-wide-connected me-1"></i> IN PROGRESS</span></c:when>
+                                                                                        <c:when test="${displayStatus eq 'COMPLETED'}"><span class="badge" style="background: rgba(52,211,153,0.15); color: #34d399; border: 1px solid rgba(52,211,153,0.3); padding:6px 10px; font-size:0.7rem;"><i class="bi bi-check2-all me-1"></i> COMPLETED</span></c:when>
+                                                                                        <c:when test="${displayStatus eq 'CANCELED'}"><span class="badge bg-secondary" style="padding:6px 10px; font-size:0.7rem;">CANCELED</span></c:when>
+                                                                                        <c:when test="${displayStatus eq 'OVERDUE'}"><span class="badge" style="background: rgba(248,113,113,0.15); color: #f87171; border: 1px solid rgba(248,113,113,0.3); padding:6px 10px; font-size:0.7rem;"><i class="bi bi-exclamation-triangle-fill me-1"></i> OVERDUE</span></c:when>
                                                                                         <c:otherwise><span class="badge bg-secondary">${displayStatus}</span></c:otherwise>
                                                                                     </c:choose>
                                                                                 </td>
                                                                                 <td>
-                                                                                    <div class="action-group">
+                                                                                    <div class="action-group d-flex gap-2">
                                                                                         <c:if test="${item.status ne 'COMPLETED' && item.status ne 'CANCELED'}">
                                                                                             <form action="MainController" method="post" style="display:inline;">
                                                                                                 <input type="hidden" name="action" value="maintenanceComplete">
                                                                                                 <input type="hidden" name="maintenanceId" value="${item.maintenanceId}">
-                                                                                                <button type="submit" class="btn-icon" style="color:var(--neon-green); border-color:rgba(52,211,153,0.3); background:rgba(52,211,153,0.1);" title="Mark as Completed" onclick="return confirm('Mark this task as completed?')">
+                                                                                                <input type="hidden" name="returnTo" value="dashboard">
+                                                                                                <button type="submit" class="btn-icon" style="color:#34d399; border-color:rgba(52,211,153,0.3); background:rgba(52,211,153,0.1);" title="Mark as Completed" onclick="return confirm('Mark this task as completed?')">
                                                                                                     <i class="bi bi-check-circle-fill"></i>
                                                                                                 </button>
-                                                                                        </form>
-                                                                                    </c:if>
-                                                                                    <a class="btn-icon" style="color:var(--neon-blue); border-color:rgba(96,165,250,0.3); background:rgba(96,165,250,0.1);" href="MainController?action=maintenanceEdit&maintenanceId=${item.maintenanceId}" title="Edit Task">
-                                                                                        <i class="bi bi-pencil-fill"></i>
-                                                                                    </a>
+                                                                                            </form>
+                                                                                        </c:if>
+                                                                                        <a class="btn-icon" style="color:#60a5fa; border-color:rgba(96,165,250,0.3); background:rgba(96,165,250,0.1);" href="MainController?action=maintenanceEdit&maintenanceId=${item.maintenanceId}&returnTo=dashboard" title="Edit Task">
+                                                                                            <i class="bi bi-pencil-fill"></i>
+                                                                                        </a>
                                                                                         <form action="MainController" method="post" style="display:inline;">
                                                                                             <input type="hidden" name="action" value="maintenanceDelete">
                                                                                             <input type="hidden" name="maintenanceId" value="${item.maintenanceId}">
-                                                                                            <button type="submit" class="btn-icon btn-icon-delete" title="Delete Task" onclick="return confirm('Delete this task?')">
+                                                                                            <input type="hidden" name="returnTo" value="dashboard">
+                                                                                            <button type="submit" class="btn-icon" style="color:#f87171; border-color:rgba(248,113,113,0.3); background:rgba(248,113,113,0.1);" title="Delete Task" onclick="return confirm('Delete this task?')">
                                                                                                 <i class="bi bi-trash3-fill"></i>
                                                                                             </button>
                                                                                         </form>
                                                                                     </div>
                                                                                 </td>
                                                                             </tr>
+                                                                            <c:remove var="now" />
                                                                         </c:forEach>
                                                                     </c:when>
                                                                     <c:otherwise>
                                                                         <tr>
                                                                             <td colspan="6">
-                                                                                <div class="rt-empty">
-                                                                                    <i class="bi bi-tools"></i>
+                                                                                <div class="rt-empty" style="padding:40px; text-align:center; color:var(--text-muted);">
+                                                                                    <i class="bi bi-tools" style="font-size:30px; display:block; margin-bottom:10px;"></i>
                                                                                     No maintenance tasks scheduled.
                                                                                 </div>
                                                                             </td>
@@ -961,6 +1062,143 @@
                                                     </div>
                                                 </div>
                                             </div>
+                                            
+                                            <script>
+                                                document.addEventListener("DOMContentLoaded", function() {
+                                                    const rows = document.querySelectorAll('#dash-maintenance-table .task-row');
+                                                    let total = rows.length;
+                                                    let planned = 0, inprogress = 0, completed = 0;
+                                                    
+                                                    rows.forEach(row => {
+                                                        let status = row.getAttribute('data-status');
+                                                        if(status === 'PLANNED') planned++;
+                                                        else if(status === 'IN_PROGRESS' || status === 'OVERDUE') inprogress++;
+                                                        else if(status === 'COMPLETED') completed++;
+                                                    });
+                                                    
+                                                    if(document.getElementById('cnt-all')) {
+                                                        document.getElementById('cnt-all').innerText = total;
+                                                        document.getElementById('cnt-planned').innerText = planned;
+                                                        document.getElementById('cnt-inprogress').innerText = inprogress;
+                                                        document.getElementById('cnt-completed').innerText = completed;
+                                                        
+                                                        // Update KPI Cards
+                                                        document.getElementById('kpi-total').innerText = total;
+                                                        document.getElementById('kpi-planned').innerText = planned;
+                                                        document.getElementById('kpi-inprogress').innerText = inprogress;
+                                                        document.getElementById('kpi-completed').innerText = completed;
+                                                    }
+                                                    
+                                                    // Initialize Chart
+                                                    if(planned > 0 || inprogress > 0 || completed > 0) {
+                                                        const ctx = document.getElementById('dashMaintenanceChart').getContext('2d');
+                                                        new Chart(ctx, {
+                                                            type: 'doughnut',
+                                                            data: {
+                                                                labels: ['Planned', 'In Progress', 'Completed'],
+                                                                datasets: [{
+                                                                    data: [planned, inprogress, completed],
+                                                                    backgroundColor: [
+                                                                        'rgba(96, 165, 250, 0.8)',   // Blue
+                                                                        'rgba(251, 191, 36, 0.8)',   // Amber
+                                                                        'rgba(52, 211, 153, 0.8)'    // Emerald
+                                                                    ],
+                                                                    borderColor: [
+                                                                        'rgba(96, 165, 250, 1)',
+                                                                        'rgba(251, 191, 36, 1)',
+                                                                        'rgba(52, 211, 153, 1)'
+                                                                    ],
+                                                                    borderWidth: 1,
+                                                                    hoverOffset: 4
+                                                                }]
+                                                            },
+                                                            options: {
+                                                                responsive: true,
+                                                                maintainAspectRatio: false,
+                                                                plugins: {
+                                                                    legend: {
+                                                                        position: 'right',
+                                                                        labels: {
+                                                                            color: '#9aa6c7',
+                                                                            font: { family: "'Segoe UI', sans-serif" },
+                                                                            padding: 20
+                                                                        }
+                                                                    },
+                                                                    tooltip: {
+                                                                        backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                                                                        titleColor: '#fff',
+                                                                        bodyColor: '#e2e8f0',
+                                                                        borderColor: 'rgba(251, 191, 36, 0.3)',
+                                                                        borderWidth: 1,
+                                                                        padding: 12,
+                                                                        cornerRadius: 8
+                                                                    }
+                                                                },
+                                                                cutout: '70%'
+                                                            }
+                                                        });
+                                                    } else {
+                                                        document.getElementById('dashMaintenanceChart').style.display = 'none';
+                                                    }
+                                                });
+
+                                                function filterDashTasks(status, element) {
+                                                    const tabsContainer = element.closest('.sev-tabs');
+                                                    if(tabsContainer && element) {
+                                                        tabsContainer.querySelectorAll('.sev-tab').forEach(tab => tab.classList.remove('active'));
+                                                        element.classList.add('active');
+                                                    }
+                                                    applyMaintenanceFilter();
+                                                }
+
+                                                function applyMaintenanceFilter() {
+                                                    let activeTab = document.querySelector('#dash-maintenance-tabs .sev-tab.active');
+                                                    let status = 'ALL';
+                                                    if(activeTab) {
+                                                        if(activeTab.classList.contains('tab-planned')) status = 'PLANNED';
+                                                        else if(activeTab.classList.contains('tab-inprogress')) status = 'IN_PROGRESS';
+                                                        else if(activeTab.classList.contains('tab-completed')) status = 'COMPLETED';
+                                                    }
+
+                                                    const rows = document.querySelectorAll('#dash-maintenance-table .task-row');
+                                                    const searchInput = document.getElementById('dash-maintenance-search');
+                                                    const searchQuery = searchInput ? searchInput.value.toLowerCase().trim() : '';
+                                                    let visibleCount = 0;
+                                                    
+                                                    rows.forEach(row => {
+                                                        let rowStatus = row.getAttribute('data-status');
+                                                        let textContent = row.innerText.toLowerCase();
+                                                        
+                                                        let statusMatch = false;
+                                                        // Group OVERDUE into IN_PROGRESS for filtering
+                                                        if(status === 'IN_PROGRESS' && rowStatus === 'OVERDUE') statusMatch = true;
+                                                        else if (status === 'ALL' || rowStatus === status) statusMatch = true;
+
+                                                        let searchMatch = searchQuery === '' || textContent.includes(searchQuery);
+
+                                                        if (statusMatch && searchMatch) {
+                                                            row.style.display = '';
+                                                            visibleCount++;
+                                                        } else {
+                                                            row.style.display = 'none';
+                                                        }
+                                                    });
+
+                                                    let emptyMsg = document.getElementById('empty-dash-msg');
+                                                    if(visibleCount === 0) {
+                                                        if(!emptyMsg) {
+                                                            const tbody = document.querySelector('#dash-maintenance-table tbody');
+                                                            const tr = document.createElement('tr');
+                                                            tr.id = 'empty-dash-msg';
+                                                            tr.innerHTML = `<td colspan="6" style="text-align:center; padding: 40px; color:var(--text-muted);"><i class="bi bi-search fs-1 mb-2 d-block text-secondary" style="opacity:0.5;"></i> No tasks match your search or filter.</td>`;
+                                                            if(tbody) tbody.appendChild(tr);
+                                                        }
+                                                    } else {
+                                                        if(emptyMsg) emptyMsg.remove();
+                                                    }
+                                                }
+
+                                            </script>
                                         </div>
 
                                         <div class="page-section" id="page-rooms">

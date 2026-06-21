@@ -5,181 +5,167 @@
 package Models_DAO;
 
 import Models.NetworkAlertDTO;
-import Utils.DbUtils;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.sql.Timestamp;
-import java.sql.Types;
+import Utils.JpaUtils;
 import java.util.ArrayList;
+import javax.persistence.EntityManager;
+import javax.persistence.TypedQuery;
 
 /**
  *
  * @author nvtv0
  */
 public class NetworkAlertDAO implements IDAO<NetworkAlertDTO, Integer>{
-    private NetworkAlertDTO mapRow(ResultSet rs) throws SQLException {
-        int alertId       = rs.getInt("alert_id");
-        String alertType  = rs.getString("alert_type");
-        String message    = rs.getString("message");
-        String severity   = rs.getString("severity");
-        Timestamp created = rs.getTimestamp("created_at");
-
-        Integer routerId = (Integer) rs.getObject("router_id");
-        Integer apId     = (Integer) rs.getObject("ap_id");
-        Integer switchId = (Integer) rs.getObject("switch_id");
-
-        return new NetworkAlertDTO(alertId, alertType, message, severity, created, routerId, apId, switchId);
-    }
 
     @Override
     public boolean insert(NetworkAlertDTO t) {
-        String sql = "INSERT INTO NetworkAlert (alert_type, message, severity, created_at, router_id, ap_id, switch_id) "
-                   + "VALUES (?, ?, ?, GETDATE(), ?, ?, ?)";
-        try (Connection conn = DbUtils.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, t.getAlertType());
-            ps.setString(2, t.getMessage());
-            ps.setString(3, t.getSeverity() != null ? t.getSeverity() : "INFO");
-            if (t.getRouterId() != null) ps.setInt(4, t.getRouterId()); else ps.setNull(4, Types.INTEGER);
-            if (t.getApId()     != null) ps.setInt(5, t.getApId());     else ps.setNull(5, Types.INTEGER);
-            if (t.getSwitchId() != null) ps.setInt(6, t.getSwitchId()); else ps.setNull(6, Types.INTEGER);
-            return ps.executeUpdate() > 0;
+        EntityManager em = JpaUtils.getEntityManager();
+        try {
+            em.getTransaction().begin();
+            if (t.getSeverity() == null) t.setSeverity("INFO");
+            if (t.getCreatedAt() == null) t.setCreatedAt(new java.sql.Timestamp(System.currentTimeMillis()));
+            em.persist(t);
+            em.getTransaction().commit();
+            return true;
         } catch (Exception e) {
+            if (em.getTransaction().isActive()) em.getTransaction().rollback();
             e.printStackTrace();
+        } finally {
+            em.close();
         }
         return false;
     }
 
+    @Override
     public boolean remove(NetworkAlertDTO t) {
-        String sql = "DELETE FROM NetworkAlert WHERE alert_id = ?";
-        try (Connection conn = DbUtils.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, t.getAlertId());
-            return ps.executeUpdate() > 0;
+        EntityManager em = JpaUtils.getEntityManager();
+        try {
+            em.getTransaction().begin();
+            NetworkAlertDTO entity = em.find(NetworkAlertDTO.class, t.getAlertId());
+            if (entity != null) {
+                em.remove(entity);
+            }
+            em.getTransaction().commit();
+            return true;
         } catch (Exception e) {
+            if (em.getTransaction().isActive()) em.getTransaction().rollback();
             e.printStackTrace();
+        } finally {
+            em.close();
         }
         return false;
     }
 
+    @Override
     public boolean update(NetworkAlertDTO t) {
-        String sql = "UPDATE NetworkAlert SET alert_type=?, message=?, severity=?, router_id=?, ap_id=?, switch_id=? "
-                   + "WHERE alert_id=?";
-        try (Connection conn = DbUtils.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, t.getAlertType());
-            ps.setString(2, t.getMessage());
-            ps.setString(3, t.getSeverity());
-            if (t.getRouterId() != null) ps.setInt(4, t.getRouterId()); else ps.setNull(4, Types.INTEGER);
-            if (t.getApId()     != null) ps.setInt(5, t.getApId());     else ps.setNull(5, Types.INTEGER);
-            if (t.getSwitchId() != null) ps.setInt(6, t.getSwitchId()); else ps.setNull(6, Types.INTEGER);
-            ps.setInt(7, t.getAlertId());
-            return ps.executeUpdate() > 0;
+        EntityManager em = JpaUtils.getEntityManager();
+        try {
+            em.getTransaction().begin();
+            em.merge(t);
+            em.getTransaction().commit();
+            return true;
         } catch (Exception e) {
+            if (em.getTransaction().isActive()) em.getTransaction().rollback();
             e.printStackTrace();
+        } finally {
+            em.close();
         }
         return false;
     }
 
     @Override
     public ArrayList<NetworkAlertDTO> ListAll() {
-        ArrayList<NetworkAlertDTO> list = new ArrayList<>();
-        String sql = "SELECT * FROM NetworkAlert ORDER BY created_at DESC";
-        try (Connection conn = DbUtils.getConnection();
-             Statement st = conn.createStatement();
-             ResultSet rs = st.executeQuery(sql)) {
-            while (rs.next()) {
-                list.add(mapRow(rs));
-            }
+        EntityManager em = JpaUtils.getEntityManager();
+        try {
+            TypedQuery<NetworkAlertDTO> query = em.createQuery("SELECT n FROM NetworkAlertDTO n ORDER BY n.createdAt DESC", NetworkAlertDTO.class);
+            return new ArrayList<>(query.getResultList());
         } catch (Exception e) {
             e.printStackTrace();
+        } finally {
+            em.close();
         }
-        return list;
+        return new ArrayList<>();
     }
 
     @Override
     public NetworkAlertDTO searchById(Integer id) {
-        String sql = "SELECT * FROM NetworkAlert WHERE alert_id = ?";
-        try (Connection conn = DbUtils.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, id);
-            ResultSet rs = ps.executeQuery();
-            if (rs.next()) {
-                return mapRow(rs);
-            }
+        EntityManager em = JpaUtils.getEntityManager();
+        try {
+            return em.find(NetworkAlertDTO.class, id);
         } catch (Exception e) {
             e.printStackTrace();
+        } finally {
+            em.close();
         }
         return null;
     }
 
     public ArrayList<NetworkAlertDTO> findByDevice(Integer routerId, Integer apId, Integer switchId) {
-        ArrayList<NetworkAlertDTO> list = new ArrayList<>();
-        StringBuilder sql = new StringBuilder("SELECT * FROM NetworkAlert WHERE 1=1");
-        if (routerId != null) sql.append(" AND router_id = ?");
-        if (apId     != null) sql.append(" AND ap_id = ?");
-        if (switchId != null) sql.append(" AND switch_id = ?");
-        sql.append(" ORDER BY created_at DESC");
-
-        try (Connection conn = DbUtils.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
-            int idx = 1;
-            if (routerId != null) ps.setInt(idx++, routerId);
-            if (apId     != null) ps.setInt(idx++, apId);
-            if (switchId != null) ps.setInt(idx++, switchId);
-            ResultSet rs = ps.executeQuery();
-            while (rs.next()) {
-                list.add(mapRow(rs));
-            }
+        EntityManager em = JpaUtils.getEntityManager();
+        try {
+            StringBuilder jpql = new StringBuilder("SELECT n FROM NetworkAlertDTO n WHERE 1=1 ");
+            if (routerId != null) jpql.append("AND n.routerId = :routerId ");
+            if (apId != null) jpql.append("AND n.apId = :apId ");
+            if (switchId != null) jpql.append("AND n.switchId = :switchId ");
+            jpql.append("ORDER BY n.createdAt DESC");
+            
+            TypedQuery<NetworkAlertDTO> query = em.createQuery(jpql.toString(), NetworkAlertDTO.class);
+            if (routerId != null) query.setParameter("routerId", routerId);
+            if (apId != null) query.setParameter("apId", apId);
+            if (switchId != null) query.setParameter("switchId", switchId);
+            
+            return new ArrayList<>(query.getResultList());
         } catch (Exception e) {
             e.printStackTrace();
+        } finally {
+            em.close();
         }
-        return list;
+        return new ArrayList<>();
     }
 
     public ArrayList<NetworkAlertDTO> findBySeverity(String severity) {
-        ArrayList<NetworkAlertDTO> list = new ArrayList<>();
-        String sql = "SELECT * FROM NetworkAlert WHERE severity = ? ORDER BY created_at DESC";
-        try (Connection conn = DbUtils.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, severity);
-            ResultSet rs = ps.executeQuery();
-            while (rs.next()) {
-                list.add(mapRow(rs));
-            }
+        EntityManager em = JpaUtils.getEntityManager();
+        try {
+            TypedQuery<NetworkAlertDTO> query = em.createQuery("SELECT n FROM NetworkAlertDTO n WHERE n.severity = :severity ORDER BY n.createdAt DESC", NetworkAlertDTO.class);
+            query.setParameter("severity", severity);
+            return new ArrayList<>(query.getResultList());
         } catch (Exception e) {
             e.printStackTrace();
+        } finally {
+            em.close();
         }
-        return list;
+        return new ArrayList<>();
     }
 
     public boolean resolveAlert(int alertId) {
-        String sql = "DELETE FROM NetworkAlert WHERE alert_id = ?";
-        try (Connection conn = DbUtils.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, alertId);
-            return ps.executeUpdate() > 0;
+        EntityManager em = JpaUtils.getEntityManager();
+        try {
+            em.getTransaction().begin();
+            NetworkAlertDTO entity = em.find(NetworkAlertDTO.class, alertId);
+            if (entity != null) {
+                em.remove(entity);
+            }
+            em.getTransaction().commit();
+            return true;
         } catch (Exception e) {
+            if (em.getTransaction().isActive()) em.getTransaction().rollback();
             e.printStackTrace();
+        } finally {
+            em.close();
         }
         return false;
     }
     
     public int countAll() {
-    String sql = "SELECT COUNT(*) AS total FROM NetworkAlert";
-    try (Connection conn = DbUtils.getConnection();
-         PreparedStatement ps = conn.prepareStatement(sql);
-         ResultSet rs = ps.executeQuery()) {
-        if (rs.next()) {
-            return rs.getInt("total");
+        EntityManager em = JpaUtils.getEntityManager();
+        try {
+            TypedQuery<Long> query = em.createQuery("SELECT COUNT(n) FROM NetworkAlertDTO n", Long.class);
+            return query.getSingleResult().intValue();
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            em.close();
         }
-    } catch (Exception e) {
-        e.printStackTrace();
+        return 0;
     }
-    return 0;
-}
 
 }

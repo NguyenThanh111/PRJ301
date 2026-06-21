@@ -1,26 +1,21 @@
 package Models_DAO;
 
 import Models.BandwidthUsageDTO;
+import Utils.JpaUtils;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
 import javax.persistence.EntityTransaction;
-import javax.persistence.Persistence;
 import javax.persistence.Query;
 
 public class BandwidthUsageDAO implements IDAO<BandwidthUsageDTO, Integer> {
-
-    private static final String PERSISTENCE_UNIT_NAME = "NetworkManagerWebPU";
-    private static final EntityManagerFactory FACTORY
-            = Persistence.createEntityManagerFactory(PERSISTENCE_UNIT_NAME);
 
     public BandwidthUsageDAO() {
     }
 
     private EntityManager getEntityManager() {
-        return FACTORY.createEntityManager();
+        return JpaUtils.getEntityManager();
     }
 
     private boolean executeInTransaction(Consumer<EntityManager> action) {
