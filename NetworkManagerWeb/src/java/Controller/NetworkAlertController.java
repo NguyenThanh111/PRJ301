@@ -6,7 +6,7 @@ import Models_DAO.NetworkAlertDAO;
 import Models.NetworkAlertDTO;
 import Models_DAO.RouterDAO;
 import Models.RouterDTO;
-import Models.SwitchDAO;
+import Models_DAO.SwitchDAO;
 import Models.SwitchDTO;
 import java.io.IOException;
 import java.util.ArrayList;

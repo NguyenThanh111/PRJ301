@@ -3,7 +3,7 @@ package Controller;
 
 import Models_DAO.AuthenticationLogDAO;
 import Models.AuthenticationLogDTO;
-import Models.UserDAO;
+import Models_DAO.UserDAO;
 import Models.UserDTO;
 import Models_DAO.UserRoleDAO;
 import java.io.IOException;
