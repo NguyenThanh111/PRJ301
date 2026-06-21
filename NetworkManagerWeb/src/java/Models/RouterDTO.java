@@ -1,23 +1,47 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package Models;
 
-/**
- *
- * @author User
- */
-public class RouterDTO {
+import java.io.Serializable;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.Table;
+
+@Entity
+@Table(name = "Router")
+public class RouterDTO implements Serializable {
+
+    private static final long serialVersionUID = 1L;
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "router_id")
     private int routerId;
+
+    @Column(name = "router_name", nullable = false, length = 100)
     private String routerName;
+
+    @Column(name = "ip_address", length = 45, unique = true)
     private String ipAddress;
+
+    @Column(name = "mac_address", length = 50, unique = true)
     private String macAddress;
+
+    @Column(name = "model", length = 100)
     private String model;
+
+    @Column(name = "firmware", length = 100)
     private String firmware;
+
+    @Column(name = "status", length = 20)
     private String status;
+
+    @Column(name = "location", length = 100)
     private String location;
-    private int roomId;
+
+    @Column(name = "room_id")
+    private Integer roomId;
 
     public RouterDTO() {
     }
@@ -31,7 +55,7 @@ public class RouterDTO {
         this.firmware = firmware;
         this.status = status;
         this.location = location;
-        this.roomId = roomId;
+        setRoomId(roomId);
     }
 
     public int getRouterId() {
@@ -99,10 +123,18 @@ public class RouterDTO {
     }
 
     public int getRoomId() {
+        return roomId == null ? 0 : roomId;
+    }
+
+    public Integer getRoomIdValue() {
         return roomId;
     }
 
     public void setRoomId(int roomId) {
-        this.roomId = roomId;
+        this.roomId = roomId > 0 ? roomId : null;
+    }
+
+    public void setRoomId(Integer roomId) {
+        this.roomId = roomId != null && roomId > 0 ? roomId : null;
     }
 }

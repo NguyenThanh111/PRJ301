@@ -1,9 +1,9 @@
 
 package Controller;
 
-import Models.UserDAO;
+import Models_DAO.UserDAO;
 import Models.UserDTO;
-import Models.UserRoleDAO;
+import Models_DAO.UserRoleDAO;
 import java.io.IOException;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -16,6 +16,7 @@ public class RegisterUserController extends HttpServlet {
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         response.setContentType("text/html;charset=UTF-8");
+        request.setCharacterEncoding("UTF-8");
 
         String source = request.getParameter("source");
         if ("google".equalsIgnoreCase(source)) {
@@ -40,8 +41,8 @@ public class RegisterUserController extends HttpServlet {
         try {
             UserDAO userDAO = new UserDAO();
 
-            if (isBlank(username) || isBlank(password) || isBlank(confirmPassword) || isBlank(email)) {
-                request.setAttribute("error", "Username, email, password and confirm password are required.");
+            if (isBlank(username) || isBlank(password) || isBlank(confirmPassword) || isBlank(email) || isBlank(fullName)) {
+                request.setAttribute("error", "All fields are required.");
                 request.setAttribute("source", "normal");
                 request.getRequestDispatcher(url).forward(request, response);
                 return;

@@ -3,4 +3,12 @@
 /NetworkManagerWeb/nbproject/private/
 /NetworkManagerWeb/build/
 /NetworkManagerWeb/dist/
+<<<<<<< Updated upstream
 
+/.agents/skills/brainstorming
+/.agents/skills/brandkit
+/.agents/skills
+=======
+/.agents
+>>>>>>> Stashed changes
+skills-lock.json

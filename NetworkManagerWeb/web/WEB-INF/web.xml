@@ -47,6 +47,12 @@
     <servlet>
         <servlet-name>VLANServlet</servlet-name>
         <servlet-class>Controller.VLANServlet</servlet-class>
+        <servlet-name>WifiController</servlet-name>
+        <servlet-class>Controller.WifiController</servlet-class>
+    </servlet>
+    <servlet>
+        <servlet-name>NetworkAlertController</servlet-name>
+        <servlet-class>Controller.NetworkAlertController</servlet-class>
     </servlet>
     <servlet-mapping>
         <servlet-name>LoginController</servlet-name>
@@ -95,6 +101,12 @@
     <servlet-mapping>
         <servlet-name>VLANServlet</servlet-name>
         <url-pattern>/VLANServlet</url-pattern>
+        <servlet-name>WifiController</servlet-name>
+        <url-pattern>/WifiController</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>NetworkAlertController</servlet-name>
+        <url-pattern>/NetworkAlertController</url-pattern>
     </servlet-mapping>
     <session-config>
         <session-timeout>
@@ -102,6 +114,6 @@
         </session-timeout>
     </session-config>
     <welcome-file-list>
-        <welcome-file>login.jsp</welcome-file>
+        <welcome-file>home</welcome-file>
     </welcome-file-list>
 </web-app>

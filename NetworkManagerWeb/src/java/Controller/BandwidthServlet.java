@@ -1,6 +1,6 @@
 package Controller;
 
-import Models.BandwidthUsageDAO;
+import Models_DAO.BandwidthUsageDAO;
 import Models.BandwidthUsageDTO;
 import java.io.IOException;
 import javax.servlet.ServletException;
@@ -10,6 +10,8 @@ import javax.servlet.http.HttpServletResponse;
 
 public class BandwidthServlet extends HttpServlet {
 
+    private BandwidthUsageDAO dao = new BandwidthUsageDAO();
+
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         request.setCharacterEncoding("UTF-8");
@@ -18,36 +20,17 @@ public class BandwidthServlet extends HttpServlet {
             action = "bandwidthList";
         }
 
-        BandwidthUsageDAO dao = new BandwidthUsageDAO();
-
         try {
             switch (action) {
                 case "bandwidthInsert":
-                    int deviceId = Integer.parseInt(request.getParameter("deviceId"));
-                    double uploadSpeed = Double.parseDouble(request.getParameter("uploadSpeed"));
-                    double downloadSpeed = Double.parseDouble(request.getParameter("downloadSpeed"));
-
-                    BandwidthUsageDTO newUsage = new BandwidthUsageDTO();
-                    newUsage.setDeviceId(deviceId);
-                    newUsage.setUploadSpeed(uploadSpeed);
-                    newUsage.setDownloadSpeed(downloadSpeed);
-
-                    dao.insert(newUsage);
-                    response.sendRedirect("staffDashboard.jsp?page=bandwidth");
+                    insertBandwidth(request, response);
                     break;
-
                 case "bandwidthDelete":
-                    int usageId = Integer.parseInt(request.getParameter("usageId"));
-                    BandwidthUsageDTO dto = new BandwidthUsageDTO();
-                    dto.setUsageId(usageId);
-                    dao.remove(dto);
-                    response.sendRedirect("staffDashboard.jsp?page=bandwidth");
+                    deleteBandwidth(request, response);
                     break;
-                    
                 case "bandwidthAdd":
                     response.sendRedirect("bandwidth-form.jsp");
                     break;
-
                 default:
                     response.sendRedirect("staffDashboard.jsp?page=bandwidth");
                     break;
@@ -56,6 +39,28 @@ public class BandwidthServlet extends HttpServlet {
             e.printStackTrace();
             response.sendRedirect("staffDashboard.jsp?page=bandwidth&error=true");
         }
+    }
+
+    private void insertBandwidth(HttpServletRequest request, HttpServletResponse response) throws Exception {
+        int deviceId = Integer.parseInt(request.getParameter("deviceId"));
+        double uploadSpeed = Double.parseDouble(request.getParameter("uploadSpeed"));
+        double downloadSpeed = Double.parseDouble(request.getParameter("downloadSpeed"));
+
+        BandwidthUsageDTO newUsage = new BandwidthUsageDTO();
+        newUsage.setDeviceId(deviceId);
+        newUsage.setUploadSpeed(uploadSpeed);
+        newUsage.setDownloadSpeed(downloadSpeed);
+
+        dao.insert(newUsage);
+        response.sendRedirect("staffDashboard.jsp?page=bandwidth");
+    }
+
+    private void deleteBandwidth(HttpServletRequest request, HttpServletResponse response) throws Exception {
+        int usageId = Integer.parseInt(request.getParameter("usageId"));
+        BandwidthUsageDTO dto = new BandwidthUsageDTO();
+        dto.setUsageId(usageId);
+        dao.remove(dto);
+        response.sendRedirect("staffDashboard.jsp?page=bandwidth");
     }
 
     @Override

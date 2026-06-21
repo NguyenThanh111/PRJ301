@@ -53,7 +53,7 @@ public class MainController extends HttpServlet {
                 break;                
             //=================LOGOUT=================
             case "logout":
-                url = "LoginCotyroller";
+                url = "LoginController";
                 break;
             //===============ROUTER==================
             case "routerList":

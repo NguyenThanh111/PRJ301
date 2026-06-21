@@ -1,5 +1,6 @@
-package Models;
+package Models_DAO;
 
+import Models.VLANDTO;
 import Utils.DbUtils;
 import java.sql.Connection;
 import java.sql.PreparedStatement;

@@ -1,11 +1,11 @@
 
 package Controller;
 
-import Models.AuthenticationLogDAO;
+import Models_DAO.AuthenticationLogDAO;
 import Models.AuthenticationLogDTO;
-import Models.UserDAO;
+import Models_DAO.UserDAO;
 import Models.UserDTO;
-import Models.UserRoleDAO;
+import Models_DAO.UserRoleDAO;
 import java.io.IOException;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -66,7 +66,7 @@ public class LoginController extends HttpServlet {
                 request.getRemoteAddr(), null));
         request.setAttribute("error", "⚠ Invalid username/email or password");
 
-    } else if (!user.isStatus()) {
+    } else if (!user.isActive()) {
         logDAO.insert(new AuthenticationLogDTO(username, AuthenticationLogDTO.STATUS_FAILED,
                 request.getRemoteAddr(), user.getUserId()));
         request.setAttribute("error", "⚠ Your account is locked");

@@ -2,8 +2,9 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
-package Models;
+package Models_DAO;
 
+import Models.MaintenanceScheduleDTO;
 import Utils.DbUtils;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -25,7 +26,7 @@ public class MaintenanceScheduleDAO implements IDAO<MaintenanceScheduleDTO, Inte
                 rs.getString("title"),
                 rs.getString("description"),
                 rs.getTimestamp("start_time"),
-                rs.getTimestamp("end_time"),   // nullable — trả về null nếu cột NULL
+                rs.getTimestamp("end_time"),
                 rs.getString("status")
         );
     }
@@ -85,7 +86,7 @@ public class MaintenanceScheduleDAO implements IDAO<MaintenanceScheduleDTO, Inte
     @Override
     public ArrayList<MaintenanceScheduleDTO> ListAll() {
         ArrayList<MaintenanceScheduleDTO> list = new ArrayList<>();
-        String sql = "SELECT * FROM MaintenanceSchedule ORDER BY maintenance_id ASC";
+        String sql = "SELECT * FROM MaintenanceSchedule ORDER BY start_time DESC";
         try (Connection conn = DbUtils.getConnection();
              Statement st = conn.createStatement();
              ResultSet rs = st.executeQuery(sql)) {
@@ -114,7 +115,6 @@ public class MaintenanceScheduleDAO implements IDAO<MaintenanceScheduleDTO, Inte
         return null;
     }
 
-    /** Tìm các lịch bảo trì sắp tới (startTime >= NOW) */
     public ArrayList<MaintenanceScheduleDTO> findUpcoming() {
         ArrayList<MaintenanceScheduleDTO> list = new ArrayList<>();
         String sql = "SELECT * FROM MaintenanceSchedule "

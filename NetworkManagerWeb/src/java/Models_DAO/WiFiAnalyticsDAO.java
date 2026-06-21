@@ -2,8 +2,9 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
-package Models;
+package Models_DAO;
 
+import Models.WiFiAnalyticsDTO;
 import Utils.DbUtils;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -20,18 +21,18 @@ public class WiFiAnalyticsDAO implements IDAO<WiFiAnalyticsDTO, Integer> {
 
     private WiFiAnalyticsDTO mapRow(ResultSet rs) throws SQLException {
         return new WiFiAnalyticsDTO(
-                rs.getInt("analyticsId"),
-                rs.getInt("totalUsers"),
-                rs.getInt("peakUsers"),
-                rs.getDouble("avgSpeed"),
-                rs.getDate("analyticsDate"),
-                rs.getInt("apId")
+                rs.getInt("analytics_id"),
+                rs.getInt("total_users"),
+                rs.getInt("peak_users"),
+                rs.getDouble("avg_speed"),
+                rs.getDate("analytics_date"),
+                rs.getInt("ap_id")
         );
     }
 
     @Override
     public boolean insert(WiFiAnalyticsDTO t) {
-        String sql = "INSERT INTO WiFiAnalytics (totalUsers, peakUsers, avgSpeed, analyticsDate, apId) "
+        String sql = "INSERT INTO WiFiAnalytics (total_users, peak_users, avg_speed, analytics_date, ap_id) "
                    + "VALUES (?, ?, ?, ?, ?)";
         try (Connection conn = DbUtils.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -49,7 +50,7 @@ public class WiFiAnalyticsDAO implements IDAO<WiFiAnalyticsDTO, Integer> {
 
     @Override
     public boolean remove(WiFiAnalyticsDTO t) {
-        String sql = "DELETE FROM WiFiAnalytics WHERE analyticsId = ?";
+        String sql = "DELETE FROM WiFiAnalytics WHERE analytics_id = ?";
         try (Connection conn = DbUtils.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, t.getAnalyticsId());
@@ -62,8 +63,8 @@ public class WiFiAnalyticsDAO implements IDAO<WiFiAnalyticsDTO, Integer> {
 
     @Override
     public boolean update(WiFiAnalyticsDTO t) {
-        String sql = "UPDATE WiFiAnalytics SET totalUsers=?, peakUsers=?, avgSpeed=?, analyticsDate=?, apId=? "
-                   + "WHERE analyticsId=?";
+        String sql = "UPDATE WiFiAnalytics SET total_users=?, peak_users=?, avg_speed=?, analytics_date=?, ap_id=? "
+                   + "WHERE analytics_id=?";
         try (Connection conn = DbUtils.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, t.getTotalUsers());
@@ -82,7 +83,7 @@ public class WiFiAnalyticsDAO implements IDAO<WiFiAnalyticsDTO, Integer> {
     @Override
     public ArrayList<WiFiAnalyticsDTO> ListAll() {
         ArrayList<WiFiAnalyticsDTO> list = new ArrayList<>();
-        String sql = "SELECT * FROM WiFiAnalytics ORDER BY analyticsDate DESC";
+        String sql = "SELECT * FROM WiFiAnalytics ORDER BY analytics_date DESC";
         try (Connection conn = DbUtils.getConnection();
              Statement st = conn.createStatement();
              ResultSet rs = st.executeQuery(sql)) {
@@ -97,7 +98,7 @@ public class WiFiAnalyticsDAO implements IDAO<WiFiAnalyticsDTO, Integer> {
 
     @Override
     public WiFiAnalyticsDTO searchById(Integer id) {
-        String sql = "SELECT * FROM WiFiAnalytics WHERE analyticsId = ?";
+        String sql = "SELECT * FROM WiFiAnalytics WHERE analytics_id = ?";
         try (Connection conn = DbUtils.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, id);
@@ -114,7 +115,7 @@ public class WiFiAnalyticsDAO implements IDAO<WiFiAnalyticsDTO, Integer> {
 
     public ArrayList<WiFiAnalyticsDTO> findByAP(int apId) {
         ArrayList<WiFiAnalyticsDTO> list = new ArrayList<>();
-        String sql = "SELECT * FROM WiFiAnalytics WHERE apId = ? ORDER BY analyticsDate DESC";
+        String sql = "SELECT * FROM WiFiAnalytics WHERE ap_id = ? ORDER BY analytics_date DESC";
         try (Connection conn = DbUtils.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, apId);
@@ -129,17 +130,15 @@ public class WiFiAnalyticsDAO implements IDAO<WiFiAnalyticsDTO, Integer> {
     }
 
     public boolean generateDailyAnalytics(int apId, int totalUsers, int peakUsers, double avgSpeed) {
-        // Nếu đã có record hôm nay cho AP này thì UPDATE, chưa có thì INSERT
-        String checkSql = "SELECT analyticsId FROM WiFiAnalytics WHERE apId = ? AND analyticsDate = CAST(GETDATE() AS DATE)";
+        String checkSql = "SELECT analytics_id FROM WiFiAnalytics WHERE ap_id = ? AND analytics_date = CAST(GETDATE() AS DATE)";
         try (Connection conn = DbUtils.getConnection();
              PreparedStatement checkPs = conn.prepareStatement(checkSql)) {
             checkPs.setInt(1, apId);
             ResultSet rs = checkPs.executeQuery();
             if (rs.next()) {
-                // UPDATE
-                int existingId = rs.getInt("analyticsId");
-                String updateSql = "UPDATE WiFiAnalytics SET totalUsers=?, peakUsers=?, avgSpeed=? "
-                                 + "WHERE analyticsId=?";
+                int existingId = rs.getInt("analytics_id");
+                String updateSql = "UPDATE WiFiAnalytics SET total_users=?, peak_users=?, avg_speed=? "
+                                 + "WHERE analytics_id=?";
                 try (PreparedStatement updatePs = conn.prepareStatement(updateSql)) {
                     updatePs.setInt(1, totalUsers);
                     updatePs.setInt(2, peakUsers);
@@ -148,8 +147,7 @@ public class WiFiAnalyticsDAO implements IDAO<WiFiAnalyticsDTO, Integer> {
                     return updatePs.executeUpdate() > 0;
                 }
             } else {
-                // INSERT
-                String insertSql = "INSERT INTO WiFiAnalytics (totalUsers, peakUsers, avgSpeed, analyticsDate, apId) "
+                String insertSql = "INSERT INTO WiFiAnalytics (total_users, peak_users, avg_speed, analytics_date, ap_id) "
                                  + "VALUES (?, ?, ?, CAST(GETDATE() AS DATE), ?)";
                 try (PreparedStatement insertPs = conn.prepareStatement(insertSql)) {
                     insertPs.setInt(1, totalUsers);
@@ -169,8 +167,8 @@ public class WiFiAnalyticsDAO implements IDAO<WiFiAnalyticsDTO, Integer> {
     public ArrayList<WiFiAnalyticsDTO> generateMonthlyAnalytics(int apId, int year, int month) {
         ArrayList<WiFiAnalyticsDTO> list = new ArrayList<>();
         String sql = "SELECT * FROM WiFiAnalytics "
-                   + "WHERE apId = ? AND YEAR(analyticsDate) = ? AND MONTH(analyticsDate) = ? "
-                   + "ORDER BY analyticsDate";
+                   + "WHERE ap_id = ? AND YEAR(analytics_date) = ? AND MONTH(analytics_date) = ? "
+                   + "ORDER BY analytics_date";
         try (Connection conn = DbUtils.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, apId);

@@ -4,7 +4,7 @@
  */
 package Controller;
 
-import Models.AuthenticationLogDAO;
+import Models_DAO.AuthenticationLogDAO;
 import Models.AuthenticationLogDTO;
 import java.io.IOException;
 import java.util.ArrayList;

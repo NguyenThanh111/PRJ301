@@ -2,7 +2,7 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
-package Models;
+package Models_DAO;
 
 import Utils.DbUtils;
 import java.sql.Connection;
@@ -14,15 +14,14 @@ import java.util.ArrayList;
  *
  * @author nvtv0
  */
-public class MaintenanceAccessPointDAO {
-    
+public class MaintenanceSwitchDAO {
 
-    public boolean addAP(int maintenanceId, int apId) {
-        String sql = "INSERT INTO MaintenanceAccessPoint (maintenanceId, apId) VALUES (?, ?)";
+    public boolean addSwitch(int maintenanceId, int switchId) {
+        String sql = "INSERT INTO MaintenanceSwitch (maintenance_id, switch_id) VALUES (?, ?)";
         try (Connection conn = DbUtils.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, maintenanceId);
-            ps.setInt(2, apId);
+            ps.setInt(2, switchId);
             return ps.executeUpdate() > 0;
         } catch (Exception e) {
             e.printStackTrace();
@@ -30,12 +29,12 @@ public class MaintenanceAccessPointDAO {
         return false;
     }
 
-    public boolean removeAP(int maintenanceId, int apId) {
-        String sql = "DELETE FROM MaintenanceAccessPoint WHERE maintenanceId = ? AND apId = ?";
+    public boolean removeSwitch(int maintenanceId, int switchId) {
+        String sql = "DELETE FROM MaintenanceSwitch WHERE maintenance_id = ? AND switch_id = ?";
         try (Connection conn = DbUtils.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, maintenanceId);
-            ps.setInt(2, apId);
+            ps.setInt(2, switchId);
             return ps.executeUpdate() > 0;
         } catch (Exception e) {
             e.printStackTrace();
@@ -43,15 +42,16 @@ public class MaintenanceAccessPointDAO {
         return false;
     }
 
-    public ArrayList<Integer> findAPsByMaintenance(int maintenanceId) {
+
+    public ArrayList<Integer> findSwitchesByMaintenance(int maintenanceId) {
         ArrayList<Integer> list = new ArrayList<>();
-        String sql = "SELECT apId FROM MaintenanceAccessPoint WHERE maintenanceId = ?";
+        String sql = "SELECT switch_id FROM MaintenanceSwitch WHERE maintenance_id = ?";
         try (Connection conn = DbUtils.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, maintenanceId);
             ResultSet rs = ps.executeQuery();
             while (rs.next()) {
-                list.add(rs.getInt("apId"));
+                list.add(rs.getInt("switch_id"));
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -60,15 +60,15 @@ public class MaintenanceAccessPointDAO {
     }
 
 
-    public ArrayList<Integer> findMaintenancesByAP(int apId) {
+    public ArrayList<Integer> findMaintenancesBySwitch(int switchId) {
         ArrayList<Integer> list = new ArrayList<>();
-        String sql = "SELECT maintenanceId FROM MaintenanceAccessPoint WHERE apId = ?";
+        String sql = "SELECT maintenance_id FROM MaintenanceSwitch WHERE switch_id = ?";
         try (Connection conn = DbUtils.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, apId);
+            ps.setInt(1, switchId);
             ResultSet rs = ps.executeQuery();
             while (rs.next()) {
-                list.add(rs.getInt("maintenanceId"));
+                list.add(rs.getInt("maintenance_id"));
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -76,4 +76,3 @@ public class MaintenanceAccessPointDAO {
         return list;
     }
 }
-
