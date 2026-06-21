@@ -1,5 +1,5 @@
 <%-- sidebar.jsp - Shared sidebar for all staff pages --%>
-<%@page import="Models.NetworkAlertDAO" %>
+<%@page import="Models_DAO.NetworkAlertDAO" %>
 <c:set var="sa" value="${sidebarActive}" />
 <% NetworkAlertDAO _alertDAO = new NetworkAlertDAO(); int _totalAlerts = _alertDAO.ListAll().size(); pageContext.setAttribute("_totalAlerts", _totalAlerts); %>
 <nav class="sidebar">

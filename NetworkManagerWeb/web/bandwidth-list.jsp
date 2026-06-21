@@ -2,9 +2,9 @@
 <%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
 <%@taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions"%>
 <%@taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt"%>
-<%@page import="Models.BandwidthUsageDAO"%>
+<%@page import="Models_DAO.BandwidthUsageDAO"%>
 <%@page import="Models.BandwidthUsageDTO"%>
-<%@page import="Models.NetworkDeviceDAO"%>
+<%@page import="Models_DAO.NetworkDeviceDAO"%>
 <%@page import="Models.NetworkDeviceDTO"%>
 <%@page import="java.util.ArrayList"%>
 <%@page import="java.util.HashMap"%>

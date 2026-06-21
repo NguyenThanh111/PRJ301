@@ -1,11 +1,11 @@
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
 <%@taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt" %>
-<%@page import="Models.RouterDAO"%>
+<%@page import="Models_DAO.RouterDAO"%>
 <%@page import="Models.RouterDTO"%>
-<%@page import="Models.AccessPointDAO"%>
+<%@page import="Models_DAO.AccessPointDAO"%>
 <%@page import="Models.AccessPointDTO"%>
-<%@page import="Models.SwitchDAO"%>
+<%@page import="Models_DAO.SwitchDAO"%>
 <%@page import="Models.SwitchDTO"%>
 <%@page import="java.util.ArrayList"%>
 <%

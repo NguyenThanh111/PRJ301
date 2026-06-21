@@ -1,6 +1,6 @@
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
-<%@page import="Models.NetworkDeviceDAO"%>
+<%@page import="Models_DAO.NetworkDeviceDAO"%>
 <%@page import="Models.NetworkDeviceDTO"%>
 <%@page import="java.util.ArrayList"%>
 <%
