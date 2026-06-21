@@ -1,223 +1,218 @@
+
 package Models;
 
-import Utils.DbUtils;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
+import Utils.JPAUtil;
 import java.util.ArrayList;
+import javax.persistence.EntityManager;
+import javax.persistence.TypedQuery;
 
-public class IPAddressManagementDAO implements IDAO<IPAddressManagementDTO, Integer> {
+public class IPAddressManagementDAO {
 
-    private IPAddressManagementDTO mapRow(ResultSet rs) throws SQLException {
-        Integer deviceId = (Integer) rs.getObject("device_id");
-
-        return new IPAddressManagementDTO(
-                rs.getInt("ip_id"),
-                rs.getString("ip_address"),
-                rs.getString("status"),
-                deviceId
-        );
-    }
-
-    @Override
-    public boolean insert(IPAddressManagementDTO ip) {
-        String sql = "INSERT INTO IPAddressManagement (ip_address, status, device_id) VALUES (?, ?, ?)";
-
-        try {
-            Connection conn = DbUtils.getConnection();
-            PreparedStatement ps = conn.prepareStatement(sql);
-
-            ps.setString(1, ip.getIpAddress());
-            ps.setString(2, ip.getStatus());
-
-            if (ip.getDeviceId() == null) {
-                ps.setNull(3, java.sql.Types.INTEGER);
-            } else {
-                ps.setInt(3, ip.getDeviceId());
-            }
-
-            return ps.executeUpdate() > 0;
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        return false;
-    }
-
-    @Override
-    public boolean update(IPAddressManagementDTO ip) {
-        String sql = "UPDATE IPAddressManagement SET ip_address = ?, status = ?, device_id = ? WHERE ip_id = ?";
-
-        try {
-            Connection conn = DbUtils.getConnection();
-            PreparedStatement ps = conn.prepareStatement(sql);
-
-            ps.setString(1, ip.getIpAddress());
-            ps.setString(2, ip.getStatus());
-
-            if (ip.getDeviceId() == null) {
-                ps.setNull(3, java.sql.Types.INTEGER);
-            } else {
-                ps.setInt(3, ip.getDeviceId());
-            }
-
-            ps.setInt(4, ip.getIpId());
-
-            return ps.executeUpdate() > 0;
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        return false;
-    }
-
-    @Override
-    public boolean remove(IPAddressManagementDTO ip) {
-        return delete(ip.getIpId());
-    }
-
-    public boolean delete(int ipId) {
-        String sql = "DELETE FROM IPAddressManagement WHERE ip_id = ?";
-
-        try {
-            Connection conn = DbUtils.getConnection();
-            PreparedStatement ps = conn.prepareStatement(sql);
-
-            ps.setInt(1, ipId);
-
-            return ps.executeUpdate() > 0;
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        return false;
-    }
-
-    @Override
     public ArrayList<IPAddressManagementDTO> ListAll() {
-        ArrayList<IPAddressManagementDTO> list = new ArrayList<>();
-        String sql = "SELECT * FROM IPAddressManagement";
+
+        EntityManager em = JPAUtil.getEntityManager();
 
         try {
-            Connection conn = DbUtils.getConnection();
-            Statement st = conn.createStatement();
-            ResultSet rs = st.executeQuery(sql);
+            TypedQuery<IPAddressManagementDTO> query
+                    = em.createQuery(
+                            "SELECT ip "
+                            + "FROM IPAddressManagementDTO ip "
+                            + "ORDER BY ip.ipId",
+                            IPAddressManagementDTO.class
+                    );
 
-            while (rs.next()) {
-                list.add(mapRow(rs));
-            }
+            return new ArrayList<>(query.getResultList());
 
         } catch (Exception e) {
             e.printStackTrace();
+            return new ArrayList<>();
+
+        } finally {
+            em.close();
+        }
+    }
+    public IPAddressManagementDTO searchById(Integer ipId) {
+
+        if (ipId == null || ipId <= 0) {
+            return null;
         }
 
-        return list;
+        EntityManager em = JPAUtil.getEntityManager();
+
+        try {
+            return em.find(
+                    IPAddressManagementDTO.class,
+                    ipId
+            );
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+
+        } finally {
+            em.close();
+        }
     }
 
-    @Override
-    public IPAddressManagementDTO searchById(Integer id) {
-        String sql = "SELECT * FROM IPAddressManagement WHERE ip_id = ?";
+    
+    public ArrayList<IPAddressManagementDTO> getIPsByPage(
+            int page,
+            int pageSize) {
+
+        if (page < 1) {
+            page = 1;
+        }
+
+        if (pageSize < 1) {
+            pageSize = 8;
+        }
+
+        EntityManager em = JPAUtil.getEntityManager();
 
         try {
-            Connection conn = DbUtils.getConnection();
-            PreparedStatement ps = conn.prepareStatement(sql);
+            TypedQuery<IPAddressManagementDTO> query
+                    = em.createQuery(
+                            "SELECT ip "
+                            + "FROM IPAddressManagementDTO ip "
+                            + "ORDER BY ip.ipId",
+                            IPAddressManagementDTO.class
+                    );
 
-            ps.setInt(1, id);
+            int firstResult = (page - 1) * pageSize;
 
-            ResultSet rs = ps.executeQuery();
+            query.setFirstResult(firstResult);
+            query.setMaxResults(pageSize);
 
-            if (rs.next()) {
-                return mapRow(rs);
-            }
+            return new ArrayList<>(
+                    query.getResultList()
+            );
 
         } catch (Exception e) {
             e.printStackTrace();
-        }
+            return new ArrayList<>();
 
-        return null;
+        } finally {
+            em.close();
+        }
     }
 
-    public ArrayList<IPAddressManagementDTO> findAvailableIP() {
-        ArrayList<IPAddressManagementDTO> list = new ArrayList<>();
-        String sql = "SELECT * FROM IPAddressManagement WHERE status = 'AVAILABLE'";
+    public long countAllIPs() {
+
+        EntityManager em = JPAUtil.getEntityManager();
 
         try {
-            Connection conn = DbUtils.getConnection();
-            Statement st = conn.createStatement();
-            ResultSet rs = st.executeQuery(sql);
+            TypedQuery<Long> query = em.createQuery(
+                    "SELECT COUNT(ip) "
+                    + "FROM IPAddressManagementDTO ip",
+                    Long.class
+            );
 
-            while (rs.next()) {
-                list.add(mapRow(rs));
-            }
+            return query.getSingleResult();
 
         } catch (Exception e) {
             e.printStackTrace();
-        }
+            return 0;
 
-        return list;
+        } finally {
+            em.close();
+        }
     }
 
-    public boolean assignIP(int ipId, int deviceId) {
-        String sql = "UPDATE IPAddressManagement SET status = 'ASSIGNED', device_id = ? WHERE ip_id = ?";
+    
+    public ArrayList<IPAddressManagementDTO> findAvailableIPs() {
+
+        EntityManager em = JPAUtil.getEntityManager();
 
         try {
-            Connection conn = DbUtils.getConnection();
-            PreparedStatement ps = conn.prepareStatement(sql);
+            TypedQuery<IPAddressManagementDTO> query
+                    = em.createQuery(
+                            "SELECT ip "
+                            + "FROM IPAddressManagementDTO ip "
+                            + "WHERE UPPER(ip.status) = :status "
+                            + "AND ip.deviceId IS NULL "
+                            + "ORDER BY ip.ipAddress",
+                            IPAddressManagementDTO.class
+                    );
 
-            ps.setInt(1, deviceId);
-            ps.setInt(2, ipId);
+            query.setParameter("status", "AVAILABLE");
 
-            return ps.executeUpdate() > 0;
+            return new ArrayList<>(
+                    query.getResultList()
+            );
 
         } catch (Exception e) {
             e.printStackTrace();
-        }
+            return new ArrayList<>();
 
-        return false;
+        } finally {
+            em.close();
+        }
     }
 
-    public boolean releaseIP(int ipId) {
-        String sql = "UPDATE IPAddressManagement SET status = 'AVAILABLE', device_id = NULL WHERE ip_id = ?";
+    
+    public IPAddressManagementDTO findByDevice(
+            Integer deviceId) {
+
+        if (deviceId == null || deviceId <= 0) {
+            return null;
+        }
+
+        EntityManager em = JPAUtil.getEntityManager();
 
         try {
-            Connection conn = DbUtils.getConnection();
-            PreparedStatement ps = conn.prepareStatement(sql);
+            TypedQuery<IPAddressManagementDTO> query
+                    = em.createQuery(
+                            "SELECT ip "
+                            + "FROM IPAddressManagementDTO ip "
+                            + "WHERE ip.deviceId = :deviceId",
+                            IPAddressManagementDTO.class
+                    );
 
-            ps.setInt(1, ipId);
+            query.setParameter("deviceId", deviceId);
 
-            return ps.executeUpdate() > 0;
+            return query.getResultStream()
+                    .findFirst()
+                    .orElse(null);
 
         } catch (Exception e) {
             e.printStackTrace();
-        }
+            return null;
 
-        return false;
+        } finally {
+            em.close();
+        }
     }
 
-    public IPAddressManagementDTO findByDevice(int deviceId) {
-        String sql = "SELECT * FROM IPAddressManagement WHERE device_id = ?";
+    
+    public long countByStatus(String status) {
+
+        if (status == null || status.trim().isEmpty()) {
+            return 0;
+        }
+
+        EntityManager em = JPAUtil.getEntityManager();
 
         try {
-            Connection conn = DbUtils.getConnection();
-            PreparedStatement ps = conn.prepareStatement(sql);
+            TypedQuery<Long> query = em.createQuery(
+                    "SELECT COUNT(ip) "
+                    + "FROM IPAddressManagementDTO ip "
+                    + "WHERE UPPER(ip.status) = :status",
+                    Long.class
+            );
 
-            ps.setInt(1, deviceId);
+            query.setParameter(
+                    "status",
+                    status.trim().toUpperCase()
+            );
 
-            ResultSet rs = ps.executeQuery();
-
-            if (rs.next()) {
-                return mapRow(rs);
-            }
+            return query.getSingleResult();
 
         } catch (Exception e) {
             e.printStackTrace();
-        }
+            return 0;
 
-        return null;
+        } finally {
+            em.close();
+        }
     }
 }

@@ -6,6 +6,8 @@
         <%@page import="Models.RouterDTO" %>
         <%@page import="Models.RoomDAO" %>
         <%@page import="Models.RoomDTO" %>
+        <%@page import="Models.VLANDAO" %> 
+        <%@page import="Models.VLANDTO" %>
         <%@page import="java.util.ArrayList" %>
         <c:set var="currentUser" value="${sessionScope.user}" />
         <c:set var="role" value="${sessionScope.role}" />
@@ -23,6 +25,8 @@
             RoomDAO roomDAO = new RoomDAO();
             ArrayList<RoomDTO> roomList = roomDAO.ListAll();
         %>
+        <% VLANDAO vlanDAO = new VLANDAO();
+        ArrayList<VLANDTO> vlanList = vlanDAO.ListAll(); %>
                 <!DOCTYPE html>
                 <html lang="en">
 
@@ -432,9 +436,12 @@
                         <button class="nav-item-link" onclick="showPage('vlan', this)">
                             <i class="bi bi-diagram-3"></i> VLAN
                         </button>
-                        <button class="nav-item-link" onclick="showPage('ipmanage', this)">
-                            <i class="bi bi-globe"></i> IP Management
-                        </button>
+                        <a class="nav-item-link text-decoration-none"
+                            href="${pageContext.request.contextPath}/MainController?action=ipList">
+
+                             <i class="bi bi-globe"></i>
+                             IP Management
+                         </a>
 
                         <div class="sidebar-section-label">Monitoring</div>
                         <button class="nav-item-link" onclick="showPage('bandwidth', this)">
@@ -673,7 +680,7 @@
                                 </div>
                             </div>
 
-                            <% String[][] infraPages={ {"devices","bi-laptop","Network Devices","Device name, MAC address, IP, owner, type, status"}, {"accesspoints","bi-reception-4","Access Points","AP name, SSID, IP, connected users, status, room"}, {"switches","bi-hdd-network","Switches","Switch name, total/used ports, IP, status"}, {"vlan","bi-diagram-3","VLAN Management","VLAN name, subnet, purpose"}, {"ipmanage","bi-globe","IP Address Management","IP address, assigned to, status"} }; %>
+                            <% String[][] infraPages={ {"devices","bi-laptop","Network Devices","Device name, MAC address, IP, owner, type, status"}, {"accesspoints","bi-reception-4","Access Points","AP name, SSID, IP, connected users, status, room"}, {"switches","bi-hdd-network","Switches","Switch name, total/used ports, IP, status"}, {"ipmanage","bi-globe","IP Address Management","IP address, assigned to, status"} }; %>
                                 <% for (String[] p : infraPages) { %>
                                     <div class="page-section" id="page-<%= p[0] %>">
                                         <div class="section-card">
@@ -782,6 +789,219 @@
                                                 </div>
                                             </div>
                                         </div>
+                                         
+                                         <div class="page-section" id="page-vlan">
+                                             <div class="section-card">
+
+                                                 <div class="section-card-header">
+                                                     <h6>
+                                                         <i class="bi bi-diagram-3 me-2"></i>
+                                                         VLAN Management
+                                                     </h6>
+
+                                                     <div>
+                                                         <a class="btn-theme text-decoration-none"
+                                                            href="MainController?action=vlanList">
+                                                             <i class="bi bi-box-arrow-up-right me-1"></i>
+                                                             Full View
+                                                         </a>
+
+                                                         <a class="btn-theme text-decoration-none ms-1"
+                                                            href="MainController?action=vlanAdd&returnTo=dashboard">
+                                                             <i class="bi bi-plus-lg me-1"></i>
+                                                             Add VLAN
+                                                         </a>
+                                                     </div>
+                                                 </div>
+
+                                                 <div class="section-card-body" style="padding:0;">
+
+                                                     <div style="overflow-x:auto;">
+
+                                                         <table class="rt-table">
+
+                                                             <thead>
+                                                                 <tr>
+                                                                     <th>
+                                                                         <i class="bi bi-hash me-1"></i>
+                                                                         ID
+                                                                     </th>
+
+                                                                     <th>
+                                                                         <i class="bi bi-diagram-3 me-1"></i>
+                                                                         VLAN Name
+                                                                     </th>
+
+                                                                     <th>
+                                                                         <i class="bi bi-globe me-1"></i>
+                                                                         Subnet
+                                                                     </th>
+
+                                                                     <th>
+                                                                         <i class="bi bi-card-text me-1"></i>
+                                                                         Purpose
+                                                                     </th>
+
+                                                                     <th>
+                                                                         <i class="bi bi-door-open me-1"></i>
+                                                                         Room
+                                                                     </th>
+
+                                                                     <th>
+                                                                         <i class="bi bi-three-dots me-1"></i>
+                                                                         Actions
+                                                                     </th>
+                                                                 </tr>
+                                                             </thead>
+
+                                                             <tbody>
+
+                                                                 <%
+                                                                     if (vlanList != null
+                                                                             && !vlanList.isEmpty()) {
+
+                                                                         for (VLANDTO vlan : vlanList) {
+                                                                 %>
+
+                                                                 <tr>
+                                                                     <td>
+                                                                         <span class="rt-id">
+                                                                             #<%= vlan.getVlanId() %>
+                                                                         </span>
+                                                                     </td>
+
+                                                                     <td>
+                                                                         <div class="rt-name">
+
+                                                                             <div class="rt-name-icon">
+                                                                                 <i class="bi bi-diagram-3-fill"></i>
+                                                                             </div>
+
+                                                                             <span style="font-weight:600;">
+                                                                                 <%= vlan.getVlanName() %>
+                                                                             </span>
+
+                                                                         </div>
+                                                                     </td>
+
+                                                                     <td>
+                                                                         <% if (vlan.getSubnet() != null) { %>
+
+                                                                         <span class="rt-ip">
+                                                                             <%= vlan.getSubnet() %>
+                                                                         </span>
+
+                                                                         <% } else { %>
+
+                                                                         <span style="color:var(--text-muted);">
+                                                                             Not specified
+                                                                         </span>
+
+                                                                         <% } %>
+                                                                     </td>
+
+                                                                     <td style="color:var(--text-muted);font-size:.78rem;">
+
+                                                                         <%= vlan.getPurpose() == null
+                                                                                 ? "Not specified"
+                                                                                 : vlan.getPurpose() %>
+
+                                                                     </td>
+
+                                                                     <td>
+                                                                         <% if (vlan.getRoomId() != null) { %>
+
+                                                                         <span class="rt-room">
+                                                                             Room #<%= vlan.getRoomId() %>
+                                                                         </span>
+
+                                                                         <% } else { %>
+
+                                                                         <span style="color:var(--text-muted);">
+                                                                             No room
+                                                                         </span>
+
+                                                                         <% } %>
+                                                                     </td>
+
+                                                                     <td>
+                                                                         <div class="rt-actions">
+
+                                                                             <a class="rt-btn rt-btn-edit"
+                                                                                href="MainController?action=vlanEdit&id=<%= vlan.getVlanId() %>&returnTo=dashboard"
+                                                                                title="Edit VLAN">
+
+                                                                                 <i class="bi bi-pencil-fill"></i>
+                                                                             </a>
+
+                                                                             <form action="MainController"
+                                                                                   method="post"
+                                                                                   style="display:inline;"
+                                                                                   onsubmit="return confirm('Are you sure you want to delete VLAN <%= vlan.getVlanName() %>?');">
+
+                                                                                 <input type="hidden"
+                                                                                        name="action"
+                                                                                        value="vlanDelete">
+
+                                                                                 <input type="hidden"
+                                                                                        name="vlanId"
+                                                                                        value="<%= vlan.getVlanId() %>">
+
+                                                                                 <input type="hidden"
+                                                                                        name="returnTo"
+                                                                                        value="dashboard">
+
+                                                                                 <button class="rt-btn rt-btn-del"
+                                                                                         type="submit"
+                                                                                         title="Delete VLAN">
+
+                                                                                     <i class="bi bi-trash3-fill"></i>
+                                                                                 </button>
+
+                                                                             </form>
+
+                                                                         </div>
+                                                                     </td>
+                                                                 </tr>
+
+                                                                 <%
+                                                                         }
+                                                                     } else {
+                                                                 %>
+
+                                                                 <tr>
+                                                                     <td colspan="6">
+
+                                                                         <div class="rt-empty">
+                                                                             <i class="bi bi-diagram-3"></i>
+
+                                                                             No VLANs found.
+
+                                                                             <div class="mt-3">
+                                                                                 <a class="btn-theme text-decoration-none"
+                                                                                    href="MainController?action=vlanAdd&returnTo=dashboard">
+
+                                                                                     <i class="bi bi-plus-lg me-1"></i>
+                                                                                     Add the first VLAN
+                                                                                 </a>
+                                                                             </div>
+                                                                         </div>
+
+                                                                     </td>
+                                                                 </tr>
+
+                                                                 <%
+                                                                     }
+                                                                 %>
+
+                                                             </tbody>
+                                                         </table>
+
+                                                     </div>
+                                                 </div>
+                                             </div>
+                                         </div>
+
 
                                         <div class="page-section" id="page-bandwidth">
                                             <div class="section-card">

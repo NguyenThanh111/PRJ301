@@ -1,134 +1,263 @@
+
 package Models;
 
-import Utils.DbUtils;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
+import Utils.JPAUtil;
 import java.util.ArrayList;
+import java.util.List;
+import javax.persistence.EntityManager;
+import javax.persistence.EntityTransaction;
+import javax.persistence.TypedQuery;
 
 public class RoomDAO implements IDAO<RoomDTO, Integer> {
-
-    private RoomDTO mapRow(ResultSet rs) throws SQLException {
-        return new RoomDTO(
-                rs.getInt("room_id"),
-                rs.getString("room_name"),
-                rs.getString("building"),
-                rs.getInt("floor"),
-                rs.getInt("capacity")
-        );
-    }
-
     @Override
     public boolean insert(RoomDTO room) {
-        String sql = "INSERT INTO Room (room_name, building, floor, capacity) VALUES (?, ?, ?, ?)";
 
-        try {
-            Connection conn = DbUtils.getConnection();
-            PreparedStatement ps = conn.prepareStatement(sql);
-
-            ps.setString(1, room.getRoomName());
-            ps.setString(2, room.getBuilding());
-            ps.setInt(3, room.getFloor());
-            ps.setInt(4, room.getCapacity());
-
-            return ps.executeUpdate() > 0;
-
-        } catch (Exception e) {
-            e.printStackTrace();
+        if (room == null) {
+            return false;
         }
 
-        return false;
+        EntityManager em = JPAUtil.getEntityManager();
+        EntityTransaction transaction = em.getTransaction();
+
+        try {
+            transaction.begin();
+
+            em.persist(room);
+
+            transaction.commit();
+            return true;
+
+        } catch (Exception e) {
+
+            if (transaction.isActive()) {
+                transaction.rollback();
+            }
+
+            e.printStackTrace();
+            return false;
+
+        } finally {
+            em.close();
+        }
     }
 
+    // =========================
+    // UPDATE
+    // =========================
     @Override
     public boolean update(RoomDTO room) {
-        String sql = "UPDATE Room SET room_name = ?, building = ?, floor = ?, capacity = ? WHERE room_id = ?";
 
-        try {
-            Connection conn = DbUtils.getConnection();
-            PreparedStatement ps = conn.prepareStatement(sql);
-
-            ps.setString(1, room.getRoomName());
-            ps.setString(2, room.getBuilding());
-            ps.setInt(3, room.getFloor());
-            ps.setInt(4, room.getCapacity());
-            ps.setInt(5, room.getRoomId());
-
-            return ps.executeUpdate() > 0;
-
-        } catch (Exception e) {
-            e.printStackTrace();
+        if (room == null || room.getRoomId() <= 0) {
+            return false;
         }
 
-        return false;
+        EntityManager em = JPAUtil.getEntityManager();
+        EntityTransaction transaction = em.getTransaction();
+
+        try {
+            transaction.begin();
+
+            RoomDTO existingRoom = em.find(
+                    RoomDTO.class,
+                    room.getRoomId()
+            );
+
+            if (existingRoom == null) {
+                transaction.rollback();
+                return false;
+            }
+
+            existingRoom.setRoomName(room.getRoomName());
+            existingRoom.setBuilding(room.getBuilding());
+            existingRoom.setFloor(room.getFloor());
+            existingRoom.setCapacity(room.getCapacity());
+
+            transaction.commit();
+            return true;
+
+        } catch (Exception e) {
+
+            if (transaction.isActive()) {
+                transaction.rollback();
+            }
+
+            e.printStackTrace();
+            return false;
+
+        } finally {
+            em.close();
+        }
     }
 
+    // =========================
+    // DELETE
+    // =========================
     @Override
     public boolean remove(RoomDTO room) {
+
+        if (room == null || room.getRoomId() <= 0) {
+            return false;
+        }
+
         return delete(room.getRoomId());
     }
 
     public boolean delete(int roomId) {
-        String sql = "DELETE FROM Room WHERE room_id = ?";
 
-        try {
-            Connection conn = DbUtils.getConnection();
-            PreparedStatement ps = conn.prepareStatement(sql);
-
-            ps.setInt(1, roomId);
-
-            return ps.executeUpdate() > 0;
-
-        } catch (Exception e) {
-            e.printStackTrace();
+        if (roomId <= 0) {
+            return false;
         }
 
-        return false;
+        EntityManager em = JPAUtil.getEntityManager();
+        EntityTransaction transaction = em.getTransaction();
+
+        try {
+            transaction.begin();
+
+            RoomDTO room = em.find(RoomDTO.class, roomId);
+
+            if (room == null) {
+                transaction.rollback();
+                return false;
+            }
+
+            em.remove(room);
+
+            transaction.commit();
+            return true;
+
+        } catch (Exception e) {
+
+            if (transaction.isActive()) {
+                transaction.rollback();
+            }
+
+            /*
+             * Trường hợp Room đang được Router, VLAN,
+             * AccessPoint... tham chiếu thì database
+             * sẽ chặn xóa và method trả về false.
+             */
+            e.printStackTrace();
+            return false;
+
+        } finally {
+            em.close();
+        }
     }
 
+    // =========================
+    // READ ALL
+    // =========================
     @Override
     public ArrayList<RoomDTO> ListAll() {
-        ArrayList<RoomDTO> list = new ArrayList<>();
-        String sql = "SELECT * FROM Room";
+
+        EntityManager em = JPAUtil.getEntityManager();
 
         try {
-            Connection conn = DbUtils.getConnection();
-            Statement st = conn.createStatement();
-            ResultSet rs = st.executeQuery(sql);
+            TypedQuery<RoomDTO> query = em.createQuery(
+                    "SELECT r FROM Room r "
+                    + "ORDER BY r.roomId",
+                    RoomDTO.class
+            );
 
-            while (rs.next()) {
-                list.add(mapRow(rs));
-            }
+            return new ArrayList<>(query.getResultList());
 
         } catch (Exception e) {
             e.printStackTrace();
-        }
+            return new ArrayList<>();
 
-        return list;
+        } finally {
+            em.close();
+        }
     }
 
+    // =========================
+    // SEARCH BY ID
+    // =========================
     @Override
     public RoomDTO searchById(Integer id) {
-        String sql = "SELECT * FROM Room WHERE room_id = ?";
+
+        if (id == null || id <= 0) {
+            return null;
+        }
+
+        EntityManager em = JPAUtil.getEntityManager();
 
         try {
-            Connection conn = DbUtils.getConnection();
-            PreparedStatement ps = conn.prepareStatement(sql);
-
-            ps.setInt(1, id);
-
-            ResultSet rs = ps.executeQuery();
-
-            if (rs.next()) {
-                return mapRow(rs);
-            }
+            return em.find(RoomDTO.class, id);
 
         } catch (Exception e) {
             e.printStackTrace();
+            return null;
+
+        } finally {
+            em.close();
+        }
+    }
+
+    // =========================
+    // PAGINATION
+    // =========================
+    public ArrayList<RoomDTO> getRoomsByPage(
+            int page,
+            int pageSize) {
+
+        if (page < 1) {
+            page = 1;
         }
 
-        return null;
+        if (pageSize < 1) {
+            pageSize = 5;
+        }
+
+        EntityManager em = JPAUtil.getEntityManager();
+
+        try {
+            TypedQuery<RoomDTO> query = em.createQuery(
+                    "SELECT r FROM Room r "
+                    + "ORDER BY r.roomId",
+                    RoomDTO.class
+            );
+
+            int firstResult = (page - 1) * pageSize;
+
+            query.setFirstResult(firstResult);
+            query.setMaxResults(pageSize);
+
+            List<RoomDTO> result = query.getResultList();
+
+            return new ArrayList<>(result);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new ArrayList<>();
+
+        } finally {
+            em.close();
+        }
+    }
+
+    // =========================
+    // COUNT FOR PAGINATION
+    // =========================
+    public long countAllRooms() {
+
+        EntityManager em = JPAUtil.getEntityManager();
+
+        try {
+            TypedQuery<Long> query = em.createQuery(
+                    "SELECT COUNT(r) FROM Room r",
+                    Long.class
+            );
+
+            return query.getSingleResult();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return 0;
+
+        } finally {
+            em.close();
+        }
     }
 }

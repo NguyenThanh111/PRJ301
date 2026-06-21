@@ -94,9 +94,8 @@ public class RoomServlet extends HttpServlet {
         rd.forward(request, response);
     }
 
-    // =========================
-    // Hiển thị form sửa
-    // =========================
+    
+    
     private void showEditForm(HttpServletRequest request,
             HttpServletResponse response)
             throws ServletException, IOException {
@@ -140,9 +139,7 @@ public class RoomServlet extends HttpServlet {
         rd.forward(request, response);
     }
 
-    // =========================
-    // CREATE - Thêm phòng
-    // =========================
+    
     private void insertRoom(HttpServletRequest request,
             HttpServletResponse response)
             throws ServletException, IOException {

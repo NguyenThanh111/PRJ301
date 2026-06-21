@@ -40,6 +40,10 @@
         <servlet-name>VLANServlet</servlet-name>
         <servlet-class>Controller.VLANServlet</servlet-class>
     </servlet>
+    <servlet>
+        <servlet-name>IPServlet</servlet-name>
+        <servlet-class>Controller.IPServlet</servlet-class>
+    </servlet>
     <servlet-mapping>
         <servlet-name>LoginController</servlet-name>
         <url-pattern>/LoginController</url-pattern>
@@ -79,6 +83,10 @@
     <servlet-mapping>
         <servlet-name>VLANServlet</servlet-name>
         <url-pattern>/VLANServlet</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>IPServlet</servlet-name>
+        <url-pattern>/IPServlet</url-pattern>
     </servlet-mapping>
     <session-config>
         <session-timeout>
