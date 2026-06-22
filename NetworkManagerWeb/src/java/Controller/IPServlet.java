@@ -1,7 +1,7 @@
 
 package Controller;
 
-import Models.IPAddressManagementDAO;
+import Models_DAO.IPAddressManagementDAO;
 import Models.IPAddressManagementDTO;
 import java.io.IOException;
 import java.util.ArrayList;

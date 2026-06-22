@@ -1,7 +1,7 @@
-package Models;
-
-import Utils.JPAUtil;
 package Models_DAO;
+
+import Models.RoomDTO;
+import Utils.JpaUtils;
 
 import Models.VLANDTO;
 import Utils.DbUtils;
@@ -28,7 +28,7 @@ public class VLANDAO implements IDAO<VLANDTO, Integer> {
             return false;
         }
 
-        EntityManager em = JPAUtil.getEntityManager();
+        EntityManager em = JpaUtils.getEntityManager();
         EntityTransaction transaction = em.getTransaction();
 
         try {
@@ -63,7 +63,7 @@ public class VLANDAO implements IDAO<VLANDTO, Integer> {
             return false;
         }
 
-        EntityManager em = JPAUtil.getEntityManager();
+        EntityManager em = JpaUtils.getEntityManager();
         EntityTransaction transaction = em.getTransaction();
 
         try {
@@ -120,7 +120,7 @@ public class VLANDAO implements IDAO<VLANDTO, Integer> {
             return false;
         }
 
-        EntityManager em = JPAUtil.getEntityManager();
+        EntityManager em = JpaUtils.getEntityManager();
         EntityTransaction transaction = em.getTransaction();
 
         try {
@@ -161,7 +161,7 @@ public class VLANDAO implements IDAO<VLANDTO, Integer> {
     @Override
     public ArrayList<VLANDTO> ListAll() {
 
-        EntityManager em = JPAUtil.getEntityManager();
+        EntityManager em = JpaUtils.getEntityManager();
 
         try {
             TypedQuery<VLANDTO> query = em.createQuery(
@@ -193,7 +193,7 @@ public class VLANDAO implements IDAO<VLANDTO, Integer> {
             return null;
         }
 
-        EntityManager em = JPAUtil.getEntityManager();
+        EntityManager em = JpaUtils.getEntityManager();
 
         try {
             return em.find(VLANDTO.class, id);
@@ -222,7 +222,7 @@ public class VLANDAO implements IDAO<VLANDTO, Integer> {
             pageSize = 5;
         }
 
-        EntityManager em = JPAUtil.getEntityManager();
+        EntityManager em = JpaUtils.getEntityManager();
 
         try {
             TypedQuery<VLANDTO> query = em.createQuery(
@@ -251,7 +251,7 @@ public class VLANDAO implements IDAO<VLANDTO, Integer> {
 
     public long countAllVLANs() {
 
-        EntityManager em = JPAUtil.getEntityManager();
+        EntityManager em = JpaUtils.getEntityManager();
 
         try {
             TypedQuery<Long> query = em.createQuery(
@@ -276,7 +276,7 @@ public class VLANDAO implements IDAO<VLANDTO, Integer> {
             return true;
         }
 
-        EntityManager em = JPAUtil.getEntityManager();
+        EntityManager em = JpaUtils.getEntityManager();
 
         try {
             RoomDTO room = em.find(

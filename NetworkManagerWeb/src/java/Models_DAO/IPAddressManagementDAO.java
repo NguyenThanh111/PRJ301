@@ -1,9 +1,8 @@
 
 
-package Models;
-
-import Utils.JPAUtil;
 package Models_DAO;
+
+import Utils.JpaUtils;
 
 import Models.IPAddressManagementDTO;
 import Utils.DbUtils;
@@ -20,7 +19,7 @@ public class IPAddressManagementDAO {
 
     public ArrayList<IPAddressManagementDTO> ListAll() {
 
-        EntityManager em = JPAUtil.getEntityManager();
+        EntityManager em = JpaUtils.getEntityManager();
 
         try {
             TypedQuery<IPAddressManagementDTO> query
@@ -47,7 +46,7 @@ public class IPAddressManagementDAO {
             return null;
         }
 
-        EntityManager em = JPAUtil.getEntityManager();
+        EntityManager em = JpaUtils.getEntityManager();
 
         try {
             return em.find(
@@ -77,7 +76,7 @@ public class IPAddressManagementDAO {
             pageSize = 8;
         }
 
-        EntityManager em = JPAUtil.getEntityManager();
+        EntityManager em = JpaUtils.getEntityManager();
 
         try {
             TypedQuery<IPAddressManagementDTO> query
@@ -108,7 +107,7 @@ public class IPAddressManagementDAO {
 
     public long countAllIPs() {
 
-        EntityManager em = JPAUtil.getEntityManager();
+        EntityManager em = JpaUtils.getEntityManager();
 
         try {
             TypedQuery<Long> query = em.createQuery(
@@ -131,7 +130,7 @@ public class IPAddressManagementDAO {
     
     public ArrayList<IPAddressManagementDTO> findAvailableIPs() {
 
-        EntityManager em = JPAUtil.getEntityManager();
+        EntityManager em = JpaUtils.getEntityManager();
 
         try {
             TypedQuery<IPAddressManagementDTO> query
@@ -167,7 +166,7 @@ public class IPAddressManagementDAO {
             return null;
         }
 
-        EntityManager em = JPAUtil.getEntityManager();
+        EntityManager em = JpaUtils.getEntityManager();
 
         try {
             TypedQuery<IPAddressManagementDTO> query
@@ -200,7 +199,7 @@ public class IPAddressManagementDAO {
             return 0;
         }
 
-        EntityManager em = JPAUtil.getEntityManager();
+        EntityManager em = JpaUtils.getEntityManager();
 
         try {
             TypedQuery<Long> query = em.createQuery(

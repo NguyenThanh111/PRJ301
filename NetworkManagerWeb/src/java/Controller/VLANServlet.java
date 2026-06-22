@@ -1,8 +1,8 @@
 
 package Controller;
 
-import Models.RoomDAO;
-import Models.VLANDAO;
+import Models_DAO.RoomDAO;
+import Models_DAO.VLANDAO;
 import Models.VLANDTO;
 import java.io.IOException;
 import java.util.ArrayList;

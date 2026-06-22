@@ -1,9 +1,8 @@
 
 
-package Models;
-
-import Utils.JPAUtil;
 package Models_DAO;
+
+import Utils.JpaUtils;
 
 import Models.RoomDTO;
 import Utils.DbUtils;
@@ -26,7 +25,7 @@ public class RoomDAO implements IDAO<RoomDTO, Integer> {
             return false;
         }
 
-        EntityManager em = JPAUtil.getEntityManager();
+        EntityManager em = JpaUtils.getEntityManager();
         EntityTransaction transaction = em.getTransaction();
 
         try {
@@ -61,7 +60,7 @@ public class RoomDAO implements IDAO<RoomDTO, Integer> {
             return false;
         }
 
-        EntityManager em = JPAUtil.getEntityManager();
+        EntityManager em = JpaUtils.getEntityManager();
         EntityTransaction transaction = em.getTransaction();
 
         try {
@@ -118,7 +117,7 @@ public class RoomDAO implements IDAO<RoomDTO, Integer> {
             return false;
         }
 
-        EntityManager em = JPAUtil.getEntityManager();
+        EntityManager em = JpaUtils.getEntityManager();
         EntityTransaction transaction = em.getTransaction();
 
         try {
@@ -161,7 +160,7 @@ public class RoomDAO implements IDAO<RoomDTO, Integer> {
     @Override
     public ArrayList<RoomDTO> ListAll() {
 
-        EntityManager em = JPAUtil.getEntityManager();
+        EntityManager em = JpaUtils.getEntityManager();
 
         try {
             TypedQuery<RoomDTO> query = em.createQuery(
@@ -191,7 +190,7 @@ public class RoomDAO implements IDAO<RoomDTO, Integer> {
             return null;
         }
 
-        EntityManager em = JPAUtil.getEntityManager();
+        EntityManager em = JpaUtils.getEntityManager();
 
         try {
             return em.find(RoomDTO.class, id);
@@ -220,7 +219,7 @@ public class RoomDAO implements IDAO<RoomDTO, Integer> {
             pageSize = 5;
         }
 
-        EntityManager em = JPAUtil.getEntityManager();
+        EntityManager em = JpaUtils.getEntityManager();
 
         try {
             TypedQuery<RoomDTO> query = em.createQuery(
@@ -252,7 +251,7 @@ public class RoomDAO implements IDAO<RoomDTO, Integer> {
     // =========================
     public long countAllRooms() {
 
-        EntityManager em = JPAUtil.getEntityManager();
+        EntityManager em = JpaUtils.getEntityManager();
 
         try {
             TypedQuery<Long> query = em.createQuery(

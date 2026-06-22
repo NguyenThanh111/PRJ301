@@ -339,6 +339,25 @@
                         text-transform: uppercase;
                     }
 
+                    .back-home {
+                        text-align: center;
+                        margin-top: 14px;
+                    }
+
+                    .back-home a {
+                        color: #93a0c8;
+                        font-size: 12px;
+                        text-decoration: none;
+                        display: inline-flex;
+                        align-items: center;
+                        gap: 6px;
+                        transition: color .2s;
+                    }
+
+                    .back-home a:hover {
+                        color: #caa7ff;
+                    }
+
                     @media (max-width: 980px) {
                         .auth-shell {
                             grid-template-columns: 1fr;
@@ -403,6 +422,16 @@
                                     </div>
                                     <% } %>
 
+                                <% String successMsg = (String) request.getAttribute("success"); %>
+                                <% if (successMsg != null && !successMsg.isEmpty()) { %>
+                                    <div class="alert-success" style="border: 1px solid rgba(16, 185, 129, 0.45); background: rgba(16, 185, 129, 0.12); color: #a7f3d0; border-radius: var(--radius-md); font-size: 13px; padding: 10px 12px; margin-bottom: 14px; display: flex; gap: 8px; align-items: center;">
+                                        <i class="bi bi-check-circle-fill"></i>
+                                        <span>
+                                            <%= successMsg %>
+                                        </span>
+                                    </div>
+                                <% } %>
+
                                         <c:if test="${not empty error}">
                                             <div class="alert-error">
                                                 <i class="bi bi-exclamation-triangle-fill"></i>
@@ -455,6 +484,11 @@
                                             <a href="user-form.jsp?source=normal">Create a new account</a>
                                         </p>
 
+                                        <div class="back-home">
+                                            <a href="<c:url value='/home'/>">
+                                                <i class="bi bi-arrow-left"></i> Back to Homepage
+                                            </a>
+                                        </div>
                                         <div class="foot-note">University Network Management System</div>
                         </div>
                     </section>
