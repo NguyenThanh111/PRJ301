@@ -1,6 +1,7 @@
 package Models;
 
 import Utils.DbUtils;
+import Utils.JPAUtil;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -8,106 +9,141 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Types;
 import java.util.ArrayList;
+import javax.persistence.EntityManager;
+import javax.persistence.EntityTransaction;
 
 public class SupportTicketDAO implements IDAO<SupportTicketDTO, Integer> {
 
     private SupportTicketDTO mapRow(ResultSet rs) throws SQLException {
-        Integer deviceId = (Integer) rs.getObject("device_id");
-
-        return new SupportTicketDTO(
-                rs.getInt("ticket_id"),
-                rs.getString("title"),
-                rs.getString("description"),
-                rs.getString("status"),
-                rs.getTimestamp("created_date"),
-                rs.getInt("created_by"),
-                deviceId
-        );
-    }
+        
 
     @Override
     public boolean insert(SupportTicketDTO ticket) {
-        String sql = "INSERT INTO SupportTicket "
-                + "(title, description, status, created_by, device_id) "
-                + "VALUES (?, ?, ?, ?, ?)";
-
-        try {
-            Connection conn = DbUtils.getConnection();
-            PreparedStatement ps = conn.prepareStatement(sql);
-
-            ps.setString(1, ticket.getTitle());
-            ps.setString(2, ticket.getDescription());
-            ps.setString(3, ticket.getStatus());
-            ps.setInt(4, ticket.getCreatedBy());
-
-            if (ticket.getDeviceId() == null) {
-                ps.setNull(5, Types.INTEGER);
-            } else {
-                ps.setInt(5, ticket.getDeviceId());
-            }
-
-            return ps.executeUpdate() > 0;
-
-        } catch (Exception e) {
-            e.printStackTrace();
+        if (vlan == null) {
+            return false;
+            
         }
-
-        return false;
+        EntityManager em = JPAUtil.getEntityManager();
+        EntityTransaction transaction = em.getTransaction();
+        
+        try {
+            transaction.begin();
+            em.persist(ticket);
+            
+            transaction.commit();
+            return true;
+            
+        } catch (Exception e) {
+            
+            if(transaction.isActive()){
+                transaction.rollback();
+            }
+            e.printStackTrace();
+            return false;
+        
+        } finally {
+            em.close();
+        }
+            
+            
+        
+    
     }
 
     @Override
     public boolean update(SupportTicketDTO ticket) {
-        String sql = "UPDATE SupportTicket SET "
-                + "title = ?, description = ?, status = ?, created_by = ?, device_id = ? "
-                + "WHERE ticket_id = ?";
-
-        try {
-            Connection conn = DbUtils.getConnection();
-            PreparedStatement ps = conn.prepareStatement(sql);
-
-            ps.setString(1, ticket.getTitle());
-            ps.setString(2, ticket.getDescription());
-            ps.setString(3, ticket.getStatus());
-            ps.setInt(4, ticket.getCreatedBy());
-
-            if (ticket.getDeviceId() == null) {
-                ps.setNull(5, Types.INTEGER);
-            } else {
-                ps.setInt(5, ticket.getDeviceId());
+        if (ticket == null || ticket.getTicketId() <= 0) {
+                return false;
             }
 
-            ps.setInt(6, ticket.getTicketId());
+            EntityManager em = JPAUtil.getEntityManager();
+            EntityTransaction transaction = em.getTransaction();
 
-            return ps.executeUpdate() > 0;
+            try {
+                transaction.begin();
 
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+                SupportTicketDTO existingSupportTicket = em.find(
+                        SupportTicketDTO.class,
+                        ticket.getTicketId()
+                );
 
-        return false;
+                if (existingSupportTicket== null) {
+                    transaction.rollback();
+                    return false;
+                }
+
+                existingSupportTicket.setTitle(ticket.getTitle());
+                existingSupportTicket.setDescription(ticket.getDescription());
+                existingSupportTicket.setStatus(ticket.getStatus());
+                existingSupportTicket.setCreatedDate(ticket.getCreatedDate());
+                existingSupportTicket.setCreatedBy(ticket.getCreatedBy());
+                existingSupportTicket.setDeviceId(ticket.getDeviceId());
+
+                transaction.commit();
+                return true;
+
+            } catch (Exception e) {
+
+                if (transaction.isActive()) {
+                    transaction.rollback();
+                }
+
+                e.printStackTrace();
+                return false;
+
+            } finally {
+                em.close();
+            }    
     }
 
     @Override
     public boolean remove(SupportTicketDTO ticket) {
+                if (ticket == null || ticket.getTicketId() <= 0) {
+                return false;
+            }
+    }
         return delete(ticket.getTicketId());
     }
 
     public boolean delete(int ticketId) {
-        String sql = "DELETE FROM SupportTicket WHERE ticket_id = ?";
+        if (ticket == null ) {
+                return false;
+            }
 
-        try {
-            Connection conn = DbUtils.getConnection();
-            PreparedStatement ps = conn.prepareStatement(sql);
+            EntityManager em = JPAUtil.getEntityManager();
+            EntityTransaction transaction = em.getTransaction();
 
-            ps.setInt(1, ticketId);
+            try {
+                transaction.begin();
 
-            return ps.executeUpdate() > 0;
+                SupportTicketDTO SupportTicket = em.find(
+                        SupportTicketDTO.class,
+                        ticketId
+                );
 
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+                if (SupportTicket== null) {
+                    transaction.rollback();
+                    return false;
+                }
+                em.remove(SupportTicket);
 
-        return false;
+                
+
+                transaction.commit();
+                return true;
+
+            } catch (Exception e) {
+
+                if (transaction.isActive()) {
+                    transaction.rollback();
+                }
+
+                e.printStackTrace();
+                return false;
+
+            } finally {
+                em.close();
+            }  
     }
 
     @Override

@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<persistence xmlns="http://xmlns.jcp.org/xml/ns/persistence"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/persistence
+                                 http://xmlns.jcp.org/xml/ns/persistence/persistence_2_1.xsd"
+             version="2.1">
+
+    <persistence-unit name="NetworkPU"
+                      transaction-type="RESOURCE_LOCAL">
+
+        <provider>org.eclipse.persistence.jpa.PersistenceProvider</provider>
+
+        <class>Models.RoomDTO</class>
+        <class>Models.VLANDTO</class>
+
+        <exclude-unlisted-classes>false</exclude-unlisted-classes>
+
+        <properties>
+            <property name="javax.persistence.jdbc.driver"
+                      value="com.microsoft.sqlserver.jdbc.SQLServerDriver"/>
+
+            <property name="javax.persistence.jdbc.url"
+                      value="jdbc:sqlserver://localhost:1433;databaseName=network_simulation_db3"/>
+
+            <property name="javax.persistence.jdbc.user"
+                      value="sa"/>
+
+            <property name="javax.persistence.jdbc.password"
+                      value="12345"/>
+
+            <property name="eclipselink.target-database"
+                      value="org.eclipse.persistence.platform.database.SQLServerPlatform"/>
+
+            <property name="eclipselink.weaving"
+                      value="false"/>
+
+            <property name="eclipselink.ddl-generation"
+                      value="none"/>
+
+            <property name="eclipselink.logging.level"
+                      value="FINE"/>
+
+            <property name="eclipselink.logging.parameters"
+                      value="true"/>
+        </properties>
+
+    </persistence-unit>
+</persistence>
