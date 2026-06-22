@@ -567,4 +567,50 @@ INSERT INTO SystemLog (action, details, performed_by) VALUES
 (N'Đăng xuất', N'Phiên đăng nhập của Admin đã đóng sau 2 giờ không hoạt động', 1);
 GO
 
+-- VNPAY payment and service activation tables
+CREATE TABLE PaymentTransaction (
+    payment_id         BIGINT IDENTITY(1,1) PRIMARY KEY,
+    txn_ref            VARCHAR(100) NOT NULL UNIQUE,
+    user_id            INT NOT NULL,
+    plan_code          VARCHAR(30) NOT NULL,
+    plan_name          NVARCHAR(100) NOT NULL,
+    duration_days      INT NOT NULL CHECK (duration_days > 0),
+    amount             BIGINT NOT NULL CHECK (amount > 0),
+    currency           VARCHAR(3) NOT NULL DEFAULT 'VND',
+    order_info         NVARCHAR(255) NOT NULL,
+    status             VARCHAR(20) NOT NULL DEFAULT 'PENDING'
+                       CHECK (status IN ('PENDING','SUCCESS','FAILED','CANCELLED','EXPIRED')),
+    client_ip          VARCHAR(45),
+    bank_code          VARCHAR(30),
+    card_type          VARCHAR(30),
+    vnp_transaction_no VARCHAR(50),
+    response_code      VARCHAR(10),
+    transaction_status VARCHAR(10),
+    pay_date           DATETIME2,
+    gateway_data       NVARCHAR(MAX),
+    created_at         DATETIME2 NOT NULL DEFAULT SYSDATETIME(),
+    updated_at         DATETIME2 NOT NULL DEFAULT SYSDATETIME(),
+    confirmed_at       DATETIME2,
+    CONSTRAINT fk_payment_user FOREIGN KEY (user_id) REFERENCES [User](user_id)
+);
+GO
+
+CREATE INDEX IX_Payment_User_Created ON PaymentTransaction(user_id, created_at DESC);
+CREATE INDEX IX_Payment_Status ON PaymentTransaction(status);
+GO
+
+CREATE TABLE UserSubscription (
+    user_id       INT PRIMARY KEY,
+    plan_code     VARCHAR(30) NOT NULL,
+    plan_name     NVARCHAR(100) NOT NULL,
+    status        VARCHAR(20) NOT NULL DEFAULT 'ACTIVE'
+                  CHECK (status IN ('ACTIVE','EXPIRED','CANCELLED')),
+    started_at    DATETIME2 NOT NULL,
+    expires_at    DATETIME2 NOT NULL,
+    updated_at    DATETIME2 NOT NULL DEFAULT SYSDATETIME(),
+    CONSTRAINT fk_subscription_user FOREIGN KEY (user_id) REFERENCES [User](user_id),
+    CONSTRAINT ck_subscription_dates CHECK (expires_at > started_at)
+);
+GO
+
 

@@ -191,6 +191,28 @@
                             border: 1px solid rgba(139, 92, 246, 0.4);
                         }
 
+                        .premium-btn {
+                            display: inline-flex;
+                            align-items: center;
+                            gap: 7px;
+                            padding: 8px 14px;
+                            border-radius: 10px;
+                            color: #fff;
+                            text-decoration: none;
+                            font-size: 13px;
+                            font-weight: 800;
+                            background: linear-gradient(135deg, #f59e0b, #d946ef 58%, #8b5cf6);
+                            border: 1px solid rgba(253, 224, 71, 0.35);
+                            box-shadow: 0 7px 22px rgba(217, 70, 239, 0.25);
+                            transition: transform .18s ease, box-shadow .18s ease;
+                        }
+
+                        .premium-btn:hover {
+                            color: #fff;
+                            transform: translateY(-1px);
+                            box-shadow: 0 10px 28px rgba(217, 70, 239, 0.38);
+                        }
+
                         .page-body {
                             padding: 22px;
                         }
@@ -322,6 +344,9 @@
                         <button class="nav-item-link" onclick="showPage('notifications', this)">
                             <i class="bi bi-bell"></i> Notifications
                         </button>
+                        <a class="nav-item-link text-decoration-none" href="<%= request.getContextPath() %>/payment/checkout">
+                            <i class="bi bi-credit-card"></i> Thanh toán VNPAY
+                        </a>
 
                         <div class="sidebar-section-label">Support</div>
                         <button class="nav-item-link" onclick="showPage('tickets', this)">
@@ -364,6 +389,9 @@
                                 <span class="topbar-breadcrumb" id="pageBreadcrumb">/ Overview</span>
                             </div>
                             <div class="d-flex align-items-center gap-2">
+                                <a class="premium-btn" href="<%= request.getContextPath() %>/payment/checkout">
+                                    <i class="bi bi-gem"></i> Premium
+                                </a>
                                 <span class="role-badge-viewer">
                                     <%= role %>
                                 </span>

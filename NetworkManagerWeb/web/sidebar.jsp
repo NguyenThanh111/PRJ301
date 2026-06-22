@@ -1,4 +1,6 @@
 <%-- sidebar.jsp - Shared sidebar for all staff pages --%>
+<%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%@taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions"%>
 <%@page import="Models_DAO.NetworkAlertDAO" %>
 <c:set var="sa" value="${sidebarActive}" />
 <% NetworkAlertDAO _alertDAO = new NetworkAlertDAO(); int _totalAlerts = _alertDAO.ListAll().size(); pageContext.setAttribute("_totalAlerts", _totalAlerts); %>
