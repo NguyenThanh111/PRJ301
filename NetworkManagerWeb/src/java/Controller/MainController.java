@@ -119,6 +119,19 @@ public class MainController extends HttpServlet {
             case "roomDelete":
                 url = "RoomServlet";
                 break;
+            //===============Vlan==================
+            case "vlanList":
+            case "vlanAdd":
+            case "vlanEdit":
+            case "vlanInsert":
+            case "vlanUpdate":
+            case "vlanDelete":
+                url = "VLANServlet";
+                break;
+            //===============Id==================
+            case "ipList":
+                url = "IPServlet";
+                break;
                 
                 //default is Login page!
             default:

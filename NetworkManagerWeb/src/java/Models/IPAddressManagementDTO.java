@@ -1,19 +1,52 @@
+
 package Models;
 
-public class IPAddressManagementDTO {
+import java.io.Serializable;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.Table;
 
+@Entity
+@Table(name = "IPAddressManagement")
+public class IPAddressManagementDTO implements Serializable {
+
+    private static final long serialVersionUID = 1L;
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "ip_id")
     private int ipId;
+
+    @Column(
+            name = "ip_address",
+            nullable = false,
+            unique = true,
+            length = 45
+    )
     private String ipAddress;
+
+    @Column(
+            name = "status",
+            nullable = false,
+            length = 30
+    )
     private String status;
+
+    @Column(name = "device_id", unique = true)
     private Integer deviceId;
 
     public IPAddressManagementDTO() {
     }
 
-    public IPAddressManagementDTO(int ipId,
-                                  String ipAddress,
-                                  String status,
-                                  Integer deviceId) {
+    public IPAddressManagementDTO(
+            int ipId,
+            String ipAddress,
+            String status,
+            Integer deviceId) {
+
         this.ipId = ipId;
         this.ipAddress = ipAddress;
         this.status = status;
@@ -54,11 +87,11 @@ public class IPAddressManagementDTO {
 
     @Override
     public String toString() {
-        return "IPAddressManagementDTO{" +
-                "ipId=" + ipId +
-                ", ipAddress='" + ipAddress + '\'' +
-                ", status='" + status + '\'' +
-                ", deviceId=" + deviceId +
-                '}';
+        return "IPAddressManagementDTO{"
+                + "ipId=" + ipId
+                + ", ipAddress='" + ipAddress + '\''
+                + ", status='" + status + '\''
+                + ", deviceId=" + deviceId
+                + '}';
     }
 }
