@@ -1,0 +1,6 @@
+# Local VNPAY credentials
+/web/WEB-INF/vnpay.properties
+
+# NetBeans build output
+/build/
+/dist/

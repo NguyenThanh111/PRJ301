@@ -1,5 +1,6 @@
 <%-- staffDashboard.jsp - Dashboard for staff members --%>
-    <%@page contentType="text/html" pageEncoding="UTF-8" %>
+    <%@page import="Models_DAO.VLANDAO"%>
+<%@page contentType="text/html" pageEncoding="UTF-8" %>
     <%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
     <%@taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions"%>
         <%@page import="Models_DAO.RouterDAO" %>
@@ -260,6 +261,28 @@
                             color: #ddd6fe;
                             background: rgba(139, 92, 246, 0.16);
                             border: 1px solid rgba(139, 92, 246, 0.4);
+                        }
+
+                        .premium-btn {
+                            display: inline-flex;
+                            align-items: center;
+                            gap: 7px;
+                            padding: 8px 14px;
+                            border-radius: 10px;
+                            color: #fff;
+                            text-decoration: none;
+                            font-size: 13px;
+                            font-weight: 800;
+                            background: linear-gradient(135deg, #f59e0b, #d946ef 58%, #8b5cf6);
+                            border: 1px solid rgba(253, 224, 71, 0.35);
+                            box-shadow: 0 7px 22px rgba(217, 70, 239, 0.25);
+                            transition: transform .18s ease, box-shadow .18s ease;
+                        }
+
+                        .premium-btn:hover {
+                            color: #fff;
+                            transform: translateY(-1px);
+                            box-shadow: 0 10px 28px rgba(217, 70, 239, 0.38);
                         }
 
                         .page-body {
@@ -543,6 +566,9 @@
                                 <span class="topbar-breadcrumb" id="pageBreadcrumb">/ Overview</span>
                             </div>
                             <div class="d-flex align-items-center gap-2">
+                                <a class="premium-btn" href="${pageContext.request.contextPath}/payment/checkout">
+                                    <i class="bi bi-gem"></i> Premium
+                                </a>
                                 <span class="${isAdmin ? 'role-badge-admin' : 'role-badge-tech'}">${role}
                                 </span>
                                 <span style="font-size:13px;color:#9db0db;">Welcome, <strong style="color:#f2f5ff;">

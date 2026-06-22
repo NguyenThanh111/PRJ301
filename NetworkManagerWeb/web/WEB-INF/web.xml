@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<web-app version="2.5" xmlns="http://java.sun.com/xml/ns/javaee" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd">
+<web-app version="3.1" xmlns="http://xmlns.jcp.org/xml/ns/javaee" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee http://xmlns.jcp.org/xml/ns/javaee/web-app_3_1.xsd">
     <servlet>
         <servlet-name>LoginController</servlet-name>
         <servlet-class>Controller.LoginController</servlet-class>
@@ -45,10 +45,10 @@
         <servlet-class>Controller.MaintenanceServlet</servlet-class>
     </servlet>
     <servlet>
+
         <servlet-name>VLANServlet</servlet-name>
         <servlet-class>Controller.VLANServlet</servlet-class>
     </servlet>
-    <servlet>
         <servlet-name>WifiController</servlet-name>
         <servlet-class>Controller.WifiController</servlet-class>
     </servlet>
@@ -57,6 +57,16 @@
         <servlet-class>Controller.NetworkAlertController</servlet-class>
     </servlet>
     <servlet>
+        <servlet-name>PaymentCheckoutController</servlet-name>
+        <servlet-class>Controller.PaymentCheckoutController</servlet-class>
+    </servlet>
+    <servlet>
+        <servlet-name>VnpayReturnController</servlet-name>
+        <servlet-class>Controller.VnpayReturnController</servlet-class>
+    </servlet>
+    <servlet>
+        <servlet-name>VnpayIpnController</servlet-name>
+        <servlet-class>Controller.VnpayIpnController</servlet-class>
         <servlet-name>IPServlet</servlet-name>
         <servlet-class>Controller.IPServlet</servlet-class>
     </servlet>
@@ -117,6 +127,16 @@
         <url-pattern>/NetworkAlertController</url-pattern>
     </servlet-mapping>
     <servlet-mapping>
+        <servlet-name>PaymentCheckoutController</servlet-name>
+        <url-pattern>/payment/checkout</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>VnpayReturnController</servlet-name>
+        <url-pattern>/vnpay/return</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>VnpayIpnController</servlet-name>
+        <url-pattern>/vnpay/ipn</url-pattern>
         <servlet-name>IPServlet</servlet-name>
         <url-pattern>/IPServlet</url-pattern>
     </servlet-mapping>
