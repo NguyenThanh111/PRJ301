@@ -1,5 +1,6 @@
 <%-- staffDashboard.jsp - Dashboard for staff members --%>
-    <%@page contentType="text/html" pageEncoding="UTF-8" %>
+    <%@page import="Models_DAO.VLANDAO"%>
+<%@page contentType="text/html" pageEncoding="UTF-8" %>
     <%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
     <%@taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions"%>
         <%@page import="Models_DAO.RouterDAO" %>
@@ -12,7 +13,7 @@
         <%@page import="Models.MaintenanceScheduleDTO" %>
         <%@page import="Models_DAO.RoomDAO" %>
         <%@page import="Models.RoomDTO" %>
-        <%@page import="Models.VLANDAO" %> 
+        <%@page import="Models_DAO.VLANDAO" %> 
         <%@page import="Models.VLANDTO" %>
         <%@page import="java.util.ArrayList" %>
         <%@page import="java.util.HashMap" %>
