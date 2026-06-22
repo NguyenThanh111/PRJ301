@@ -12,7 +12,7 @@
         <%@page import="Models.MaintenanceScheduleDTO" %>
         <%@page import="Models_DAO.RoomDAO" %>
         <%@page import="Models.RoomDTO" %>
-        <%@page import="Models.VLANDAO" %> 
+        <%@page import="Models_DAO.VLANDAO" %> 
         <%@page import="Models.VLANDTO" %>
         <%@page import="java.util.ArrayList" %>
         <%@page import="java.util.HashMap" %>

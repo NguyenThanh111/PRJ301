@@ -47,6 +47,8 @@
     <servlet>
         <servlet-name>VLANServlet</servlet-name>
         <servlet-class>Controller.VLANServlet</servlet-class>
+    </servlet>
+    <servlet>
         <servlet-name>WifiController</servlet-name>
         <servlet-class>Controller.WifiController</servlet-class>
     </servlet>
@@ -105,6 +107,8 @@
     <servlet-mapping>
         <servlet-name>VLANServlet</servlet-name>
         <url-pattern>/VLANServlet</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
         <servlet-name>WifiController</servlet-name>
         <url-pattern>/WifiController</url-pattern>
     </servlet-mapping>
