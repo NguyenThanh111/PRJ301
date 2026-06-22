@@ -5,20 +5,45 @@
 package Models;
 
 import java.sql.Timestamp;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.Table;
 
 /**
  *
  * @author nvtv0
  */
+@Entity
+@Table(name = "NetworkAlert")
 public class NetworkAlertDTO {
 
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "alert_id")
     private int alertId;
+
+    @Column(name = "alert_type")
     private String alertType;
+
+    @Column(name = "message")
     private String message;
+
+    @Column(name = "severity")
     private String severity; 
+
+    @Column(name = "created_at")
     private Timestamp createdAt;
+
+    @Column(name = "router_id")
     private Integer routerId;  
+
+    @Column(name = "ap_id")
     private Integer apId;      
+
+    @Column(name = "switch_id")
     private Integer switchId; 
 
     public NetworkAlertDTO() {

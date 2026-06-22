@@ -1,7 +1,7 @@
 
 package Controller;
 
-import Models.RoomDAO;
+import Models_DAO.RoomDAO;
 import Models.RoomDTO;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -18,7 +18,6 @@ public class RoomServlet extends HttpServlet {
     protected void processRequest(HttpServletRequest request,
             HttpServletResponse response)
             throws ServletException, IOException {
-
         request.setCharacterEncoding("UTF-8");
         response.setContentType("text/html;charset=UTF-8");
 

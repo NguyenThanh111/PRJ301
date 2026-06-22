@@ -2,6 +2,7 @@
 title: "Project Overview — University Network Management System"
 tags: [prj301, planning, overview]
 created: 2026-05-26
+updated: 2026-06-17
 ---
 
 # Project Overview — University Network Management System
@@ -29,6 +30,8 @@ This web application helps university IT staff manage and monitor the campus net
 | **Technician** | Handle maintenance tasks, resolve support tickets, update device status |
 | **Viewer** | Read-only access — view dashboards, reports, and network status |
 
+> ⚠️ Roles are **not** stored as a field on `User`. They are managed through the `UserRole` junction table (M:N relationship between `User` and `Role`). Every role check must use `SessionUtil.hasRole()`, not `user.getRole()`.
+
 **What does it do?**
 
 - Authenticate users with role-based access control (Admin / Technician / Viewer)
@@ -49,21 +52,69 @@ This web application helps university IT staff manage and monitor the campus net
 | JDK | JDK 8 (Java 1.8) |
 | Server | Apache Tomcat 9 |
 | Backend | Java Servlet + JSP (`javax.servlet.*`) |
+| Architecture | MVC-V2 with FrontController (DispatcherServlet) |
 | Build Tool | Ant (NetBeans default) |
-| Database | MySQL 8.0 |
-| JDBC Driver | `mysql-connector-java-8.0.33.jar` |
-| View Layer | JSP + JSTL 1.2 |
+| **Database** | **SQL Server** (không dùng MySQL) |
+| **JDBC Driver** | `mssql-jdbc-12.x.x.jre8.jar` (Microsoft JDBC Driver for SQL Server) |
+| View Layer | JSP + JSTL 1.2 + EL |
+| Security | BCrypt (jBCrypt) cho mã hoá mật khẩu, Google OAuth2 cho đăng nhập Google |
+| Email | JavaMail API (Jakarta Mail) |
 | Project Name | `NetworkSimulationManagement` |
 | DB Name | `network_simulation_db` |
 
 > [!warning]
-> Use **Tomcat 9**, not Tomcat 10+. Tomcat 10 uses `jakarta.servlet.*`, which is incompatible with this project.
+> - Dùng **Tomcat 9**, không dùng Tomcat 10+ (Tomcat 10 dùng `jakarta.servlet.*` không tương thích).
+> - Database là **SQL Server**, không phải MySQL. Dùng T-SQL (`IDENTITY`, `GETDATE()`, `NVARCHAR`, `GO`).
+> - Tên database trong `Network2.sql` hiện là `network_simulation_db3` — cần đổi thành `network_simulation_db` trước khi chạy chung.
+> - Các bảng `[User]` và `[Switch]` phải viết trong ngoặc vuông khi truy vấn SQL Server.
 
 ---
 
-## 4. Computational Thinking Overview
+## 4. Database Summary
 
-### 4.1 Decomposition
+Schema theo `Network2.sql` gồm **20 bảng**: 16 bảng chính + 4 bảng junction.
+
+| Nhóm | Bảng |
+|---|---|
+| Auth & Logging | `[User]`, `Role`, `UserRole`*, `AuthenticationLog`, `SystemLog` |
+| Core Devices | `Router`, `AccessPoint`, `[Switch]`, `NetworkDevice` |
+| Infrastructure & Support | `Room`, `VLAN`, `IPAddressManagement`, `SupportTicket` |
+| Monitoring | `BandwidthUsage`, `WiFiAnalytics`, `NetworkAlert` |
+| Maintenance | `MaintenanceSchedule`, `MaintenanceRouter`*, `MaintenanceAccessPoint`*, `MaintenanceSwitch`* |
+
+*Bảng junction (composite PK, không có auto-increment ID riêng)
+
+---
+
+## 5. Architecture Overview (MVC-V2)
+
+Đề bài PDF **yêu cầu bắt buộc** kiến trúc MVC-V2 với FrontController — đây là 2/8 điểm back-end.
+
+```text
+Browser
+  → FrontController (DispatcherServlet) — điều phối toàn bộ request
+      → Session / Role Check (SessionUtil + AuthFilter)
+          → Action Handler (trong từng Servlet hoặc Command class)
+              → DAO Layer (SQL Server via JDBC)
+              ← DTO / List
+          ← setAttribute
+      → JSP View (JSTL + EL, không scriptlet lớn)
+  ← HTML Response
+```
+
+**Yêu cầu bắt buộc từ đề bài:**
+- FrontController / DispatcherServlet — điều phối request
+- DAO/Service layer riêng biệt — không viết SQL trong Servlet/JSP
+- Filter: AuthenticationFilter, AuthorizationFilter, EncodingFilter
+- BCrypt cho mã hoá mật khẩu
+- Google OAuth2 cho đăng nhập Google
+- JavaMail: gửi email xác nhận, reset mật khẩu
+
+---
+
+## 6. Computational Thinking Overview
+
+### 6.1 Decomposition
 
 We break the system into **5 major subsystems**:
 
@@ -73,14 +124,12 @@ We break the system into **5 major subsystems**:
 4. **Infrastructure Management** — Rooms, VLANs, IP addresses
 5. **Support & Maintenance** — Support tickets, maintenance schedules, system logs
 
-Each subsystem is independent enough for one team member to own, yet connected through shared entities (User, Room, Device).
-
-### 4.2 Pattern Recognition
+### 6.2 Pattern Recognition
 
 Nearly every feature follows the same **CRUD pattern**:
 
 ```text
-JSP Form  →  Servlet Controller  →  DAO  →  MySQL  →  Servlet  →  JSP List
+JSP Form  →  Servlet Controller  →  DAO  →  SQL Server  →  Servlet  →  JSP List
 ```
 
 Recognized repeating structures:
@@ -89,45 +138,41 @@ Recognized repeating structures:
 - Date/time tracking is consistent: `createdAt`, `loginTime`, `recordTime`, etc.
 - Role-based filtering applies across all list views
 
-### 4.3 Abstraction
-
-We define clean layers to separate concerns:
+### 6.3 Abstraction
 
 | Layer | Responsibility | Examples |
 |---|---|---|
-| **Presentation** (JSP) | Display data, accept input | `login.jsp`, `router-list.jsp` |
-| **Controller** (Servlet) | Handle HTTP, route logic | `LoginServlet`, `RouterServlet` |
-| **Data Access** (DAO) | SQL operations | `UserDAO`, `RouterDAO` |
+| **Presentation** (JSP) | Display data, accept input | `login.jsp`, `router/list.jsp` |
+| **Controller** (Servlet) | Handle HTTP, route logic | `DispatcherServlet`, `RouterServlet` |
+| **Data Access** (DAO) | SQL Server operations via JDBC | `UserDAO`, `RouterDAO` |
 | **Data Transfer** (DTO) | Carry data between layers | `User`, `Router`, `BandwidthUsage` |
+| **Utility** | Shared helpers | `DBContext`, `SessionUtil` |
 
-The **DTO** (Data Transfer Object) is the core abstraction — each model is a plain Java class with fields, getters, and setters. The DAO knows about the database; the Servlet knows about HTTP; the JSP knows about HTML. They communicate only through DTOs.
-
-### 4.4 Algorithm Design
+### 6.4 Algorithm Design
 
 Key algorithms in the system:
 
-1. **Login Flow** — Validate credentials → check role → create session → redirect by role
-2. **Device Block/Unblock** — Find device by MAC → update status → log action → alert if needed
-3. **Alert Trigger** — Monitor device status → detect anomaly → create alert → notify dashboard
-4. **Support Ticket Lifecycle** — Submit → assign technician → update status → resolve → close
-
-Each algorithm is documented with Mermaid flowcharts in [[01_CT_analysis|CT Analysis]].
+1. **Login Flow** — Validate credentials → BCrypt verify → load roles from UserRole → create session → redirect by role → log to AuthenticationLog
+2. **Device Block/Unblock** — Find device by MAC → update status → log action to SystemLog → alert if needed
+3. **Alert Trigger** — Monitor device status → detect anomaly → create alert with router_id/ap_id/switch_id → notify dashboard
+4. **Support Ticket Lifecycle** — Submit (created_by = current userId) → update status → resolve → close
 
 ---
 
-## 5. Related Documents
+## 7. Related Documents
 
 | Document | Description |
 |---|---|
-| [[01_CT_analysis]] | Full Computational Thinking breakdown |
-| [[02_erd_database]] | ERD diagram and SQL scripts |
-| [[03_team_assignment]] | Member assignments and sprint plan |
-| [[04_system_architecture]] | Architecture layers and folder structure |
-| [[05_feature_list]] | Feature list grouped by role |
-| [[06_report_template]] | Vietnamese-language report outline |
-| [[07_coding_guide]] | Step-by-step coding guide with examples |
+| `01_CT_analysis.md` | Full Computational Thinking breakdown |
+| `02_erd_database.md` | ERD diagram and SQL scripts (SQL Server) |
+| `03_team_assignment_updated.md` | Member assignments and sprint plan |
+| `04_system_architecture.md` | Architecture layers and folder structure |
+| `05_feature_list.md` | Feature list grouped by role |
+| `06_report_template.md` | Vietnamese-language report outline |
+| `07_coding_guide.md` | Step-by-step coding guide with examples |
+| `Network2.sql` | **Nguồn sự thật duy nhất** cho schema — luôn đối chiếu file này |
 
 ---
 
 > [!tip]
-> Start with [[03_team_assignment]] to understand who does what, then move to [[07_coding_guide]] to see how to implement one model end-to-end.
+> Bắt đầu với `03_team_assignment_updated.md` để biết ai làm gì, sau đó đọc `07_coding_guide.md` để xem cách implement một model từ đầu đến cuối. Luôn đối chiếu `Network2.sql` khi có nghi ngờ về schema.

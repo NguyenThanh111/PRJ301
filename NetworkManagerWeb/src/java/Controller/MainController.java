@@ -53,7 +53,7 @@ public class MainController extends HttpServlet {
                 break;                
             //=================LOGOUT=================
             case "logout":
-                url = "LoginCotyroller";
+                url = "LoginController";
                 break;
             //===============ROUTER==================
             case "routerList":
@@ -92,6 +92,23 @@ public class MainController extends HttpServlet {
             case "deviceUpdate":
             case "deviceDelete":
                 url = "NetworkDeviceServlet";
+                break;
+            //===============BANDWIDTH===============
+            case "bandwidthList":
+            case "bandwidthAdd":
+            case "bandwidthInsert":
+            case "bandwidthDelete":
+                url = "BandwidthServlet";
+                break;
+            //==============MAINTENANCE==============
+            case "maintenanceList":
+            case "maintenanceAdd":
+            case "maintenanceEdit":
+            case "maintenanceInsert":
+            case "maintenanceUpdate":
+            case "maintenanceDelete":
+            case "maintenanceComplete":
+                url = "MaintenanceServlet";
                 break;
              //===============Room==================
             case "roomList":

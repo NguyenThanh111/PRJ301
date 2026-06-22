@@ -383,15 +383,15 @@
 
                                 <form id="registerForm" action="RegisterUserController" method="post"
                                     autocomplete="off">
-                                    <input type="hidden" name="source" value="<%= isGoogleSource ? " google" : "normal"
+                                    <input type="hidden" name="source" value="<%= isGoogleSource ? "google" : "normal"
                                         %>"/>
 
                                     <div class="field">
-                                        <label for="fullName">Full name <span class="hint">(can be blank)</span></label>
+                                        <label for="fullName">Full name</label>
                                         <div class="input-wrap">
                                             <i class="bi bi-person-badge-fill"></i>
                                             <input id="fullName" type="text" name="fullName" value="<%= fullNameVal %>"
-                                                placeholder="Your full name" />
+                                                placeholder="Your full name" required />
                                         </div>
                                     </div>
 
@@ -400,7 +400,7 @@
                                         <div class="input-wrap">
                                             <i class="bi bi-person-fill"></i>
                                             <input id="username" type="text" name="username" value="<%= usernameVal %>"
-                                                placeholder="Choose username" required />
+                                                placeholder="Create username" pattern="^[a-zA-Z0-9_]+$" title="Username can only contain letters, numbers, and underscores (no spaces or accents)" required />
                                         </div>
                                     </div>
 

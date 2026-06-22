@@ -1,18 +1,40 @@
 
 package Models;
 
+import java.io.Serializable;
 import java.sql.Timestamp;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.Table;
 
 /**
  *
  * @author nvtv0
  */
-public class BandwidthUsageDTO {
+@Entity
+@Table(name = "BandwidthUsage")
+public class BandwidthUsageDTO implements Serializable {
 
+    private static final long serialVersionUID = 1L;
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "usage_id")
     private int usageId;
+
+    @Column(name = "upload_speed")
     private double uploadSpeed;
+
+    @Column(name = "download_speed")
     private double downloadSpeed;
+
+    @Column(name = "record_time")
     private Timestamp recordTime;
+
+    @Column(name = "device_id")
     private int deviceId; 
 
     public BandwidthUsageDTO() {

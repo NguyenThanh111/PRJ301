@@ -1,9 +1,14 @@
 package Controller;
 
-import Models.UserDAO;
+import Models_DAO.RoleDAO;
+import Models.RoleDTO;
+import Models_DAO.UserDAO;
 import Models.UserDTO;
+import Models_DAO.UserRoleDAO;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -61,8 +66,19 @@ public class UserController extends HttpServlet {
 
     private void listUsers(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         UserDAO dao = new UserDAO();
+        UserRoleDAO roleDAO = new UserRoleDAO();
+        RoleDAO allRoles = new RoleDAO();
+
         ArrayList<UserDTO> list = dao.ListAll();
+        Map<Integer, String> roleMap = new HashMap<>();
+        for (UserDTO u : list) {
+            roleMap.put(u.getUserId(), roleDAO.findRoleByUser(u.getUserId()));
+        }
+        ArrayList<RoleDTO> roleList = allRoles.ListAll();
+
         request.setAttribute("userList", list);
+        request.setAttribute("roleMap", roleMap);
+        request.setAttribute("roleList", roleList);
         request.setAttribute("activeTab", "users");
         request.getRequestDispatcher("manage-user.jsp").forward(request, response);
     }
@@ -70,9 +86,20 @@ public class UserController extends HttpServlet {
     private void searchUsers(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         String keyword = request.getParameter("keyword");
         UserDAO dao = new UserDAO();
+        UserRoleDAO roleDAO = new UserRoleDAO();
+        RoleDAO allRoles = new RoleDAO();
+
         ArrayList<UserDTO> list = dao.searchListByKeyword(keyword);
+        Map<Integer, String> roleMap = new HashMap<>();
+        for (UserDTO u : list) {
+            roleMap.put(u.getUserId(), roleDAO.findRoleByUser(u.getUserId()));
+        }
+        ArrayList<RoleDTO> roleList = allRoles.ListAll();
+
         request.setAttribute("userList", list);
-        request.setAttribute("keyword", keyword); // To keep the keyword in the search box
+        request.setAttribute("roleMap", roleMap);
+        request.setAttribute("roleList", roleList);
+        request.setAttribute("keyword", keyword);
         request.setAttribute("activeTab", "users");
         request.getRequestDispatcher("manage-user.jsp").forward(request, response);
     }
@@ -82,11 +109,18 @@ public class UserController extends HttpServlet {
         String fullName = request.getParameter("fullName");
         String email = request.getParameter("email");
         String password = request.getParameter("password");
+        String roleIdStr = request.getParameter("roleId");
 
         UserDTO user = new UserDTO(username, password, fullName, email);
         UserDAO dao = new UserDAO();
         dao.insert(user);
-        
+
+        UserDTO created = dao.searchByNameOrEmail(username);
+        if (created != null && roleIdStr != null && !roleIdStr.trim().isEmpty()) {
+            int roleId = Integer.parseInt(roleIdStr);
+            new UserRoleDAO().assignRole(created.getUserId(), roleId);
+        }
+
         response.sendRedirect("UserController?action=list");
     }
 
@@ -96,15 +130,23 @@ public class UserController extends HttpServlet {
         String fullName = request.getParameter("fullName");
         String email = request.getParameter("email");
         String password = request.getParameter("password");
-        boolean status = request.getParameter("status") != null; // checkbox
+        boolean status = request.getParameter("status") != null;
+        String roleIdStr = request.getParameter("roleId");
 
         UserDTO user = new UserDTO(username, password, fullName, email);
         user.setUserId(userId);
         user.setStatus(status);
-        
+
         UserDAO dao = new UserDAO();
         dao.update(user);
-        
+
+        if (roleIdStr != null && !roleIdStr.trim().isEmpty()) {
+            int roleId = Integer.parseInt(roleIdStr);
+            UserRoleDAO roleDAO = new UserRoleDAO();
+            roleDAO.removeAllRoles(userId);
+            roleDAO.assignRole(userId, roleId);
+        }
+
         response.sendRedirect("UserController?action=list");
     }
 

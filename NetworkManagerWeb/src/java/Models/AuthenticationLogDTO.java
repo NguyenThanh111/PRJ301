@@ -1,29 +1,51 @@
-
 package Models;
 
+import java.io.Serializable;
 import java.sql.Timestamp;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.Table;
 
+@Entity
+@Table(name = "AuthenticationLog")
+public class AuthenticationLogDTO implements Serializable {
 
-public class AuthenticationLogDTO {
-    
+    private static final long serialVersionUID = 1L;
+
     public static final String STATUS_SUCCESS = "SUCCESS";
-    public static final String STATUS_FAILED  = "FAILED";
-    
+    public static final String STATUS_FAILED = "FAILED";
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "log_id")
     private int logId;
-    private String userName;
+
+    @Column(name = "username", nullable = false, length = 50)
+    private String username;
+
+    @Column(name = "login_status", nullable = false, length = 20)
     private String loginStatus;
+
+    @Column(name = "ip_address", length = 45)
     private String ipAddress;
+
+    @Column(name = "login_time")
     private Timestamp loginTime;
+
+    @Column(name = "user_id")
     private Integer userId;
 
-    public AuthenticationLogDTO(String userName, String loginStatus, String ipAddress, Integer user_id) {
-        this.userName = userName;
-        this.loginStatus = loginStatus;
-        this.ipAddress = ipAddress;
-        this.userId = user_id;
+    public AuthenticationLogDTO() {
     }
 
-    public AuthenticationLogDTO() {
+    public AuthenticationLogDTO(String username, String loginStatus, String ipAddress, Integer userId) {
+        this.username = username;
+        this.loginStatus = loginStatus;
+        this.ipAddress = ipAddress;
+        this.userId = userId;
     }
 
     public int getLogId() {
@@ -34,12 +56,21 @@ public class AuthenticationLogDTO {
         this.logId = logId;
     }
 
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    // backward compatibility for JSP using ${log.userName}
     public String getUserName() {
-        return userName;
+        return username;
     }
 
     public void setUserName(String userName) {
-        this.userName = userName;
+        this.username = userName;
     }
 
     public String getLoginStatus() {
@@ -70,11 +101,11 @@ public class AuthenticationLogDTO {
         return userId;
     }
 
-    public void setUserId(Integer user_id) {
-        this.userId = user_id;
+    public void setUserId(Integer userId) {
+        this.userId = userId;
     }
-    
-    public boolean isSuccess(){
+
+    public boolean isSuccess() {
         return STATUS_SUCCESS.equalsIgnoreCase(loginStatus);
     }
 }

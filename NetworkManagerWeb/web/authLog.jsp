@@ -1,6 +1,7 @@
 <%-- staffDashboard.jsp - Dashboard for staff members --%>
 <%@page contentType="text/html" pageEncoding="UTF-8" %>
     <%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+    <%@taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions"%>
     <%@taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt"%>
         <%@page import="Models.UserDTO" %>
             <% UserDTO currentUser=(UserDTO) session.getAttribute("user"); String role=(String)
@@ -8,6 +9,8 @@
                 !role.equalsIgnoreCase("Technician"))) { response.sendRedirect("login.jsp"); return; } String
                 displayName=currentUser.getFullName() !=null ? currentUser.getFullName() : currentUser.getUserName();
                 boolean isAdmin=role.equalsIgnoreCase("Admin"); %>
+                <c:set var="displayName" value="${empty sessionScope.user.fullName ? sessionScope.user.userName : sessionScope.user.fullName}" />
+                <c:set var="isAdmin" value="${fn:toLowerCase(sessionScope.role) eq 'admin'}" />
                 <!DOCTYPE html>
                 <html lang="en">
 
@@ -393,99 +396,18 @@
                         }
                         .badge-status-active { background: rgba(74, 222, 128, 0.16); color: #4ade80; padding: 4px 10px; border-radius: 999px; font-size: 11px; font-weight: 700; border: 1px solid rgba(74, 222, 128, 0.4); display: inline-block; }
                         .badge-status-inactive { background: rgba(239, 68, 68, 0.16); color: #f87171; padding: 4px 10px; border-radius: 999px; font-size: 11px; font-weight: 700; border: 1px solid rgba(239, 68, 68, 0.4); display: inline-block; }
+                        .pagination-controls { display: flex; align-items: center; gap: 8px; }
+                        .pagination-controls .page-btn { width: 32px; height: 32px; border-radius: 8px; border: 1px solid var(--border); background: rgba(139, 92, 246, 0.15); color: #e8ddff; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.15s ease; font-size: 14px; }
+                        .pagination-controls .page-btn:hover { background: rgba(139, 92, 246, 0.3); border-color: rgba(139, 92, 246, 0.6); }
+                        .pagination-controls .page-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+                        .pagination-controls .page-info { font-size: 12px; color: var(--text-muted); min-width: 70px; text-align: center; }
                     </style>
                 </head>
 
                 <body>
 
-                    <nav class="sidebar">
-                        <div class="sidebar-brand">
-                            <div class="sidebar-brand-icon"><i class="bi bi-diagram-3-fill"></i></div>
-                            <div class="brand-title">Network<br>Manager</div>
-                        </div>
-
-                        <div class="sidebar-section-label">Overview</div>
-                        <button class="nav-item-link active" onclick="showPage('dashboard', this)">
-                            <i class="bi bi-speedometer2"></i> Dashboard
-                        </button>
-
-                        <div class="sidebar-section-label">Infrastructure</div>
-                        <button class="nav-item-link" onclick="showPage('devices', this)">
-                            <i class="bi bi-laptop"></i> Network Devices
-                        </button>
-                        <button class="nav-item-link" onclick="showPage('accesspoints', this)">
-                            <i class="bi bi-reception-4"></i> Access Points
-                        </button>
-                        <button class="nav-item-link" onclick="showPage('routers', this)">
-                            <i class="bi bi-router"></i> Routers
-                        </button>
-                        <button class="nav-item-link" onclick="showPage('switches', this)">
-                            <i class="bi bi-hdd-network"></i> Switches
-                        </button>
-                        <button class="nav-item-link" onclick="showPage('vlan', this)">
-                            <i class="bi bi-diagram-3"></i> VLAN
-                        </button>
-                        <button class="nav-item-link" onclick="showPage('ipmanage', this)">
-                            <i class="bi bi-globe"></i> IP Management
-                        </button>
-
-                        <div class="sidebar-section-label">Monitoring</div>
-                        <button class="nav-item-link" onclick="showPage('bandwidth', this)">
-                            <i class="bi bi-bar-chart-line"></i> Bandwidth Usage
-                        </button>
-                        <button class="nav-item-link" onclick="showPage('wifianalytics', this)">
-                            <i class="bi bi-graph-up"></i> WiFi Analytics
-                        </button>
-                        <button class="nav-item-link" onclick="showPage('alerts', this)">
-                            <i class="bi bi-exclamation-triangle"></i> Network Alerts
-                            <span class="ms-auto badge"
-                                style="background:rgba(239,68,68,0.2);color:#fda4af;font-size:10px;">3</span>
-                        </button>
-
-                        <div class="sidebar-section-label">Management</div>
-                        <button class="nav-item-link" onclick="showPage('tickets', this)">
-                            <i class="bi bi-ticket-perforated"></i> Support Tickets
-                        </button>
-                        <button class="nav-item-link" onclick="showPage('maintenance', this)">
-                            <i class="bi bi-tools"></i> Maintenance
-                        </button>
-                        <button class="nav-item-link" onclick="showPage('rooms', this)">
-                            <i class="bi bi-building"></i> Rooms
-                        </button>
-
-                        <% if (isAdmin) { %>
-                            <div class="sidebar-section-label">Administration</div>
-                            <a href="UserController?action=list" class="nav-item-link text-decoration-none">
-                                <i class="bi bi-people"></i> Manage Users
-                            </a>
-                            <a href="AuthLogController" class="nav-item-link text-decoration-none active">
-                                <i class="bi bi-shield-check"></i> Auth Logs
-                            </a>
-                            <a href="SystemLogController" class="nav-item-link text-decoration-none">
-                                <i class="bi bi-journal-text"></i> System Logs
-                            </a>
-                        <% } %>
-
-                                <div class="sidebar-footer">
-                                    <div class="d-flex align-items-center gap-2 mb-2">
-                                        <div class="user-avatar <%= isAdmin ? " admin-avatar" : "tech-avatar" %>">
-                                            <%= displayName.charAt(0) %>
-                                        </div>
-                                        <div>
-                                            <div style="font-size:13px;font-weight:600;color:#e8ecff;">
-                                                <%= displayName %>
-                                            </div>
-                                            <div style="font-size:11px;color:#8ea0cb;">
-                                                <%= role %>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <a href="LoginController?action=logout" class="nav-item-link text-danger"
-                                        style="padding-left:0;">
-                                        <i class="bi bi-box-arrow-left"></i> Sign Out
-                                    </a>
-                                </div>
-                    </nav>
+                    <c:set var="sidebarActive" value="authlogs" scope="request" />
+                    <%@include file="sidebar.jsp" %>
 
                     <div class="main-content">
                         <div class="topbar">
@@ -507,10 +429,15 @@
                                                 <div class="section-card">
                                                     <div class="section-card-header">
                                                         <h6><i class="bi bi-shield-check me-2"></i>Authentication Logs</h6>
+                                                        <div class="pagination-controls">
+                                                            <button class="page-btn" onclick="prevPage('authLog-table')" id="authLog-table-prev"><i class="bi bi-chevron-left"></i></button>
+                                                            <span class="page-info" id="authLog-table-page-info">Page 1 of 1</span>
+                                                            <button class="page-btn" onclick="nextPage('authLog-table')" id="authLog-table-next"><i class="bi bi-chevron-right"></i></button>
+                                                        </div>
                                                     </div>
                                                     <div class="section-card-body">
                                                         <div class="table-responsive">
-                                                            <table class="table-dark-custom">
+                                                            <table class="table-dark-custom" id="authLog-table">
                                                                 <thead>
                                                                     <tr>
                                                                         <th>Log ID</th>
@@ -663,8 +590,45 @@
 
 
 
+                        // Pagination
+                        const PAGE_SIZE = 10;
+                        const paginationState = {};
+
+                        function initPagination(tableId) {
+                            const tbody = document.querySelector('#' + tableId + ' tbody');
+                            if (!tbody) return;
+                            const rows = Array.from(tbody.querySelectorAll('tr'));
+                            const total = Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
+                            paginationState[tableId] = { current: 1, total: total, rows: rows };
+                            showPageForTable(tableId);
+                        }
+
+                        function showPageForTable(tableId) {
+                            const state = paginationState[tableId];
+                            if (!state) return;
+                            const start = (state.current - 1) * PAGE_SIZE;
+                            const end = start + PAGE_SIZE;
+                            state.rows.forEach(function(r, i) {
+                                r.style.display = (i >= start && i < end) ? '' : 'none';
+                            });
+                            document.getElementById(tableId + '-page-info').textContent = 'Page ' + state.current + ' of ' + state.total;
+                            document.getElementById(tableId + '-prev').disabled = state.current <= 1;
+                            document.getElementById(tableId + '-next').disabled = state.current >= state.total;
+                        }
+
+                        function prevPage(tableId) {
+                            const state = paginationState[tableId];
+                            if (state && state.current > 1) { state.current--; showPageForTable(tableId); }
+                        }
+
+                        function nextPage(tableId) {
+                            const state = paginationState[tableId];
+                            if (state && state.current < state.total) { state.current++; showPageForTable(tableId); }
+                        }
+
                         // Populate Edit User Modal
                         document.addEventListener('DOMContentLoaded', function() {
+                            initPagination('authLog-table');
                             var editUserModal = document.getElementById('editUserModal');
                             if (editUserModal) {
                                 editUserModal.addEventListener('show.bs.modal', function (event) {

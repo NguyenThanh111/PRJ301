@@ -22,6 +22,46 @@ CREATE TABLE [User] (
 );
 GO
 
+-- Service plans
+CREATE TABLE ServicePlan (
+    plan_id INT IDENTITY(1,1) PRIMARY KEY,
+    plan_name NVARCHAR(100) NOT NULL,
+    from_bandwidth FLOAT NOT NULL,
+    to_bandwidth FLOAT NOT NULL,
+    price DECIMAL(10,0) NOT NULL,
+    duration_days INT NOT NULL DEFAULT 30,
+    description NVARCHAR(500),
+    is_active BIT DEFAULT 1,
+    created_at DATETIME DEFAULT GETDATE()
+);
+GO
+
+-- User bandwidth (one row per user, UNIQUE on user_id)
+CREATE TABLE UserBandwidth (
+    id INT IDENTITY(1,1) PRIMARY KEY,
+    user_id INT NOT NULL UNIQUE REFERENCES [User](user_id),
+    bandwidth_limit FLOAT NOT NULL DEFAULT 100,
+    upgraded_at DATETIME,
+    expires_at DATETIME,
+    is_active BIT DEFAULT 0
+);
+GO
+
+-- Payment transactions
+CREATE TABLE PaymentTransaction (
+    transaction_id INT IDENTITY(1,1) PRIMARY KEY,
+    user_id INT NOT NULL REFERENCES [User](user_id),
+    plan_id INT NOT NULL REFERENCES ServicePlan(plan_id),
+    amount DECIMAL(10,0) NOT NULL,
+    payment_method VARCHAR(20) NOT NULL,
+    payment_status VARCHAR(20) DEFAULT 'PENDING',
+    transaction_ref VARCHAR(100) UNIQUE,
+    order_info NVARCHAR(500),
+    created_at DATETIME DEFAULT GETDATE(),
+    updated_at DATETIME
+);
+GO
+
 CREATE TABLE UserRole (
     user_id     INT NOT NULL,
     role_id     INT NOT NULL,
@@ -567,4 +607,14 @@ INSERT INTO SystemLog (action, details, performed_by) VALUES
 (N'Đăng xuất', N'Phiên đăng nhập của Admin đã đóng sau 2 giờ không hoạt động', 1);
 GO
 
+-- Seed: Premium 300 Mbps plan
+INSERT INTO ServicePlan (plan_name, from_bandwidth, to_bandwidth, price, duration_days, description)
+VALUES (N'Premium 300 Mbps', 100, 300, 50000, 30, N'Upgrade bandwidth from 100 Mbps to 300 Mbps. Max download ~37 MB/s.');
+GO
 
+-- Seed: Default 100 Mbps row for every existing user (idempotent via NOT EXISTS)
+INSERT INTO UserBandwidth (user_id, bandwidth_limit, is_active)
+SELECT user_id, 100, 1 FROM [User] u
+WHERE NOT EXISTS (SELECT 1 FROM UserBandwidth ub WHERE ub.user_id = u.user_id);
+GO
+```

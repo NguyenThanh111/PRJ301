@@ -1,48 +1,55 @@
-﻿---
+---
 title: "System Architecture and Folder Structure"
 tags: [prj301, planning, architecture, structure]
 created: 2026-05-26
-updated: 2026-06-07
+updated: 2026-06-17
 ---
 
 # System Architecture and Folder Structure
 
-## 1. Architecture Overview
+> **Đồng bộ với:** `Network2.sql` (SQL Server, 20 bảng).
+> **Kiến trúc:** MVC-V2 với FrontController — bắt buộc theo đề bài PDF (2.0 điểm).
 
-The system follows the classic **MVC (Model-View-Controller)** pattern using Java Servlet/JSP, JDBC, and SQL Server.
+---
+
+## 1. Architecture Overview (MVC-V2 với FrontController)
+
+Đề bài yêu cầu **FrontController (DispatcherServlet)** điều phối toàn bộ request. Không dùng mô hình mỗi model một URL riêng mà không có front controller.
 
 ```mermaid
 flowchart TD
     A[Browser] -->|HTTP Request| B[Tomcat 9]
-    B --> C[Servlet Controller]
-    C --> D[Session and Role Check]
-    D -->|Not logged in| E[Redirect to login.jsp]
-    D -->|Logged in| F[Business Logic]
-    F -->|Call DAO| G[DAO Layer]
-    G -->|JDBC| H[(SQL Server DB)]
-    H -->|ResultSet| G
-    G -->|Return DTO/List| F
-    F -->|setAttribute| I[JSP View]
-    I -->|HTML Response| A
+    B --> C[DispatcherServlet - Front Controller]
+    C --> D[AuthenticationFilter - kiểm tra session]
+    D -->|Chưa đăng nhập| E[Redirect login.jsp]
+    D -->|Đã đăng nhập| F[AuthorizationFilter - kiểm tra role]
+    F -->|Sai role| G[error.jsp 403]
+    F -->|Đúng role| H[Action Handler / Sub-Servlet]
+    H -->|Call DAO| I[DAO Layer]
+    I -->|JDBC| J[(SQL Server)]
+    J -->|ResultSet| I
+    I -->|Return DTO/List| H
+    H -->|setAttribute| K[JSP View - JSTL + EL]
+    K -->|HTML Response| A
 ```
 
 ### Layer Responsibilities
 
 | Layer | Technology | Responsibility |
 |---|---|---|
-| Presentation | JSP + JSTL + CSS | Render HTML and receive form input |
-| Controller | Servlet (`javax.servlet`) | Handle HTTP requests, validate input, check session/role, route to JSP |
-| Data Access | DAO classes | SQL Server queries via JDBC |
-| Model | DTO/JavaBean | Data carrier between layers |
-| Utility | Helper classes | Database connection, session/role helper |
+| Presentation | JSP + JSTL + EL + Bootstrap 5 | Render HTML, nhận form input — không có scriptlet lớn |
+| FrontController | `DispatcherServlet` (`javax.servlet`) | Nhận toàn bộ request, điều phối sang sub-servlet/action |
+| Sub-Controller | Các Servlet con | Xử lý action cụ thể, validate, gọi DAO |
+| Filter | `AuthenticationFilter`, `AuthorizationFilter`, `EncodingFilter` | Kiểm tra session, phân quyền, UTF-8 |
+| Data Access | DAO classes | SQL Server queries via JDBC — không có SQL trong Servlet/JSP |
+| Model | DTO/JavaBean | Data carrier giữa các layer |
+| Utility | Helper classes | `DBContext`, `SessionUtil`, `PasswordUtil` |
 
-> This document is synchronized with `Network2.sql`. The current schema has **20 tables**: 16 main tables and 4 junction tables.
+> **Lưu ý quan trọng:** DAO/Service layer phải riêng biệt. Không viết SQL hoặc business logic trong Servlet hoặc JSP — đây là yêu cầu bắt buộc của đề bài.
 
 ---
 
 ## 2. Project Folder Structure
-
-Recommended NetBeans Ant project: `NetworkSimulationManagement`.
 
 ```text
 NetworkSimulationManagement/
@@ -87,6 +94,7 @@ NetworkSimulationManagement/
 |-- Source Packages/
 |   `-- com.networksim/
 |       |-- controller/
+|       |   |-- DispatcherServlet.java     ← FrontController (bắt buộc theo đề)
 |       |   |-- LoginServlet.java
 |       |   |-- LogoutServlet.java
 |       |   |-- DashboardServlet.java
@@ -107,7 +115,7 @@ NetworkSimulationManagement/
 |       |-- dao/
 |       |   |-- UserDAO.java
 |       |   |-- RoleDAO.java
-|       |   |-- UserRoleDAO.java
+|       |   |-- UserRoleDAO.java           ← junction DAO
 |       |   |-- AuthenticationLogDAO.java
 |       |   |-- SystemLogDAO.java
 |       |   |-- RouterDAO.java
@@ -122,9 +130,9 @@ NetworkSimulationManagement/
 |       |   |-- WiFiAnalyticsDAO.java
 |       |   |-- NetworkAlertDAO.java
 |       |   |-- MaintenanceScheduleDAO.java
-|       |   |-- MaintenanceRouterDAO.java
-|       |   |-- MaintenanceAccessPointDAO.java
-|       |   `-- MaintenanceSwitchDAO.java
+|       |   |-- MaintenanceRouterDAO.java       ← junction DAO
+|       |   |-- MaintenanceAccessPointDAO.java  ← junction DAO
+|       |   `-- MaintenanceSwitchDAO.java       ← junction DAO
 |       |-- model/
 |       |   |-- User.java
 |       |   |-- Role.java
@@ -147,17 +155,21 @@ NetworkSimulationManagement/
 |       |   |-- MaintenanceAccessPoint.java
 |       |   `-- MaintenanceSwitch.java
 |       |-- filter/
-|       |   `-- EncodingFilter.java
+|       |   |-- AuthenticationFilter.java  ← chặn URL chưa đăng nhập
+|       |   |-- AuthorizationFilter.java   ← phân quyền theo role
+|       |   `-- EncodingFilter.java        ← UTF-8
 |       `-- util/
 |           |-- DBContext.java
-|           `-- SessionUtil.java
+|           |-- SessionUtil.java
+|           |-- PasswordUtil.java          ← BCrypt wrapper
+|           `-- MailUtil.java              ← JavaMail helper
 |-- Libraries/
 |   |-- mssql-jdbc-12.x.x.jre8.jar
-|   `-- jstl-1.2.jar
+|   |-- jstl-1.2.jar
+|   |-- jbcrypt-0.4.jar
+|   `-- jakarta.mail-2.x.x.jar
 `-- build.xml
 ```
-
-> JSP naming convention: this architecture uses folder-based pages such as `router/list.jsp` and `router/form.jsp`. If the team prefers flat names like `router-list.jsp`, choose one style and update all servlet forwards consistently.
 
 ---
 
@@ -168,11 +180,12 @@ NetworkSimulationManagement/
 | Type | Convention | Example |
 |---|---|---|
 | DTO/Model | PascalCase, singular | `Router.java`, `UserRole.java` |
-| DAO | PascalCase + DAO suffix | `RouterDAO.java`, `MaintenanceRouterDAO.java` |
-| Servlet | PascalCase + Servlet suffix | `RouterServlet.java`, `LoginServlet.java` |
-| Utility | PascalCase | `DBContext.java`, `SessionUtil.java` |
+| DAO | PascalCase + DAO suffix | `RouterDAO.java`, `UserRoleDAO.java` |
+| Servlet | PascalCase + Servlet suffix | `RouterServlet.java`, `DispatcherServlet.java` |
+| Filter | PascalCase + Filter suffix | `AuthenticationFilter.java` |
+| Utility | PascalCase | `DBContext.java`, `SessionUtil.java`, `PasswordUtil.java` |
 
-### 3.2 Java Fields vs Database Columns
+### 3.2 Java Fields vs Database Columns (SQL Server)
 
 | Database column | Java field |
 |---|---|
@@ -180,13 +193,17 @@ NetworkSimulationManagement/
 | `room_id` | `roomId` |
 | `created_at` | `createdAt` |
 | `assigned_at` | `assignedAt` |
+| `performed_by` | `performedBy` |
+| `created_by` | `createdBy` |
+| `ap_id` | `apId` |
+| `switch_id` | `switchId` |
 
-### 3.3 Database
+### 3.3 Database (SQL Server)
 
 | Item | Convention | Example |
 |---|---|---|
 | Table name | PascalCase, singular | `Router`, `BandwidthUsage` |
-| Reserved table names | Wrap in brackets in SQL Server | `[User]`, `[Switch]` |
+| Reserved table names | Wrap in brackets | `[User]`, `[Switch]` |
 | Primary key | `<entity>_id` | `router_id`, `usage_id` |
 | Foreign key | referenced `<entity>_id` | `room_id`, `device_id` |
 | Status values | UPPER_SNAKE_CASE | `ONLINE`, `IN_PROGRESS`, `ALLOWED` |
@@ -195,9 +212,7 @@ NetworkSimulationManagement/
 
 ## 4. Shared Utilities
 
-### 4.1 DBContext.java
-
-Location: `com.networksim.util.DBContext`
+### 4.1 DBContext.java (SQL Server)
 
 ```java
 package com.networksim.util;
@@ -208,16 +223,12 @@ import java.sql.SQLException;
 
 public class DBContext {
 
-    private static final String SERVER = "localhost";
-    private static final String PORT = "1433";
-    private static final String DATABASE = "network_simulation_db";
+    private static final String URL =
+            "jdbc:sqlserver://localhost:1433;"
+            + "databaseName=network_simulation_db;"
+            + "encrypt=true;trustServerCertificate=true";
     private static final String USER = "sa";
     private static final String PASSWORD = "your_password_here";
-
-    private static final String URL =
-            "jdbc:sqlserver://" + SERVER + ":" + PORT
-            + ";databaseName=" + DATABASE
-            + ";encrypt=true;trustServerCertificate=true";
 
     public static Connection getConnection() throws ClassNotFoundException, SQLException {
         Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
@@ -226,11 +237,12 @@ public class DBContext {
 }
 ```
 
-> `Network2.sql` currently creates `network_simulation_db3`. Before team integration, rename it to `network_simulation_db` or update `DBContext.DATABASE` consistently.
+> ❌ Không dùng MySQL JDBC URL (`jdbc:mysql://...`).
+> ✅ Dùng `jdbc:sqlserver://...` với driver `com.microsoft.sqlserver.jdbc.SQLServerDriver`.
 
 ### 4.2 SessionUtil.java
 
-The `User` table no longer has a direct `role` column. Roles are loaded from `UserRole`.
+Không dùng `user.getRole()` — role lấy từ `UserRole` table, được load khi login và lưu trong session.
 
 ```java
 package com.networksim.util;
@@ -267,16 +279,63 @@ public class SessionUtil {
 }
 ```
 
-During login, `LoginServlet` should store:
+Trong `LoginServlet`, sau khi xác thực thành công:
 
 ```java
+// Load roles từ UserRole (không phải User.role)
+List<String> roles = userRoleDAO.findRoleNamesByUser(user.getUserId());
 session.setAttribute("loggedUser", user);
-session.setAttribute("roles", userRoleDAO.findRoleNamesByUser(user.getUserId()));
+session.setAttribute("roles", roles);
 ```
 
-### 4.3 web.xml
+### 4.3 PasswordUtil.java (BCrypt — bắt buộc theo đề)
 
-Use `web.xml` for shared configuration such as welcome file and UTF-8 filter. Use `@WebServlet` for servlet mappings unless the team decides to manage all mappings in XML.
+```java
+package com.networksim.util;
+
+import org.mindrot.jbcrypt.BCrypt;
+
+public class PasswordUtil {
+
+    public static String hash(String plainPassword) {
+        return BCrypt.hashpw(plainPassword, BCrypt.gensalt());
+    }
+
+    public static boolean verify(String plainPassword, String hashedPassword) {
+        return BCrypt.checkpw(plainPassword, hashedPassword);
+    }
+}
+```
+
+> ⚠️ Thêm `jbcrypt-0.4.jar` vào Libraries. Sample data trong `Network2.sql` dùng `hashed_admin01` là placeholder — khi chạy thật phải hash bằng BCrypt và update lại.
+
+### 4.4 Filters (bắt buộc theo đề — 1.0 điểm)
+
+```java
+// AuthenticationFilter.java — chặn URL chưa đăng nhập
+@WebFilter("/*")
+public class AuthenticationFilter implements Filter {
+    public void doFilter(ServletRequest req, ServletResponse res, FilterChain chain)
+            throws IOException, ServletException {
+        HttpServletRequest request = (HttpServletRequest) req;
+        HttpServletResponse response = (HttpServletResponse) res;
+        HttpSession session = request.getSession(false);
+
+        String uri = request.getRequestURI();
+        boolean isLoginPage = uri.endsWith("login") || uri.endsWith("login.jsp")
+                || uri.endsWith("oauth2callback");
+        boolean isLoggedIn = (session != null && session.getAttribute("loggedUser") != null);
+
+        if (isLoggedIn || isLoginPage) {
+            chain.doFilter(req, res);
+        } else {
+            response.sendRedirect(request.getContextPath() + "/login");
+        }
+    }
+}
+```
+
+### 4.5 web.xml
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -292,6 +351,7 @@ Use `web.xml` for shared configuration such as welcome file and UTF-8 filter. Us
         <welcome-file>login.jsp</welcome-file>
     </welcome-file-list>
 
+    <!-- EncodingFilter: đảm bảo UTF-8 toàn hệ thống -->
     <filter>
         <filter-name>EncodingFilter</filter-name>
         <filter-class>com.networksim.filter.EncodingFilter</filter-class>
@@ -300,34 +360,45 @@ Use `web.xml` for shared configuration such as welcome file and UTF-8 filter. Us
         <filter-name>EncodingFilter</filter-name>
         <url-pattern>/*</url-pattern>
     </filter-mapping>
+
+    <!-- AuthenticationFilter: chặn URL chưa đăng nhập -->
+    <filter>
+        <filter-name>AuthenticationFilter</filter-name>
+        <filter-class>com.networksim.filter.AuthenticationFilter</filter-class>
+    </filter>
+    <filter-mapping>
+        <filter-name>AuthenticationFilter</filter-name>
+        <url-pattern>/*</url-pattern>
+    </filter-mapping>
 </web-app>
 ```
 
 ---
 
-## 5. Table Dependency Order
-
-The SQL Server schema must be created in FK-safe order:
+## 5. Table Dependency Order (SQL Server FK-safe)
 
 ```text
-Role
-User
-UserRole
-Room
-Router / AccessPoint / Switch / NetworkDevice
-VLAN
-IPAddressManagement
-BandwidthUsage
-WiFiAnalytics
-NetworkAlert
-SupportTicket
-MaintenanceSchedule
-MaintenanceRouter / MaintenanceAccessPoint / MaintenanceSwitch
-AuthenticationLog
-SystemLog
+1. Role
+2. [User]
+3. UserRole          ← FK: User, Role
+4. Room
+5. Router            ← FK: Room
+6. AccessPoint       ← FK: Room
+7. [Switch]          ← FK: Room
+8. NetworkDevice     ← FK: Room
+9. VLAN              ← FK: Room
+10. IPAddressManagement  ← FK: NetworkDevice
+11. BandwidthUsage   ← FK: NetworkDevice
+12. WiFiAnalytics    ← FK: AccessPoint
+13. NetworkAlert     ← FK: Router, AccessPoint, Switch
+14. SupportTicket    ← FK: [User], NetworkDevice
+15. MaintenanceSchedule
+16. MaintenanceRouter       ← FK: MaintenanceSchedule, Router
+17. MaintenanceAccessPoint  ← FK: MaintenanceSchedule, AccessPoint
+18. MaintenanceSwitch       ← FK: MaintenanceSchedule, Switch
+19. AuthenticationLog ← FK: [User]
+20. SystemLog         ← FK: [User]
 ```
-
-For coding dependencies, `Room` should be implemented early because many device and infrastructure tables use `room_id`.
 
 ---
 
@@ -336,45 +407,103 @@ For coding dependencies, `Room` should be implemented early because many device 
 ```mermaid
 sequenceDiagram
     participant B as Browser
+    participant D as DispatcherServlet
     participant S as RouterServlet
-    participant D as RouterDAO
+    participant DAO as RouterDAO
     participant DB as SQL Server
 
-    B->>S: POST /router?action=add
-    S->>S: Check session and Admin role
+    B->>D: POST /app?module=router&action=add
+    D->>D: AuthFilter: check session
+    D->>S: dispatch to RouterServlet
+    S->>S: Check Admin role via SessionUtil
     S->>S: Validate input
-    S->>D: insert(router)
-    D->>DB: INSERT INTO Router (..., room_id)
-    DB-->>D: affected rows
-    D-->>S: true
-    S->>B: Redirect /router?action=list
-    B->>S: GET /router?action=list
-    S->>D: findAll()
-    D->>DB: SELECT * FROM Router
-    DB-->>D: ResultSet
-    D-->>S: List<Router>
+    S->>DAO: insert(router)
+    DAO->>DB: INSERT INTO Router (..., room_id)
+    DB-->>DAO: affected rows
+    DAO-->>S: true
+    S->>B: Redirect /app?module=router&action=list
+    B->>D: GET /app?module=router&action=list
+    D->>S: dispatch to RouterServlet
+    S->>DAO: findAll()
+    DAO->>DB: SELECT * FROM Router
+    DB-->>DAO: ResultSet
+    DAO-->>S: List<Router>
     S->>B: Forward router/list.jsp
 ```
 
 ---
 
-## 7. Error Handling Strategy
+## 7. Security Requirements (bắt buộc theo đề — 1.0 điểm)
 
-| Error Type | Handling |
+| Requirement | Implementation |
 |---|---|
-| DB connection failure | Show `error.jsp` with friendly message |
-| SQL exception | Log to `SystemLog` when a logged-in user exists |
-| Not logged in | Redirect to `login.jsp` |
-| Wrong role | Show access denied message or redirect with `msg=access_denied` |
-| Form validation error | Re-show form with error messages |
-| FK delete conflict | Do not delete blindly; show message explaining related records exist |
+| Mã hoá mật khẩu | BCrypt (jBCrypt) trong `PasswordUtil.java` |
+| Đăng nhập Google | Google OAuth2 Client — `oauth2callback` servlet |
+| Chống CSRF | Hidden token trong form, verify ở Servlet |
+| Validate server-side | Kiểm tra input trong Servlet trước khi gọi DAO |
+| Không để lộ stack trace | Custom error page `error.jsp` |
 
 ---
 
-## 8. Related Documents
+## 8. JavaMail Requirements (bắt buộc theo đề — 1.0 điểm)
 
-- `Network2.sql` - Current SQL Server schema and sample data
-- `03_team_assignment_updated.md` - Current table ownership and sprint plan
-- `05_feature_list.md` - Feature list by role
-- `07_coding_guide.md` - Implementation guide
+| Chức năng | Khi nào gửi |
+|---|---|
+| Email xác nhận đăng ký | Sau khi Admin tạo user mới |
+| Email reset mật khẩu | Khi user yêu cầu reset — kèm token hết hạn |
+| Email thông báo | Khi ticket được tạo hoặc cập nhật trạng thái |
 
+```java
+// MailUtil.java — wrapper cho JavaMail
+package com.networksim.util;
+
+import javax.mail.*;
+import javax.mail.internet.*;
+import java.util.Properties;
+
+public class MailUtil {
+    public static void send(String toEmail, String subject, String body) throws MessagingException {
+        Properties props = new Properties();
+        props.put("mail.smtp.host", "smtp.gmail.com");
+        props.put("mail.smtp.port", "587");
+        props.put("mail.smtp.auth", "true");
+        props.put("mail.smtp.starttls.enable", "true");
+
+        Session session = Session.getInstance(props, new Authenticator() {
+            protected PasswordAuthentication getPasswordAuthentication() {
+                return new PasswordAuthentication("your_email@gmail.com", "your_app_password");
+            }
+        });
+
+        Message msg = new MimeMessage(session);
+        msg.setFrom(new InternetAddress("your_email@gmail.com"));
+        msg.setRecipients(Message.RecipientType.TO, InternetAddress.parse(toEmail));
+        msg.setSubject(subject);
+        msg.setText(body);
+        Transport.send(msg);
+    }
+}
+```
+
+---
+
+## 9. Error Handling Strategy
+
+| Error Type | Handling |
+|---|---|
+| DB connection failure | Show `error.jsp` với friendly message — không lộ stack trace |
+| SQL exception | Log vào `SystemLog` khi có user đăng nhập |
+| Not logged in | AuthenticationFilter redirect về `login.jsp` |
+| Wrong role | AuthorizationFilter → `error.jsp` 403 |
+| Form validation error | Re-show form với error messages |
+| FK delete conflict | Show message giải thích có bản ghi liên quan |
+| Lỗi 400, 403, 404, 500 | Custom error page theo đề bài |
+
+---
+
+## 10. Related Documents
+
+- `Network2.sql` — SQL Server schema và sample data
+- `03_team_assignment_updated.md` — Table ownership và sprint plan
+- `05_feature_list.md` — Feature list by role
+- `07_coding_guide.md` — Implementation guide

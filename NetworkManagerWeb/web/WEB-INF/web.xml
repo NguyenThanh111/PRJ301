@@ -37,8 +37,22 @@
         <servlet-class>Controller.SystemLogController</servlet-class>
     </servlet>
     <servlet>
+        <servlet-name>BandwidthServlet</servlet-name>
+        <servlet-class>Controller.BandwidthServlet</servlet-class>
+    </servlet>
+    <servlet>
+        <servlet-name>MaintenanceServlet</servlet-name>
+        <servlet-class>Controller.MaintenanceServlet</servlet-class>
+    </servlet>
+    <servlet>
         <servlet-name>VLANServlet</servlet-name>
         <servlet-class>Controller.VLANServlet</servlet-class>
+        <servlet-name>WifiController</servlet-name>
+        <servlet-class>Controller.WifiController</servlet-class>
+    </servlet>
+    <servlet>
+        <servlet-name>NetworkAlertController</servlet-name>
+        <servlet-class>Controller.NetworkAlertController</servlet-class>
     </servlet>
     <servlet>
         <servlet-name>IPServlet</servlet-name>
@@ -81,8 +95,22 @@
         <url-pattern>/SystemLogController</url-pattern>
     </servlet-mapping>
     <servlet-mapping>
+        <servlet-name>BandwidthServlet</servlet-name>
+        <url-pattern>/BandwidthServlet</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>MaintenanceServlet</servlet-name>
+        <url-pattern>/MaintenanceServlet</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
         <servlet-name>VLANServlet</servlet-name>
         <url-pattern>/VLANServlet</url-pattern>
+        <servlet-name>WifiController</servlet-name>
+        <url-pattern>/WifiController</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>NetworkAlertController</servlet-name>
+        <url-pattern>/NetworkAlertController</url-pattern>
     </servlet-mapping>
     <servlet-mapping>
         <servlet-name>IPServlet</servlet-name>
@@ -94,6 +122,6 @@
         </session-timeout>
     </session-config>
     <welcome-file-list>
-        <welcome-file>login.jsp</welcome-file>
+        <welcome-file>home</welcome-file>
     </welcome-file-list>
 </web-app>
