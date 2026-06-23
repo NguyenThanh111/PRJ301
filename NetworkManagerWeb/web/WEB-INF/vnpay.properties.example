@@ -1,0 +1,10 @@
+﻿# Copy this file to vnpay.properties, then fill the credentials issued by VNPAY.
+# The real vnpay.properties file is ignored by Git and must never be committed.
+vnpay.payUrl=https://sandbox.vnpayment.vn/paymentv2/vpcpay.html
+vnpay.tmnCode=
+vnpay.hashSecret=
+
+# Use public HTTPS URLs registered in the VNPAY merchant portal.
+vnpay.returnUrl=https://your-domain.example/NetworkManagerWeb/vnpay/return
+vnpay.ipnUrl=https://your-domain.example/NetworkManagerWeb/vnpay/ipn
+

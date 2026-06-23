@@ -1,19 +1,25 @@
 <%-- staffDashboard.jsp - Dashboard for staff members --%>
-    <%@page contentType="text/html" pageEncoding="UTF-8" %>
+    <%@page import="Models_DAO.VLANDAO"%>
+<%@page contentType="text/html" pageEncoding="UTF-8" %>
     <%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
     <%@taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions"%>
-        <%@page import="Models.RouterDAO" %>
+        <%@page import="Models_DAO.RouterDAO" %>
         <%@page import="Models.RouterDTO" %>
-        <%@page import="Models.BandwidthUsageDAO" %>
+        <%@page import="Models_DAO.BandwidthUsageDAO" %>
         <%@page import="Models.BandwidthUsageDTO" %>
-        <%@page import="Models.NetworkDeviceDAO" %>
+        <%@page import="Models_DAO.NetworkDeviceDAO" %>
         <%@page import="Models.NetworkDeviceDTO" %>
-        <%@page import="Models.MaintenanceScheduleDAO" %>
+        <%@page import="Models_DAO.MaintenanceScheduleDAO" %>
         <%@page import="Models.MaintenanceScheduleDTO" %>
-        <%@page import="Models.RoomDAO" %>
+        <%@page import="Models_DAO.RoomDAO" %>
         <%@page import="Models.RoomDTO" %>
+        <%@page import="Models_DAO.VLANDAO" %> 
+        <%@page import="Models.VLANDTO" %>
+        <%@page import="Models_DAO.SupportTicketDAO" %>
+        <%@page import="Models.SupportTicketDTO" %>
         <%@page import="java.util.ArrayList" %>
         <%@page import="java.util.HashMap" %>
+        <%@page import="java.text.SimpleDateFormat" %>
         <c:set var="currentUser" value="${sessionScope.user}" />
         <c:set var="role" value="${sessionScope.role}" />
         <c:set var="roleLower" value="${fn:toLowerCase(role)}" />
@@ -48,6 +54,11 @@
             RoomDAO roomDAO = new RoomDAO();
             ArrayList<RoomDTO> roomList = roomDAO.ListAll();
         %>
+        <% VLANDAO vlanDAO = new VLANDAO();
+        ArrayList<VLANDTO> vlanList = vlanDAO.ListAll(); %>
+        <% SupportTicketDAO ticketDAO = new SupportTicketDAO();
+        ArrayList<SupportTicketDTO> ticketList = ticketDAO.ListAll();
+        SimpleDateFormat ticketDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm"); %>
                 <!DOCTYPE html>
                 <html lang="en">
 
@@ -258,6 +269,28 @@
                             border: 1px solid rgba(139, 92, 246, 0.4);
                         }
 
+                        .premium-btn {
+                            display: inline-flex;
+                            align-items: center;
+                            gap: 7px;
+                            padding: 8px 14px;
+                            border-radius: 10px;
+                            color: #fff;
+                            text-decoration: none;
+                            font-size: 13px;
+                            font-weight: 800;
+                            background: linear-gradient(135deg, #f59e0b, #d946ef 58%, #8b5cf6);
+                            border: 1px solid rgba(253, 224, 71, 0.35);
+                            box-shadow: 0 7px 22px rgba(217, 70, 239, 0.25);
+                            transition: transform .18s ease, box-shadow .18s ease;
+                        }
+
+                        .premium-btn:hover {
+                            color: #fff;
+                            transform: translateY(-1px);
+                            box-shadow: 0 10px 28px rgba(217, 70, 239, 0.38);
+                        }
+
                         .page-body {
                             padding: 22px;
                         }
@@ -436,6 +469,99 @@
 
                 <body>
 
+
+                    <nav class="sidebar">
+                        <div class="sidebar-brand">
+                            <div class="sidebar-brand-icon"><i class="bi bi-diagram-3-fill"></i></div>
+                            <div class="brand-title">Network<br>Manager</div>
+                        </div>
+
+                        <div class="sidebar-section-label">Overview</div>
+                        <button class="nav-item-link active" onclick="showPage('dashboard', this)">
+                            <i class="bi bi-speedometer2"></i> Dashboard
+                        </button>
+
+                        <div class="sidebar-section-label">Infrastructure</div>
+                        <button class="nav-item-link" onclick="showPage('devices', this)">
+                            <i class="bi bi-laptop"></i> Network Devices
+                        </button>
+                        <button class="nav-item-link" onclick="showPage('accesspoints', this)">
+                            <i class="bi bi-reception-4"></i> Access Points
+                        </button>
+                        <button class="nav-item-link" onclick="showPage('routers', this)">
+                            <i class="bi bi-router"></i> Routers
+                        </button>
+                        <button class="nav-item-link" onclick="showPage('switches', this)">
+                            <i class="bi bi-hdd-network"></i> Switches
+                        </button>
+                        <button class="nav-item-link" onclick="showPage('vlan', this)">
+                            <i class="bi bi-diagram-3"></i> VLAN
+                        </button>
+                        <a class="nav-item-link text-decoration-none"
+                            href="${pageContext.request.contextPath}/MainController?action=ipList">
+
+                             <i class="bi bi-globe"></i>
+                             IP Management
+                         </a>
+
+                        <div class="sidebar-section-label">Monitoring</div>
+                        <button class="nav-item-link" onclick="showPage('bandwidth', this)">
+                            <i class="bi bi-bar-chart-line"></i> Bandwidth Usage
+                        </button>
+                        <button class="nav-item-link" onclick="showPage('wifianalytics', this)">
+                            <i class="bi bi-graph-up"></i> WiFi Analytics
+                        </button>
+                        <button class="nav-item-link" onclick="showPage('alerts', this)">
+                            <i class="bi bi-exclamation-triangle"></i> Network Alerts
+                            <span class="ms-auto badge"
+                                style="background:rgba(239,68,68,0.2);color:#fda4af;font-size:10px;">3</span>
+                        </button>
+
+                        <div class="sidebar-section-label">Management</div>
+                        <button class="nav-item-link" onclick="showPage('tickets', this)">
+                            <i class="bi bi-ticket-perforated"></i> Support Tickets
+                        </button>
+                        <button class="nav-item-link" onclick="showPage('maintenance', this)">
+                            <i class="bi bi-tools"></i> Maintenance
+                        </button>
+                        <button class="nav-item-link" onclick="showPage('rooms', this)">
+                            <i class="bi bi-building"></i> Rooms
+                        </button>
+
+                        <c:if test="${isAdmin}">
+                            <div class="sidebar-section-label">Administration</div>
+                            <a href="UserController?action=list" class="nav-item-link text-decoration-none">
+                                <i class="bi bi-people"></i> Manage Users
+                            </a>
+                            <a href="AuthLogController" class="nav-item-link text-decoration-none">
+                                <i class="bi bi-shield-check"></i> Auth Logs
+                            </a>
+                            <a href="SystemLogController" class="nav-item-link text-decoration-none">
+                                <i class="bi bi-journal-text"></i> System Logs
+                            </a>
+                        </c:if>
+
+                                <div class="sidebar-footer">
+                                    <div class="d-flex align-items-center gap-2 mb-2">
+                                        <div class="user-avatar ${isAdmin ? 'admin-avatar' : 'tech-avatar'}">
+                                            ${fn:substring(displayName, 0, 1)}
+                                        </div>
+                                        <div>
+                                            <div style="font-size:13px;font-weight:600;color:#e8ecff;">
+                                                ${displayName}
+                                            </div>
+                                            <div style="font-size:11px;color:#8ea0cb;">
+                                                ${role}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <a href="LoginController?action=logout" class="nav-item-link text-danger"
+                                        style="padding-left:0;">
+                                        <i class="bi bi-box-arrow-left"></i> Sign Out
+                                    </a>
+                                </div>
+                    </nav>
+
 <c:set var="sidebarActive" value="${empty param.page ? 'dashboard' : param.page}" scope="request" />
 <%@include file="sidebar.jsp" %>
 
@@ -446,6 +572,9 @@
                                 <span class="topbar-breadcrumb" id="pageBreadcrumb">/ Overview</span>
                             </div>
                             <div class="d-flex align-items-center gap-2">
+                                <a class="premium-btn" href="${pageContext.request.contextPath}/payment/checkout">
+                                    <i class="bi bi-gem"></i> Premium
+                                </a>
                                 <span class="${isAdmin ? 'role-badge-admin' : 'role-badge-tech'}">${role}
                                 </span>
                                 <span style="font-size:13px;color:#9db0db;">Welcome, <strong style="color:#f2f5ff;">
@@ -588,10 +717,62 @@
                                                     All</button>
                                             </div>
                                             <div class="section-card-body">
+                                                <%
+                                                    int openTicketShown = 0;
+                                                    if (ticketList != null) {
+                                                        for (SupportTicketDTO ticket : ticketList) {
+                                                            if (ticket == null || ticket.getStatus() == null) {
+                                                                continue;
+                                                            }
+
+                                                            if (!"OPEN".equals(ticket.getStatus())
+                                                                    && !"IN_PROGRESS".equals(ticket.getStatus())) {
+                                                                continue;
+                                                            }
+
+                                                            if (openTicketShown >= 3) {
+                                                                break;
+                                                            }
+
+                                                            openTicketShown++;
+                                                %>
+                                                <div class="alert-item">
+                                                    <div class="severity-dot <%= "OPEN".equals(ticket.getStatus())
+                                                            ? "severity-critical"
+                                                            : "severity-warning" %>"></div>
+                                                    <div class="flex-grow-1">
+                                                        <div class="d-flex justify-content-between gap-2">
+                                                            <div style="font-weight:600;font-size:13px;">
+                                                                <%= ticket.getTitle() %>
+                                                            </div>
+                                                            <span class="badge text-bg-secondary"
+                                                                  style="font-size:10px;">
+                                                                <%= ticket.getStatus() %>
+                                                            </span>
+                                                        </div>
+                                                        <div style="font-size:11px;color:#95a3c8;">
+                                                            User #<%= ticket.getCreatedBy() %>
+                                                            <% if (ticket.getDeviceId() != null) { %>
+                                                            &middot; Device #<%= ticket.getDeviceId() %>
+                                                            <% } else { %>
+                                                            &middot; No device
+                                                            <% } %>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <%
+                                                        }
+                                                    }
+
+                                                    if (openTicketShown == 0) {
+                                                %>
                                                 <div class="placeholder-box">
                                                     <i class="bi bi-ticket-perforated" style="font-size:26px;"></i><br>
-                                                    Support ticket queue will appear here
+                                                    No open support tickets.
                                                 </div>
+                                                <%
+                                                    }
+                                                %>
                                             </div>
                                         </div>
                                     </div>
@@ -618,7 +799,7 @@
                                 </div>
                             </div>
 
-                            <% String[][] infraPages={ {"devices","bi-laptop","Network Devices","Device name, MAC address, IP, owner, type, status"}, {"accesspoints","bi-reception-4","Access Points","AP name, SSID, IP, connected users, status, room"}, {"switches","bi-hdd-network","Switches","Switch name, total/used ports, IP, status"}, {"vlan","bi-diagram-3","VLAN Management","VLAN name, subnet, purpose"}, {"ipmanage","bi-globe","IP Address Management","IP address, assigned to, status"} }; %>
+                            <% String[][] infraPages={ {"devices","bi-laptop","Network Devices","Device name, MAC address, IP, owner, type, status"}, {"accesspoints","bi-reception-4","Access Points","AP name, SSID, IP, connected users, status, room"}, {"switches","bi-hdd-network","Switches","Switch name, total/used ports, IP, status"}, {"ipmanage","bi-globe","IP Address Management","IP address, assigned to, status"} }; %>
                                 <% for (String[] p : infraPages) { %>
                                     <div class="page-section" id="page-<%= p[0] %>">
                                         <div class="section-card">
@@ -727,6 +908,219 @@
                                                 </div>
                                             </div>
                                         </div>
+                                         
+                                         <div class="page-section" id="page-vlan">
+                                             <div class="section-card">
+
+                                                 <div class="section-card-header">
+                                                     <h6>
+                                                         <i class="bi bi-diagram-3 me-2"></i>
+                                                         VLAN Management
+                                                     </h6>
+
+                                                     <div>
+                                                         <a class="btn-theme text-decoration-none"
+                                                            href="MainController?action=vlanList">
+                                                             <i class="bi bi-box-arrow-up-right me-1"></i>
+                                                             Full View
+                                                         </a>
+
+                                                         <a class="btn-theme text-decoration-none ms-1"
+                                                            href="MainController?action=vlanAdd&returnTo=dashboard">
+                                                             <i class="bi bi-plus-lg me-1"></i>
+                                                             Add VLAN
+                                                         </a>
+                                                     </div>
+                                                 </div>
+
+                                                 <div class="section-card-body" style="padding:0;">
+
+                                                     <div style="overflow-x:auto;">
+
+                                                         <table class="rt-table">
+
+                                                             <thead>
+                                                                 <tr>
+                                                                     <th>
+                                                                         <i class="bi bi-hash me-1"></i>
+                                                                         ID
+                                                                     </th>
+
+                                                                     <th>
+                                                                         <i class="bi bi-diagram-3 me-1"></i>
+                                                                         VLAN Name
+                                                                     </th>
+
+                                                                     <th>
+                                                                         <i class="bi bi-globe me-1"></i>
+                                                                         Subnet
+                                                                     </th>
+
+                                                                     <th>
+                                                                         <i class="bi bi-card-text me-1"></i>
+                                                                         Purpose
+                                                                     </th>
+
+                                                                     <th>
+                                                                         <i class="bi bi-door-open me-1"></i>
+                                                                         Room
+                                                                     </th>
+
+                                                                     <th>
+                                                                         <i class="bi bi-three-dots me-1"></i>
+                                                                         Actions
+                                                                     </th>
+                                                                 </tr>
+                                                             </thead>
+
+                                                             <tbody>
+
+                                                                 <%
+                                                                     if (vlanList != null
+                                                                             && !vlanList.isEmpty()) {
+
+                                                                         for (VLANDTO vlan : vlanList) {
+                                                                 %>
+
+                                                                 <tr>
+                                                                     <td>
+                                                                         <span class="rt-id">
+                                                                             #<%= vlan.getVlanId() %>
+                                                                         </span>
+                                                                     </td>
+
+                                                                     <td>
+                                                                         <div class="rt-name">
+
+                                                                             <div class="rt-name-icon">
+                                                                                 <i class="bi bi-diagram-3-fill"></i>
+                                                                             </div>
+
+                                                                             <span style="font-weight:600;">
+                                                                                 <%= vlan.getVlanName() %>
+                                                                             </span>
+
+                                                                         </div>
+                                                                     </td>
+
+                                                                     <td>
+                                                                         <% if (vlan.getSubnet() != null) { %>
+
+                                                                         <span class="rt-ip">
+                                                                             <%= vlan.getSubnet() %>
+                                                                         </span>
+
+                                                                         <% } else { %>
+
+                                                                         <span style="color:var(--text-muted);">
+                                                                             Not specified
+                                                                         </span>
+
+                                                                         <% } %>
+                                                                     </td>
+
+                                                                     <td style="color:var(--text-muted);font-size:.78rem;">
+
+                                                                         <%= vlan.getPurpose() == null
+                                                                                 ? "Not specified"
+                                                                                 : vlan.getPurpose() %>
+
+                                                                     </td>
+
+                                                                     <td>
+                                                                         <% if (vlan.getRoomId() != null) { %>
+
+                                                                         <span class="rt-room">
+                                                                             Room #<%= vlan.getRoomId() %>
+                                                                         </span>
+
+                                                                         <% } else { %>
+
+                                                                         <span style="color:var(--text-muted);">
+                                                                             No room
+                                                                         </span>
+
+                                                                         <% } %>
+                                                                     </td>
+
+                                                                     <td>
+                                                                         <div class="rt-actions">
+
+                                                                             <a class="rt-btn rt-btn-edit"
+                                                                                href="MainController?action=vlanEdit&id=<%= vlan.getVlanId() %>&returnTo=dashboard"
+                                                                                title="Edit VLAN">
+
+                                                                                 <i class="bi bi-pencil-fill"></i>
+                                                                             </a>
+
+                                                                             <form action="MainController"
+                                                                                   method="post"
+                                                                                   style="display:inline;"
+                                                                                   onsubmit="return confirm('Are you sure you want to delete VLAN <%= vlan.getVlanName() %>?');">
+
+                                                                                 <input type="hidden"
+                                                                                        name="action"
+                                                                                        value="vlanDelete">
+
+                                                                                 <input type="hidden"
+                                                                                        name="vlanId"
+                                                                                        value="<%= vlan.getVlanId() %>">
+
+                                                                                 <input type="hidden"
+                                                                                        name="returnTo"
+                                                                                        value="dashboard">
+
+                                                                                 <button class="rt-btn rt-btn-del"
+                                                                                         type="submit"
+                                                                                         title="Delete VLAN">
+
+                                                                                     <i class="bi bi-trash3-fill"></i>
+                                                                                 </button>
+
+                                                                             </form>
+
+                                                                         </div>
+                                                                     </td>
+                                                                 </tr>
+
+                                                                 <%
+                                                                         }
+                                                                     } else {
+                                                                 %>
+
+                                                                 <tr>
+                                                                     <td colspan="6">
+
+                                                                         <div class="rt-empty">
+                                                                             <i class="bi bi-diagram-3"></i>
+
+                                                                             No VLANs found.
+
+                                                                             <div class="mt-3">
+                                                                                 <a class="btn-theme text-decoration-none"
+                                                                                    href="MainController?action=vlanAdd&returnTo=dashboard">
+
+                                                                                     <i class="bi bi-plus-lg me-1"></i>
+                                                                                     Add the first VLAN
+                                                                                 </a>
+                                                                             </div>
+                                                                         </div>
+
+                                                                     </td>
+                                                                 </tr>
+
+                                                                 <%
+                                                                     }
+                                                                 %>
+
+                                                             </tbody>
+                                                         </table>
+
+                                                     </div>
+                                                 </div>
+                                             </div>
+                                         </div>
+
 
                                         <div class="page-section" id="page-bandwidth">
                                             <div class="section-card">
@@ -841,26 +1235,233 @@
                                             <div class="section-card">
                                                 <div class="section-card-header">
                                                     <h6><i class="bi bi-ticket-perforated me-2"></i>Support Tickets</h6>
-                                                    <select class="form-select form-select-sm"
-                                                        style="width:130px;background:#0f162b;border-color:var(--border);color:#dbe3ff;font-size:12px;">
-                                                        <option>All Status</option>
-                                                        <option>OPEN</option>
-                                                        <option>IN PROGRESS</option>
-                                                        <option>CLOSED</option>
-                                                    </select>
+                                                    <a class="btn-theme text-decoration-none"
+                                                       href="MainController?action=ticketAdd&returnTo=dashboard">
+                                                        <i class="bi bi-plus-lg me-1"></i>
+                                                        Add Ticket
+                                                    </a>
                                                 </div>
                                                 <div class="section-card-body">
-                                                    <div class="placeholder-box">All support tickets will appear here
+                                                    <div class="table-responsive">
+                                                        <table class="table table-dark table-striped table-hover align-middle mb-0">
+                                                            <thead>
+                                                                <tr>
+                                                                    <th>ID</th>
+                                                                    <th>Title</th>
+                                                                    <th>Status</th>
+                                                                    <th>Created Date</th>
+                                                                    <th>Created By</th>
+                                                                    <th>Device</th>
+                                                                    <th>Actions</th>
+                                                                </tr>
+                                                            </thead>
+
+                                                            <tbody>
+                                                                <% if (ticketList != null && !ticketList.isEmpty()) {
+                                                                    for (SupportTicketDTO ticket : ticketList) {
+                                                                %>
+
+                                                                <tr>
+                                                                    <td><%= ticket.getTicketId() %></td>
+                                                                    <td>
+                                                                        <div style="font-weight:600;">
+                                                                            <%= ticket.getTitle() %>
+                                                                        </div>
+                                                                        <% if (ticket.getDescription() != null
+                                                                                && !ticket.getDescription().trim().isEmpty()) { %>
+                                                                        <div style="font-size:12px;color:#95a3c8;">
+                                                                            <%= ticket.getDescription() %>
+                                                                        </div>
+                                                                        <% } %>
+                                                                    </td>
+                                                                    <td>
+                                                                        <span class="badge text-bg-secondary">
+                                                                            <%= ticket.getStatus() %>
+                                                                        </span>
+                                                                    </td>
+                                                                    <td>
+                                                                        <%= ticket.getCreatedDate() == null
+                                                                                ? "Not set"
+                                                                                : ticketDateFormat.format(ticket.getCreatedDate()) %>
+                                                                    </td>
+                                                                    <td>User #<%= ticket.getCreatedBy() %></td>
+                                                                    <td>
+                                                                        <%= ticket.getDeviceId() == null
+                                                                                ? "Not assigned"
+                                                                                : "Device #" + ticket.getDeviceId() %>
+                                                                    </td>
+                                                                    <td>
+                                                                        <div class="d-flex flex-wrap gap-2">
+                                                                            <a class="btn btn-sm btn-outline-light"
+                                                                               href="MainController?action=ticketEdit&id=<%= ticket.getTicketId() %>&returnTo=dashboard">
+                                                                                Edit
+                                                                            </a>
+
+                                                                            <form action="MainController"
+                                                                                  method="post">
+                                                                                <input type="hidden"
+                                                                                       name="action"
+                                                                                       value="ticketUpdateStatus">
+                                                                                <input type="hidden"
+                                                                                       name="ticketId"
+                                                                                       value="<%= ticket.getTicketId() %>">
+                                                                                <input type="hidden"
+                                                                                       name="returnTo"
+                                                                                       value="dashboard">
+                                                                                <select class="form-select form-select-sm"
+                                                                                        name="status"
+                                                                                        style="width:130px;background:#0f162b;border-color:var(--border);color:#dbe3ff;font-size:12px;"
+                                                                                        onchange="this.form.submit()">
+                                                                                    <option value="OPEN"
+                                                                                            <%= "OPEN".equals(ticket.getStatus()) ? "selected" : "" %>>
+                                                                                        OPEN
+                                                                                    </option>
+                                                                                    <option value="IN_PROGRESS"
+                                                                                            <%= "IN_PROGRESS".equals(ticket.getStatus()) ? "selected" : "" %>>
+                                                                                        IN_PROGRESS
+                                                                                    </option>
+                                                                                    <option value="RESOLVED"
+                                                                                            <%= "RESOLVED".equals(ticket.getStatus()) ? "selected" : "" %>>
+                                                                                        RESOLVED
+                                                                                    </option>
+                                                                                    <option value="CLOSED"
+                                                                                            <%= "CLOSED".equals(ticket.getStatus()) ? "selected" : "" %>>
+                                                                                        CLOSED
+                                                                                    </option>
+                                                                                </select>
+                                                                            </form>
+
+                                                                            <form action="MainController"
+                                                                                  method="post"
+                                                                                  onsubmit="return confirm('Are you sure you want to delete this ticket?');">
+                                                                                <input type="hidden"
+                                                                                       name="action"
+                                                                                       value="ticketDelete">
+                                                                                <input type="hidden"
+                                                                                       name="ticketId"
+                                                                                       value="<%= ticket.getTicketId() %>">
+                                                                                <input type="hidden"
+                                                                                       name="returnTo"
+                                                                                       value="dashboard">
+                                                                                <button class="btn btn-sm btn-outline-danger"
+                                                                                        type="submit">
+                                                                                    Delete
+                                                                                </button>
+                                                                            </form>
+                                                                        </div>
+                                                                    </td>
+                                                                </tr>
+
+                                                                <%
+                                                                    }
+                                                                } else {
+                                                                %>
+
+                                                                <tr>
+                                                                    <td colspan="7">
+                                                                        <div class="placeholder-box my-0">
+                                                                            <i class="bi bi-ticket-perforated"
+                                                                               style="font-size:26px;"></i>
+                                                                            <br>
+                                                                            No support tickets found.
+                                                                        </div>
+                                                                    </td>
+                                                                </tr>
+
+                                                                <%
+                                                                }
+                                                                %>
+                                                            </tbody>
+                                                        </table>
                                                     </div>
                                                 </div>
                                             </div>
                                         </div>
 
                                         <div class="page-section" id="page-maintenance">
+                                            <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+                                            
+                                            <!-- KPI Row -->
+                                            <div class="row g-3 mb-3">
+                                                <div class="col-6 col-lg-3">
+                                                    <div class="stat-card">
+                                                        <div class="stat-icon" style="background:rgba(251,191,36,.15);color:#fbbf24;"><i class="bi bi-tools"></i></div>
+                                                        <div class="stat-value" style="color:#fde68a;" id="kpi-total">0</div>
+                                                        <div class="stat-label">Total Schedules</div>
+                                                        <div class="stat-delta" style="color:var(--text-muted);">All time tasks</div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-6 col-lg-3">
+                                                    <div class="stat-card">
+                                                        <div class="stat-icon" style="background:rgba(96,165,250,.12);color:#60a5fa;"><i class="bi bi-calendar-event"></i></div>
+                                                        <div class="stat-value" style="color:#bfdbfe;" id="kpi-planned">0</div>
+                                                        <div class="stat-label">Planned</div>
+                                                        <div class="stat-delta" style="color:var(--text-muted);">Upcoming tasks</div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-6 col-lg-3">
+                                                    <div class="stat-card">
+                                                        <div class="stat-icon" style="background:rgba(245,158,11,.12);color:#f59e0b;"><i class="bi bi-gear-wide-connected"></i></div>
+                                                        <div class="stat-value" style="color:#fde68a;" id="kpi-inprogress">0</div>
+                                                        <div class="stat-label">In Progress</div>
+                                                        <div class="stat-delta" style="color:var(--text-muted);">Currently executing</div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-6 col-lg-3">
+                                                    <div class="stat-card">
+                                                        <div class="stat-icon" style="background:rgba(52,211,153,.12);color:#34d399;"><i class="bi bi-check2-circle"></i></div>
+                                                        <div class="stat-value" style="color:#6ee7b7;" id="kpi-completed">0</div>
+                                                        <div class="stat-label">Completed</div>
+                                                        <div class="stat-delta" style="color:var(--text-muted);">Finished tasks</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Chart Row -->
+                                            <div class="row g-3 mb-3">
+                                                <div class="col-12">
+                                                    <div class="section-card h-100">
+                                                        <div class="section-card-header">
+                                                            <h6><i class="bi bi-pie-chart me-2" style="color:var(--neon-amber);"></i>Status Distribution</h6>
+                                                        </div>
+                                                        <div class="section-card-body">
+                                                            <div class="chart-wrap" style="position: relative; height: 300px;">
+                                                                <canvas id="dashMaintenanceChart"></canvas>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <style>
+                                                .sev-tabs { display: flex; gap: 8px; flex-wrap: wrap; padding: 14px 18px; border-bottom: 1px solid var(--border); }
+                                                .sev-tab { border-radius: 8px; padding: 6px 14px; font-size: 12px; font-weight: 700; cursor: pointer; transition: .18s; display: inline-flex; align-items: center; gap: 7px; border: 1px solid var(--border); background: rgba(22, 31, 54, .6); color: var(--text-muted); text-decoration: none; user-select: none; }
+                                                .sev-tab:hover { color: #e5ddff; filter: brightness(1.1); }
+                                                .sev-tab.tab-all.active { background: rgba(139, 92, 246, .25); border-color: rgba(139, 92, 246, .6); color: #f0ebff; }
+                                                .sev-tab.tab-planned.active { background: rgba(96, 165, 250, .2); border-color: rgba(96, 165, 250, .6); color: #bae6fd; }
+                                                .sev-tab.tab-inprogress.active { background: rgba(251, 191, 36, .18); border-color: rgba(251, 191, 36, .6); color: #fde68a; }
+                                                .sev-tab.tab-completed.active { background: rgba(52, 211, 153, .18); border-color: rgba(52, 211, 153, .6); color: #a7f3d0; }
+                                                .sev-count { display: inline-flex; align-items: center; justify-content: center; min-width: 20px; height: 20px; border-radius: 10px; font-size: 10px; padding: 0 6px; font-weight: 800; }
+                                                .sev-count-all { background: rgba(139, 92, 246, .3); color: #e0d6ff; }
+                                                .sev-count-planned { background: rgba(96, 165, 250, .3); color: #bae6fd; }
+                                                .sev-count-inprogress { background: rgba(251, 191, 36, .3); color: #fde68a; }
+                                                .sev-count-completed { background: rgba(52, 211, 153, .3); color: #a7f3d0; }
+                                                .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+                                                .dot-planned { background: var(--neon-blue); box-shadow: 0 0 6px var(--neon-blue); }
+                                                .dot-inprogress { background: var(--neon-amber); box-shadow: 0 0 6px var(--neon-amber); animation: blink 1.4s infinite; }
+                                                .dot-completed { background: var(--neon-emerald); }
+                                                @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
+                                                .desc-box { font-size:0.75rem; color:var(--text-muted); margin-top:6px; line-height:1.5; white-space:pre-wrap; word-wrap:break-word; background:rgba(15,23,42,0.6); padding:8px 12px; border-radius:6px; border-left: 2px solid rgba(139,92,246,0.4); }
+                                                .btn-icon { display:inline-flex; align-items:center; justify-content:center; width:32px; height:32px; border-radius:8px; border:1px solid transparent; transition:all .2s; background:transparent; cursor:pointer; }
+                                                .btn-icon:hover { filter: brightness(1.2); }
+                                            </style>
                                             <div class="section-card">
-                                                <div class="section-card-header">
+                                                <div class="section-card-header" style="flex-wrap: wrap; gap: 15px;">
                                                     <h6><i class="bi bi-tools me-2"></i>Maintenance Schedule</h6>
-                                                    <div class="d-flex gap-2">
+                                                    <div class="d-flex gap-2 ms-auto align-items-center" style="flex-wrap: wrap;">
+                                                        <div class="search-wrap" style="position:relative; width: 220px;">
+                                                            <i class="bi bi-search" style="position:absolute; left:12px; top:50%; transform:translateY(-50%); color:var(--text-muted); font-size:14px;"></i>
+                                                            <input type="text" id="dash-maintenance-search" class="form-control" placeholder="Search tasks..." style="background:rgba(15,23,42,0.6); border:1px solid var(--border); color:#fff; border-radius:8px; padding-left:36px; height:36px; font-size:0.85rem;" onkeyup="applyMaintenanceFilter()">
+                                                        </div>
                                                         <a class="btn-theme text-decoration-none" href="MainController?action=maintenanceAdd&returnTo=dashboard">
                                                             <i class="bi bi-plus-lg me-1"></i>Schedule
                                                         </a>
@@ -869,9 +1470,25 @@
                                                         </a>
                                                     </div>
                                                 </div>
+
+                                                <div class="sev-tabs" id="dash-maintenance-tabs">
+                                                    <div class="sev-tab tab-all active" onclick="filterDashTasks('ALL', this)">
+                                                        <i class="bi bi-grid-fill"></i> All <span class="sev-count sev-count-all" id="cnt-all">0</span>
+                                                    </div>
+                                                    <div class="sev-tab tab-planned" onclick="filterDashTasks('PLANNED', this)">
+                                                        <span class="dot dot-planned"></span> Planned <span class="sev-count sev-count-planned" id="cnt-planned">0</span>
+                                                    </div>
+                                                    <div class="sev-tab tab-inprogress" onclick="filterDashTasks('IN_PROGRESS', this)">
+                                                        <span class="dot dot-inprogress"></span> In Progress <span class="sev-count sev-count-inprogress" id="cnt-inprogress">0</span>
+                                                    </div>
+                                                    <div class="sev-tab tab-completed" onclick="filterDashTasks('COMPLETED', this)">
+                                                        <span class="dot dot-completed"></span> Completed <span class="sev-count sev-count-completed" id="cnt-completed">0</span>
+                                                    </div>
+                                                </div>
+
                                                 <div class="section-card-body" style="padding:0;">
                                                     <div style="overflow-x:auto;">
-                                                        <table class="rt-table">
+                                                        <table class="rt-table" id="dash-maintenance-table">
                                                             <thead>
                                                                 <tr>
                                                                     <th><i class="bi bi-hash me-1"></i>ID</th>
@@ -886,70 +1503,76 @@
                                                                 <c:choose>
                                                                     <c:when test="${not empty tasks}">
                                                                         <c:forEach var="item" items="${tasks}">
-                                                                            <tr>
-                                                                                <td><span class="id-badge">#${item.maintenanceId}</span></td>
-                                                                                <td>
-                                                                                    <div style="font-weight:600; color:#fff;">${item.title}</div>
-                                                                                    <div style="font-size:0.8rem; color:var(--text-muted);">${item.description}</div>
+                                                                            <jsp:useBean id="now" class="java.util.Date" />
+                                                                            <c:set var="displayStatus" value="${item.status}" />
+                                                                            <c:if test="${item.status eq 'PLANNED' or item.status eq 'IN_PROGRESS'}">
+                                                                                <c:choose>
+                                                                                    <c:when test="${not empty item.endTime and item.endTime.time < now.time}">
+                                                                                        <c:set var="displayStatus" value="OVERDUE" />
+                                                                                    </c:when>
+                                                                                    <c:when test="${item.startTime.time < now.time and (empty item.endTime or item.endTime.time > now.time)}">
+                                                                                        <c:set var="displayStatus" value="IN_PROGRESS" />
+                                                                                    </c:when>
+                                                                                </c:choose>
+                                                                            </c:if>
+
+                                                                            <tr class="task-row" data-status="${displayStatus}">
+                                                                                <td><span class="rt-id" style="font-size:0.8rem; background:rgba(96,165,250,0.1); border:1px solid rgba(96,165,250,0.22); color:#60a5fa; border-radius:5px; padding:2px 8px; font-weight:700; font-family:monospace;">#${item.maintenanceId}</span></td>
+                                                                                <td style="max-width:350px;">
+                                                                                    <div style="font-weight:600; color:#fff; display:flex; align-items:center; gap:8px;">
+                                                                                        <i class="bi bi-tools" style="color:var(--neon-purple);"></i> ${item.title}
+                                                                                    </div>
+                                                                                    <div class="desc-box">${item.description}</div>
                                                                                 </td>
-                                                                                <td style="color:var(--text-muted)"><fmt:formatDate value="${item.startTime}" pattern="yyyy-MM-dd HH:mm" /></td>
-                                                                                <td style="color:var(--text-muted)">
+                                                                                <td style="color:var(--text-muted); font-size:0.85rem;"><fmt:formatDate value="${item.startTime}" pattern="yyyy-MM-dd HH:mm" /></td>
+                                                                                <td style="color:var(--text-muted); font-size:0.85rem;">
                                                                                     <c:if test="${not empty item.endTime}"><fmt:formatDate value="${item.endTime}" pattern="yyyy-MM-dd HH:mm" /></c:if>
                                                                                     <c:if test="${empty item.endTime}">--</c:if>
                                                                                 </td>
                                                                                 <td>
-                                                                                    <jsp:useBean id="now" class="java.util.Date" />
-                                                                                    <c:set var="displayStatus" value="${item.status}" />
-                                                                                    <c:if test="${item.status eq 'PLANNED' or item.status eq 'IN_PROGRESS'}">
-                                                                                        <c:choose>
-                                                                                            <c:when test="${not empty item.endTime and item.endTime.time < now.time}">
-                                                                                                <c:set var="displayStatus" value="OVERDUE" />
-                                                                                            </c:when>
-                                                                                            <c:when test="${item.startTime.time < now.time and (empty item.endTime or item.endTime.time > now.time)}">
-                                                                                                <c:set var="displayStatus" value="IN_PROGRESS" />
-                                                                                            </c:when>
-                                                                                        </c:choose>
-                                                                                    </c:if>
                                                                                     <c:choose>
-                                                                                        <c:when test="${displayStatus eq 'PLANNED'}"><span class="badge" style="background: rgba(96,165,250,0.15); color: #60a5fa; border: 1px solid rgba(96,165,250,0.3);"><i class="bi bi-calendar-event me-1"></i> PLANNED</span></c:when>
-                                                                                        <c:when test="${displayStatus eq 'IN_PROGRESS'}"><span class="badge" style="background: rgba(250,204,21,0.15); color: #facc15; border: 1px solid rgba(250,204,21,0.3);"><i class="bi bi-gear-wide-connected me-1"></i> IN_PROGRESS</span></c:when>
-                                                                                        <c:when test="${displayStatus eq 'COMPLETED'}"><span class="badge" style="background: rgba(52,211,153,0.15); color: #34d399; border: 1px solid rgba(52,211,153,0.3);"><i class="bi bi-check2-all me-1"></i> COMPLETED</span></c:when>
-                                                                                        <c:when test="${displayStatus eq 'CANCELED'}"><span class="badge bg-secondary">CANCELED</span></c:when>
-                                                                                        <c:when test="${displayStatus eq 'OVERDUE'}"><span class="badge" style="background: rgba(248,113,113,0.15); color: #f87171; border: 1px solid rgba(248,113,113,0.3);"><i class="bi bi-exclamation-triangle-fill me-1"></i> OVERDUE</span></c:when>
+                                                                                        <c:when test="${displayStatus eq 'PLANNED'}"><span class="badge" style="background: rgba(96,165,250,0.15); color: #60a5fa; border: 1px solid rgba(96,165,250,0.3); padding:6px 10px; font-size:0.7rem;"><i class="bi bi-calendar-event me-1"></i> PLANNED</span></c:when>
+                                                                                        <c:when test="${displayStatus eq 'IN_PROGRESS'}"><span class="badge" style="background: rgba(250,204,21,0.15); color: #facc15; border: 1px solid rgba(250,204,21,0.3); padding:6px 10px; font-size:0.7rem; animation:blink 1.5s infinite;"><i class="bi bi-gear-wide-connected me-1"></i> IN PROGRESS</span></c:when>
+                                                                                        <c:when test="${displayStatus eq 'COMPLETED'}"><span class="badge" style="background: rgba(52,211,153,0.15); color: #34d399; border: 1px solid rgba(52,211,153,0.3); padding:6px 10px; font-size:0.7rem;"><i class="bi bi-check2-all me-1"></i> COMPLETED</span></c:when>
+                                                                                        <c:when test="${displayStatus eq 'CANCELED'}"><span class="badge bg-secondary" style="padding:6px 10px; font-size:0.7rem;">CANCELED</span></c:when>
+                                                                                        <c:when test="${displayStatus eq 'OVERDUE'}"><span class="badge" style="background: rgba(248,113,113,0.15); color: #f87171; border: 1px solid rgba(248,113,113,0.3); padding:6px 10px; font-size:0.7rem;"><i class="bi bi-exclamation-triangle-fill me-1"></i> OVERDUE</span></c:when>
                                                                                         <c:otherwise><span class="badge bg-secondary">${displayStatus}</span></c:otherwise>
                                                                                     </c:choose>
                                                                                 </td>
                                                                                 <td>
-                                                                                    <div class="action-group">
+                                                                                    <div class="action-group d-flex gap-2">
                                                                                         <c:if test="${item.status ne 'COMPLETED' && item.status ne 'CANCELED'}">
                                                                                             <form action="MainController" method="post" style="display:inline;">
                                                                                                 <input type="hidden" name="action" value="maintenanceComplete">
                                                                                                 <input type="hidden" name="maintenanceId" value="${item.maintenanceId}">
-                                                                                                <button type="submit" class="btn-icon" style="color:var(--neon-green); border-color:rgba(52,211,153,0.3); background:rgba(52,211,153,0.1);" title="Mark as Completed" onclick="return confirm('Mark this task as completed?')">
+                                                                                                <input type="hidden" name="returnTo" value="dashboard">
+                                                                                                <button type="submit" class="btn-icon" style="color:#34d399; border-color:rgba(52,211,153,0.3); background:rgba(52,211,153,0.1);" title="Mark as Completed" onclick="return confirm('Mark this task as completed?')">
                                                                                                     <i class="bi bi-check-circle-fill"></i>
                                                                                                 </button>
-                                                                                        </form>
-                                                                                    </c:if>
-                                                                                    <a class="btn-icon" style="color:var(--neon-blue); border-color:rgba(96,165,250,0.3); background:rgba(96,165,250,0.1);" href="MainController?action=maintenanceEdit&maintenanceId=${item.maintenanceId}" title="Edit Task">
-                                                                                        <i class="bi bi-pencil-fill"></i>
-                                                                                    </a>
+                                                                                            </form>
+                                                                                        </c:if>
+                                                                                        <a class="btn-icon" style="color:#60a5fa; border-color:rgba(96,165,250,0.3); background:rgba(96,165,250,0.1);" href="MainController?action=maintenanceEdit&maintenanceId=${item.maintenanceId}&returnTo=dashboard" title="Edit Task">
+                                                                                            <i class="bi bi-pencil-fill"></i>
+                                                                                        </a>
                                                                                         <form action="MainController" method="post" style="display:inline;">
                                                                                             <input type="hidden" name="action" value="maintenanceDelete">
                                                                                             <input type="hidden" name="maintenanceId" value="${item.maintenanceId}">
-                                                                                            <button type="submit" class="btn-icon btn-icon-delete" title="Delete Task" onclick="return confirm('Delete this task?')">
+                                                                                            <input type="hidden" name="returnTo" value="dashboard">
+                                                                                            <button type="submit" class="btn-icon" style="color:#f87171; border-color:rgba(248,113,113,0.3); background:rgba(248,113,113,0.1);" title="Delete Task" onclick="return confirm('Delete this task?')">
                                                                                                 <i class="bi bi-trash3-fill"></i>
                                                                                             </button>
                                                                                         </form>
                                                                                     </div>
                                                                                 </td>
                                                                             </tr>
+                                                                            <c:remove var="now" />
                                                                         </c:forEach>
                                                                     </c:when>
                                                                     <c:otherwise>
                                                                         <tr>
                                                                             <td colspan="6">
-                                                                                <div class="rt-empty">
-                                                                                    <i class="bi bi-tools"></i>
+                                                                                <div class="rt-empty" style="padding:40px; text-align:center; color:var(--text-muted);">
+                                                                                    <i class="bi bi-tools" style="font-size:30px; display:block; margin-bottom:10px;"></i>
                                                                                     No maintenance tasks scheduled.
                                                                                 </div>
                                                                             </td>
@@ -961,6 +1584,143 @@
                                                     </div>
                                                 </div>
                                             </div>
+                                            
+                                            <script>
+                                                document.addEventListener("DOMContentLoaded", function() {
+                                                    const rows = document.querySelectorAll('#dash-maintenance-table .task-row');
+                                                    let total = rows.length;
+                                                    let planned = 0, inprogress = 0, completed = 0;
+                                                    
+                                                    rows.forEach(row => {
+                                                        let status = row.getAttribute('data-status');
+                                                        if(status === 'PLANNED') planned++;
+                                                        else if(status === 'IN_PROGRESS' || status === 'OVERDUE') inprogress++;
+                                                        else if(status === 'COMPLETED') completed++;
+                                                    });
+                                                    
+                                                    if(document.getElementById('cnt-all')) {
+                                                        document.getElementById('cnt-all').innerText = total;
+                                                        document.getElementById('cnt-planned').innerText = planned;
+                                                        document.getElementById('cnt-inprogress').innerText = inprogress;
+                                                        document.getElementById('cnt-completed').innerText = completed;
+                                                        
+                                                        // Update KPI Cards
+                                                        document.getElementById('kpi-total').innerText = total;
+                                                        document.getElementById('kpi-planned').innerText = planned;
+                                                        document.getElementById('kpi-inprogress').innerText = inprogress;
+                                                        document.getElementById('kpi-completed').innerText = completed;
+                                                    }
+                                                    
+                                                    // Initialize Chart
+                                                    if(planned > 0 || inprogress > 0 || completed > 0) {
+                                                        const ctx = document.getElementById('dashMaintenanceChart').getContext('2d');
+                                                        new Chart(ctx, {
+                                                            type: 'doughnut',
+                                                            data: {
+                                                                labels: ['Planned', 'In Progress', 'Completed'],
+                                                                datasets: [{
+                                                                    data: [planned, inprogress, completed],
+                                                                    backgroundColor: [
+                                                                        'rgba(96, 165, 250, 0.8)',   // Blue
+                                                                        'rgba(251, 191, 36, 0.8)',   // Amber
+                                                                        'rgba(52, 211, 153, 0.8)'    // Emerald
+                                                                    ],
+                                                                    borderColor: [
+                                                                        'rgba(96, 165, 250, 1)',
+                                                                        'rgba(251, 191, 36, 1)',
+                                                                        'rgba(52, 211, 153, 1)'
+                                                                    ],
+                                                                    borderWidth: 1,
+                                                                    hoverOffset: 4
+                                                                }]
+                                                            },
+                                                            options: {
+                                                                responsive: true,
+                                                                maintainAspectRatio: false,
+                                                                plugins: {
+                                                                    legend: {
+                                                                        position: 'right',
+                                                                        labels: {
+                                                                            color: '#9aa6c7',
+                                                                            font: { family: "'Segoe UI', sans-serif" },
+                                                                            padding: 20
+                                                                        }
+                                                                    },
+                                                                    tooltip: {
+                                                                        backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                                                                        titleColor: '#fff',
+                                                                        bodyColor: '#e2e8f0',
+                                                                        borderColor: 'rgba(251, 191, 36, 0.3)',
+                                                                        borderWidth: 1,
+                                                                        padding: 12,
+                                                                        cornerRadius: 8
+                                                                    }
+                                                                },
+                                                                cutout: '70%'
+                                                            }
+                                                        });
+                                                    } else {
+                                                        document.getElementById('dashMaintenanceChart').style.display = 'none';
+                                                    }
+                                                });
+
+                                                function filterDashTasks(status, element) {
+                                                    const tabsContainer = element.closest('.sev-tabs');
+                                                    if(tabsContainer && element) {
+                                                        tabsContainer.querySelectorAll('.sev-tab').forEach(tab => tab.classList.remove('active'));
+                                                        element.classList.add('active');
+                                                    }
+                                                    applyMaintenanceFilter();
+                                                }
+
+                                                function applyMaintenanceFilter() {
+                                                    let activeTab = document.querySelector('#dash-maintenance-tabs .sev-tab.active');
+                                                    let status = 'ALL';
+                                                    if(activeTab) {
+                                                        if(activeTab.classList.contains('tab-planned')) status = 'PLANNED';
+                                                        else if(activeTab.classList.contains('tab-inprogress')) status = 'IN_PROGRESS';
+                                                        else if(activeTab.classList.contains('tab-completed')) status = 'COMPLETED';
+                                                    }
+
+                                                    const rows = document.querySelectorAll('#dash-maintenance-table .task-row');
+                                                    const searchInput = document.getElementById('dash-maintenance-search');
+                                                    const searchQuery = searchInput ? searchInput.value.toLowerCase().trim() : '';
+                                                    let visibleCount = 0;
+                                                    
+                                                    rows.forEach(row => {
+                                                        let rowStatus = row.getAttribute('data-status');
+                                                        let textContent = row.innerText.toLowerCase();
+                                                        
+                                                        let statusMatch = false;
+                                                        // Group OVERDUE into IN_PROGRESS for filtering
+                                                        if(status === 'IN_PROGRESS' && rowStatus === 'OVERDUE') statusMatch = true;
+                                                        else if (status === 'ALL' || rowStatus === status) statusMatch = true;
+
+                                                        let searchMatch = searchQuery === '' || textContent.includes(searchQuery);
+
+                                                        if (statusMatch && searchMatch) {
+                                                            row.style.display = '';
+                                                            visibleCount++;
+                                                        } else {
+                                                            row.style.display = 'none';
+                                                        }
+                                                    });
+
+                                                    let emptyMsg = document.getElementById('empty-dash-msg');
+                                                    if(visibleCount === 0) {
+                                                        if(!emptyMsg) {
+                                                            const tbody = document.querySelector('#dash-maintenance-table tbody');
+                                                            const tr = document.createElement('tr');
+                                                            tr.id = 'empty-dash-msg';
+                                                            tr.innerHTML = `<td colspan="6" style="text-align:center; padding: 40px; color:var(--text-muted);"><i class="bi bi-search fs-1 mb-2 d-block text-secondary" style="opacity:0.5;"></i> No tasks match your search or filter.</td>`;
+                                                            if(tbody) tbody.appendChild(tr);
+                                                        }
+                                                    } else {
+                                                        if(emptyMsg) emptyMsg.remove();
+                                                    }
+                                                }
+
+                                            </script>
                                         </div>
 
                                         <div class="page-section" id="page-rooms">

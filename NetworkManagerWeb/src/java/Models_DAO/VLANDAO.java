@@ -1,5 +1,8 @@
 package Models_DAO;
 
+import Models.RoomDTO;
+import Utils.JpaUtils;
+
 import Models.VLANDTO;
 import Utils.DbUtils;
 import java.sql.Connection;
@@ -8,164 +11,287 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.List;
+import javax.persistence.EntityManager;
+import javax.persistence.EntityTransaction;
+import javax.persistence.TypedQuery;
 
 public class VLANDAO implements IDAO<VLANDTO, Integer> {
 
-    private VLANDTO mapRow(ResultSet rs) throws SQLException {
-        Integer roomId = (Integer) rs.getObject("room_id");
-
-        return new VLANDTO(
-                rs.getInt("vlan_id"),
-                rs.getString("vlan_name"),
-                rs.getString("subnet"),
-                rs.getString("purpose"),
-                roomId
-        );
-    }
-
+    // =========================
+    // CREATE
+    // =========================
     @Override
     public boolean insert(VLANDTO vlan) {
-        String sql = "INSERT INTO VLAN (vlan_name, subnet, purpose, room_id) VALUES (?, ?, ?, ?)";
 
-        try {
-            Connection conn = DbUtils.getConnection();
-            PreparedStatement ps = conn.prepareStatement(sql);
-
-            ps.setString(1, vlan.getVlanName());
-            ps.setString(2, vlan.getSubnet());
-            ps.setString(3, vlan.getPurpose());
-
-            if (vlan.getRoomId() == null) {
-                ps.setNull(4, java.sql.Types.INTEGER);
-            } else {
-                ps.setInt(4, vlan.getRoomId());
-            }
-
-            return ps.executeUpdate() > 0;
-
-        } catch (Exception e) {
-            e.printStackTrace();
+        if (vlan == null) {
+            return false;
         }
 
-        return false;
+        EntityManager em = JpaUtils.getEntityManager();
+        EntityTransaction transaction = em.getTransaction();
+
+        try {
+            transaction.begin();
+
+            em.persist(vlan);
+
+            transaction.commit();
+            return true;
+
+        } catch (Exception e) {
+
+            if (transaction.isActive()) {
+                transaction.rollback();
+            }
+
+            e.printStackTrace();
+            return false;
+
+        } finally {
+            em.close();
+        }
     }
 
+    // =========================
+    // UPDATE
+    // =========================
     @Override
     public boolean update(VLANDTO vlan) {
-        String sql = "UPDATE VLAN SET vlan_name = ?, subnet = ?, purpose = ?, room_id = ? WHERE vlan_id = ?";
 
-        try {
-            Connection conn = DbUtils.getConnection();
-            PreparedStatement ps = conn.prepareStatement(sql);
-
-            ps.setString(1, vlan.getVlanName());
-            ps.setString(2, vlan.getSubnet());
-            ps.setString(3, vlan.getPurpose());
-
-            if (vlan.getRoomId() == null) {
-                ps.setNull(4, java.sql.Types.INTEGER);
-            } else {
-                ps.setInt(4, vlan.getRoomId());
-            }
-
-            ps.setInt(5, vlan.getVlanId());
-
-            return ps.executeUpdate() > 0;
-
-        } catch (Exception e) {
-            e.printStackTrace();
+        if (vlan == null || vlan.getVlanId() <= 0) {
+            return false;
         }
 
-        return false;
+        EntityManager em = JpaUtils.getEntityManager();
+        EntityTransaction transaction = em.getTransaction();
+
+        try {
+            transaction.begin();
+
+            VLANDTO existingVLAN = em.find(
+                    VLANDTO.class,
+                    vlan.getVlanId()
+            );
+
+            if (existingVLAN == null) {
+                transaction.rollback();
+                return false;
+            }
+
+            existingVLAN.setVlanName(vlan.getVlanName());
+            existingVLAN.setSubnet(vlan.getSubnet());
+            existingVLAN.setPurpose(vlan.getPurpose());
+            existingVLAN.setRoomId(vlan.getRoomId());
+
+            transaction.commit();
+            return true;
+
+        } catch (Exception e) {
+
+            if (transaction.isActive()) {
+                transaction.rollback();
+            }
+
+            e.printStackTrace();
+            return false;
+
+        } finally {
+            em.close();
+        }
     }
 
+    // =========================
+    // DELETE
+    // =========================
     @Override
     public boolean remove(VLANDTO vlan) {
+
+        if (vlan == null || vlan.getVlanId() <= 0) {
+            return false;
+        }
+
         return delete(vlan.getVlanId());
     }
 
     public boolean delete(int vlanId) {
-        String sql = "DELETE FROM VLAN WHERE vlan_id = ?";
 
-        try {
-            Connection conn = DbUtils.getConnection();
-            PreparedStatement ps = conn.prepareStatement(sql);
-
-            ps.setInt(1, vlanId);
-
-            return ps.executeUpdate() > 0;
-
-        } catch (Exception e) {
-            e.printStackTrace();
+        if (vlanId <= 0) {
+            return false;
         }
 
-        return false;
+        EntityManager em = JpaUtils.getEntityManager();
+        EntityTransaction transaction = em.getTransaction();
+
+        try {
+            transaction.begin();
+
+            VLANDTO vlan = em.find(
+                    VLANDTO.class,
+                    vlanId
+            );
+
+            if (vlan == null) {
+                transaction.rollback();
+                return false;
+            }
+
+            em.remove(vlan);
+
+            transaction.commit();
+            return true;
+
+        } catch (Exception e) {
+
+            if (transaction.isActive()) {
+                transaction.rollback();
+            }
+
+            e.printStackTrace();
+            return false;
+
+        } finally {
+            em.close();
+        }
     }
 
+    // =========================
+    // READ ALL
+    // =========================
     @Override
     public ArrayList<VLANDTO> ListAll() {
-        ArrayList<VLANDTO> list = new ArrayList<>();
-        String sql = "SELECT * FROM VLAN";
+
+        EntityManager em = JpaUtils.getEntityManager();
 
         try {
-            Connection conn = DbUtils.getConnection();
-            Statement st = conn.createStatement();
-            ResultSet rs = st.executeQuery(sql);
+            TypedQuery<VLANDTO> query = em.createQuery(
+                    "SELECT v FROM VLAN v "
+                    + "ORDER BY v.vlanId",
+                    VLANDTO.class
+            );
 
-            while (rs.next()) {
-                list.add(mapRow(rs));
-            }
+            return new ArrayList<>(
+                    query.getResultList()
+            );
 
         } catch (Exception e) {
             e.printStackTrace();
-        }
+            return new ArrayList<>();
 
-        return list;
+        } finally {
+            em.close();
+        }
     }
 
+    // =========================
+    // SEARCH BY ID
+    // =========================
     @Override
     public VLANDTO searchById(Integer id) {
-        String sql = "SELECT * FROM VLAN WHERE vlan_id = ?";
+
+        if (id == null || id <= 0) {
+            return null;
+        }
+
+        EntityManager em = JpaUtils.getEntityManager();
 
         try {
-            Connection conn = DbUtils.getConnection();
-            PreparedStatement ps = conn.prepareStatement(sql);
-
-            ps.setInt(1, id);
-
-            ResultSet rs = ps.executeQuery();
-
-            if (rs.next()) {
-                return mapRow(rs);
-            }
+            return em.find(VLANDTO.class, id);
 
         } catch (Exception e) {
             e.printStackTrace();
-        }
+            return null;
 
-        return null;
+        } finally {
+            em.close();
+        }
     }
 
-    public ArrayList<VLANDTO> findByRoom(Integer roomId) {
-        ArrayList<VLANDTO> list = new ArrayList<>();
-        String sql = "SELECT * FROM VLAN WHERE room_id = ?";
+    // =========================
+    // PAGINATION
+    // =========================
+    public ArrayList<VLANDTO> getVLANsByPage(
+            int page,
+            int pageSize) {
+
+        if (page < 1) {
+            page = 1;
+        }
+
+        if (pageSize < 1) {
+            pageSize = 5;
+        }
+
+        EntityManager em = JpaUtils.getEntityManager();
 
         try {
-            Connection conn = DbUtils.getConnection();
-            PreparedStatement ps = conn.prepareStatement(sql);
+            TypedQuery<VLANDTO> query = em.createQuery(
+                    "SELECT v FROM VLAN v "
+                    + "ORDER BY v.vlanId",
+                    VLANDTO.class
+            );
 
-            ps.setInt(1, roomId);
+            int firstResult = (page - 1) * pageSize;
 
-            ResultSet rs = ps.executeQuery();
+            query.setFirstResult(firstResult);
+            query.setMaxResults(pageSize);
 
-            while (rs.next()) {
-                list.add(mapRow(rs));
-            }
+            List<VLANDTO> result = query.getResultList();
+
+            return new ArrayList<>(result);
 
         } catch (Exception e) {
             e.printStackTrace();
+            return new ArrayList<>();
+
+        } finally {
+            em.close();
+        }
+    }
+
+    public long countAllVLANs() {
+
+        EntityManager em = JpaUtils.getEntityManager();
+
+        try {
+            TypedQuery<Long> query = em.createQuery(
+                    "SELECT COUNT(v) FROM VLAN v",
+                    Long.class
+            );
+
+            return query.getSingleResult();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return 0;
+
+        } finally {
+            em.close();
+        }
+    }
+
+    public boolean roomExists(Integer roomId) {
+
+        if (roomId == null) {
+            return true;
         }
 
-        return list;
+        EntityManager em = JpaUtils.getEntityManager();
+
+        try {
+            RoomDTO room = em.find(
+                    RoomDTO.class,
+                    roomId
+            );
+
+            return room != null;
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+
+        } finally {
+            em.close();
+        }
     }
 }
