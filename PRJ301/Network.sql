@@ -291,21 +291,21 @@ GO
 -- User (15 rows)
 -- =====================
 INSERT INTO [User] (username, password, full_name, email, status) VALUES
-('admin',     'hashed_admin01',  'System Administrator',  'admin@university.edu',      'ACTIVE'),
-('tech01',    'hashed_tech01',   'Nguyen Van An',         'nv.an@university.edu',      'ACTIVE'),
-('tech02',    'hashed_tech02',   'Tran Minh Duc',         'tm.duc@university.edu',     'ACTIVE'),
-('tech03',    'hashed_tech03',   'Le Thi Hoa',            'lt.hoa@university.edu',     'ACTIVE'),
-('viewer01',  'hashed_view01',   'Pham Quoc Bao',         'pq.bao@university.edu',     'ACTIVE'),
-('viewer02',  'hashed_view02',   'Hoang Thi Mai',         'ht.mai@university.edu',     'ACTIVE'),
-('viewer03',  'hashed_view03',   'Vu Thanh Long',         'vt.long@university.edu',    'ACTIVE'),
-('viewer04',  'hashed_view04',   'Dang Thi Thu',          'dt.thu@university.edu',     'ACTIVE'),
-('viewer05',  'hashed_view05',   'Bui Van Khanh',         'bv.khanh@university.edu',   'ACTIVE'),
-('viewer06',  'hashed_view06',   'Ngo Thi Lan',           'nt.lan@university.edu',     'ACTIVE'),
-('tech04',    'hashed_tech04',   'Dinh Van Phuc',         'dv.phuc@university.edu',    'ACTIVE'),
-('viewer07',  'hashed_view07',   'Truong Thi Ngoc',       'tt.ngoc@university.edu',    'INACTIVE'),
-('viewer08',  'hashed_view08',   'Cao Van Hieu',          'cv.hieu@university.edu',    'ACTIVE'),
-('viewer09',  'hashed_view09',   'Lam Thi Phuong',        'lt.phuong@university.edu',  'ACTIVE'),
-('viewer10',  'hashed_view10',   'Mai Van Thanh',         'mv.thanh@university.edu',   'INACTIVE');
+('admin',     '310000:P7UZGhoXabjgr/+K58CdTg==:SJQFpsuxDDltbQYyIRekKgFVAzNPvdcZ/quoBrDG+eI=',  'System Administrator',  'admin@university.edu',      'ACTIVE'),
+('tech01',    '310000:AUJd2wVYdTo1DhdkhLJbwg==:U/CF73lXSEHu2lw5JScpxNxun35OTmMudY5bCsOefT4=',  'Nguyen Van An',         'nv.an@university.edu',      'ACTIVE'),
+('tech02',    '310000:fW7qDPxc92MuLe79lVf7Ww==:Vq8Bh9+TyTw65sKiE2sCcGst1PcxwU0JS54ICH5bU8s=',  'Tran Minh Duc',         'tm.duc@university.edu',     'ACTIVE'),
+('tech03',    '310000:av1AaSBiNfgliwR84eWWOg==:QlnPGxUUqPVSNs9rjHRoGou0xcl1vLytsxq1n0aZxwc=',  'Le Thi Hoa',            'lt.hoa@university.edu',     'ACTIVE'),
+('viewer01',  '310000:arM6JX5+O1ShygVJgWqqKQ==:6APl749vm3mVIl+VAxYo+oDCwIQ2qVq+lCUAD3fvLTw=',  'Pham Quoc Bao',         'pq.bao@university.edu',     'ACTIVE'),
+('viewer02',  '310000:qH7ZmgojRhzL5Ub5jrPK7A==:7qGIjjHYidMDU/kWbAZq6TrYHOthUtcXdQVoQColo1c=',  'Hoang Thi Mai',         'ht.mai@university.edu',     'ACTIVE'),
+('viewer03',  '310000:V6Fzr1VjvWqF+ufEe/dG5Q==:OoJNYAu5F2psQcbCGowPmvBZ5YhxKU0Tk4Ksiv1WvQM=',  'Vu Thanh Long',         'vt.long@university.edu',    'ACTIVE'),
+('viewer04',  '310000:V2JLjQT88BfIbk9JkRG22A==:hDF0654t8uj11qGNXN10IoI6Zl7bypvb748tBFT1pjc=',  'Dang Thi Thu',          'dt.thu@university.edu',     'ACTIVE'),
+('viewer05',  '310000:Zlsc3KiXijq/IsDqOy/4Mw==:JI3LbGiIL3vUeOgU+Ql5ZCKntZ7ObZmLCAS+wIpMcMs=',  'Bui Van Khanh',         'bv.khanh@university.edu',   'ACTIVE'),
+('viewer06',  '310000:5t5TjWbYCrRh4e+a8O6LMQ==:JRwQn+yacw5YsCTn9z9zkBm5rNF37VLDSlsVf3zvhOc=',  'Ngo Thi Lan',           'nt.lan@university.edu',     'ACTIVE'),
+('tech04',    '310000:n0n6c4zs9l7A/d1c6KhGNA==:7nl0gbps9PF68Gj+VkmFm4mpiN9g587OYcui69J2wmU=',  'Dinh Van Phuc',         'dv.phuc@university.edu',    'ACTIVE'),
+('viewer07',  '310000:sv2YZ7jZ2sYxURmZqIxM9Q==:wAwgwyEwKsPKT+5cul9okPnpaRPNOf4trDk9XUhXOCg=',  'Truong Thi Ngoc',       'tt.ngoc@university.edu',    'INACTIVE'),
+('viewer08',  '310000:lYcK74QivkKXpOXez4kZ8g==:HmFU3Bpnmpf6sTzy7+RZBqy902p36p4qUYLmON5erfI=',  'Cao Van Hieu',          'cv.hieu@university.edu',    'ACTIVE'),
+('viewer09',  '310000:lfOFT2KomuqVYLknyQNZbw==:Fl6f2+THurDgB7XqhxIx14PyeNC9PCz53b24E1SWqHA=',  'Lam Thi Phuong',        'lt.phuong@university.edu',  'ACTIVE'),
+('viewer10',  '310000:5ZCAYQV5XvU3CK2zriawIg==:ipjXSNDZdVPSe9Wy1wMTdmZ+ek/GZyO7ZjXohbLOrNc=',  'Mai Van Thanh',         'mv.thanh@university.edu',   'INACTIVE');
 GO
 
 -- =====================

@@ -2,6 +2,7 @@ package Models_DAO;
 
 import Models.UserDTO;
 import Models_DAO.IDAO;
+import Utils.PasswordUtils;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
@@ -24,7 +25,7 @@ public class UserDAO implements IDAO<UserDTO, Integer> {
         return FACTORY.createEntityManager();
     }
 
-    private boolean executeInTransaction(Consumer<EntityManager> action) {
+    public boolean executeInTransaction(Consumer<EntityManager> action) {
         EntityManager em = getEntityManager();
         EntityTransaction tx = em.getTransaction();
 
@@ -129,7 +130,7 @@ public class UserDAO implements IDAO<UserDTO, Integer> {
         if (!user.isActive()) {
             return false;
         }
-        return user.getPassword().equals(password);
+        return PasswordUtils.verifyPassword(password, user.getPassword());
     }
 
     public boolean softDelete(int userId) {

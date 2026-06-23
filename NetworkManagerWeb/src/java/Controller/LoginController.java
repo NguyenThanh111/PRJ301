@@ -6,6 +6,7 @@ import Models.AuthenticationLogDTO;
 import Models_DAO.UserDAO;
 import Models.UserDTO;
 import Models_DAO.UserRoleDAO;
+import Utils.PasswordUtils;
 import java.io.IOException;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -66,25 +67,37 @@ public class LoginController extends HttpServlet {
                 request.getRemoteAddr(), null));
         request.setAttribute("error", "⚠ Invalid username/email or password");
 
+    } else if ("PENDING".equals(user.getStatus())) {
+        logDAO.insert(new AuthenticationLogDTO(username, AuthenticationLogDTO.STATUS_FAILED,
+                request.getRemoteAddr(), user.getUserId()));
+        session.setAttribute("LOGIN_USER", user);
+        request.setAttribute("error", "Please verify your email before logging in. <a href='check-email.jsp'>Resend verification</a>");
+
     } else if (!user.isActive()) {
         logDAO.insert(new AuthenticationLogDTO(username, AuthenticationLogDTO.STATUS_FAILED,
                 request.getRemoteAddr(), user.getUserId()));
         request.setAttribute("error", "⚠ Your account is locked");
 
-    } else if (!user.getPassword().equals(password)) {
+    } else if (!PasswordUtils.verifyPassword(password, user.getPassword())) {
         logDAO.insert(new AuthenticationLogDTO(username, AuthenticationLogDTO.STATUS_FAILED,
                 request.getRemoteAddr(), user.getUserId()));
         request.setAttribute("error", "⚠ Username or password is wrong");
 
     } else {
-        logDAO.insert(new AuthenticationLogDTO(username, AuthenticationLogDTO.STATUS_SUCCESS,
-                request.getRemoteAddr(), user.getUserId()));
         String role = roleDAO.findRoleByUser(user.getUserId());
-        session.setAttribute("user", user);
-        session.setAttribute("role", role);
-        url = ("Admin".equalsIgnoreCase(role) || "Technician".equalsIgnoreCase(role))
-                ? "staffDashboard.jsp"
-                : "userDashboard.jsp";
+        if (role == null || role.trim().isEmpty()) {
+            logDAO.insert(new AuthenticationLogDTO(username, AuthenticationLogDTO.STATUS_FAILED,
+                    request.getRemoteAddr(), user.getUserId()));
+            request.setAttribute("error", "⚠ Your account has no role assigned. Contact administrator.");
+        } else {
+            logDAO.insert(new AuthenticationLogDTO(username, AuthenticationLogDTO.STATUS_SUCCESS,
+                    request.getRemoteAddr(), user.getUserId()));
+            session.setAttribute("user", user);
+            session.setAttribute("role", role);
+            url = ("Admin".equalsIgnoreCase(role) || "Technician".equalsIgnoreCase(role))
+                    ? "staffDashboard.jsp"
+                    : "userDashboard.jsp";
+        }
     }
 
     request.getRequestDispatcher(url).forward(request, response);

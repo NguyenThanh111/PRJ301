@@ -26,6 +26,8 @@
         <c:set var="role" value="${sessionScope.role}" />
         <c:set var="roleLower" value="${fn:toLowerCase(role)}" />
         <c:if test="${empty currentUser || empty role || (roleLower ne 'admin' && roleLower ne 'technician')}">
+            <c:remove var="user" scope="session"/>
+            <c:remove var="role" scope="session"/>
             <c:redirect url="login.jsp" />
         </c:if>
         <c:set var="displayName" value="${empty currentUser.fullName ? currentUser.userName : currentUser.fullName}" />

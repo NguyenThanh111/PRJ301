@@ -24,7 +24,7 @@ public class UserRoleDTO implements Serializable {
     @Column(name = "role_id")
     private int roleId;
 
-    @Column(name = "assigned_at")
+    @Column(name = "assigned_at", insertable = false, updatable = false)
     private Timestamp assignedAt;
 
     public UserRoleDTO() {

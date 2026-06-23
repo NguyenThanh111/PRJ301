@@ -152,6 +152,40 @@ public class NetworkAlertController extends HttpServlet {
 
         boolean success = alertDAO.insert(alert);
 
+        if (success) {
+            java.util.concurrent.ExecutorService executor = java.util.concurrent.Executors.newSingleThreadExecutor();
+            javax.servlet.ServletContext ctx = getServletContext();
+            String alertTitle = alertType;
+            String alertDetail = message;
+            String severity2 = severity;
+
+            executor.submit(() -> {
+                try {
+                    Models_DAO.UserDAO userDAO = new Models_DAO.UserDAO();
+                    String color = "#f59e0b";
+                    if ("CRITICAL".equalsIgnoreCase(severity2)) color = "#dc2626";
+                    else if ("INFO".equalsIgnoreCase(severity2)) color = "#2563eb";
+                    else if ("LOW".equalsIgnoreCase(severity2)) color = "#16a34a";
+
+                    for (Models.UserDTO u : userDAO.ListAll()) {
+                        if ("ACTIVE".equals(u.getStatus())) {
+                            java.util.Map<String, String> placeholders = new java.util.HashMap<>();
+                            placeholders.put("USERNAME", u.getUsername());
+                            placeholders.put("ALERT_TITLE", alertTitle);
+                            placeholders.put("ALERT_DETAIL", alertDetail);
+                            placeholders.put("ALERT_SEVERITY", severity2);
+                            placeholders.put("ALERT_COLOR", color);
+                            String html = Utils.EmailUtils.loadTemplate(ctx, "alert", placeholders);
+                            Utils.EmailUtils.sendEmail(u.getEmail(), "Alert: " + alertTitle, html);
+                        }
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            });
+            executor.shutdown();
+        }
+
         String redirectUrl = success
                 ? "NetworkAlertController?action=list&msg=created"
                 : "NetworkAlertController?action=list&error=create_failed";

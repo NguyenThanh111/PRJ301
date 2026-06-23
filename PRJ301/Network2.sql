@@ -266,21 +266,21 @@ INSERT INTO Role (role_name, description) VALUES
 GO
 
 INSERT INTO [User] (username, password, full_name, email, status) VALUES
-('admin',     'hashed_admin01',  N'Quản trị viên hệ thống', 'admin@university.edu', 'ACTIVE'),
-('tech01',    'hashed_tech01',   N'Nguyễn Văn An',          'nv.an@university.edu', 'ACTIVE'),
-('tech02',    'hashed_tech02',   N'Trần Minh Đức',          'tm.duc@university.edu', 'ACTIVE'),
-('tech03',    'hashed_tech03',   N'Lê Thị Hoa',             'lt.hoa@university.edu', 'ACTIVE'),
-('viewer01',  'hashed_view01',   N'Phạm Quốc Bảo',          'pq.bao@university.edu', 'ACTIVE'),
-('viewer02',  'hashed_view02',   N'Hoàng Thị Mai',          'ht.mai@university.edu', 'ACTIVE'),
-('viewer03',  'hashed_view03',   N'Vũ Thanh Long',          'vt.long@university.edu', 'ACTIVE'),
-('viewer04',  'hashed_view04',   N'Đặng Thị Thu',           'dt.thu@university.edu', 'ACTIVE'),
-('viewer05',  'hashed_view05',   N'Bùi Văn Khánh',          'bv.khanh@university.edu', 'ACTIVE'),
-('viewer06',  'hashed_view06',   N'Ngô Thị Lan',            'nt.lan@university.edu', 'ACTIVE'),
-('tech04',    'hashed_tech04',   N'Đinh Văn Phúc',          'dv.phuc@university.edu', 'ACTIVE'),
-('viewer07',  'hashed_view07',   N'Trương Thị Ngọc',        'tt.ngoc@university.edu', 'INACTIVE'),
-('viewer08',  'hashed_view08',   N'Cao Văn Hiếu',           'cv.hieu@university.edu', 'ACTIVE'),
-('viewer09',  'hashed_view09',   N'Lâm Thị Phương',         'lt.phuong@university.edu', 'ACTIVE'),
-('viewer10',  'hashed_view10',   N'Mai Văn Thành',          'mv.thanh@university.edu', 'INACTIVE');
+('admin',     '310000:P7UZGhoXabjgr/+K58CdTg==:SJQFpsuxDDltbQYyIRekKgFVAzNPvdcZ/quoBrDG+eI=',  N'Quản trị viên hệ thống', 'admin@university.edu', 'ACTIVE'),
+('tech01',    '310000:AUJd2wVYdTo1DhdkhLJbwg==:U/CF73lXSEHu2lw5JScpxNxun35OTmMudY5bCsOefT4=',  N'Nguyễn Văn An',          'nv.an@university.edu', 'ACTIVE'),
+('tech02',    '310000:fW7qDPxc92MuLe79lVf7Ww==:Vq8Bh9+TyTw65sKiE2sCcGst1PcxwU0JS54ICH5bU8s=',  N'Trần Minh Đức',          'tm.duc@university.edu', 'ACTIVE'),
+('tech03',    '310000:av1AaSBiNfgliwR84eWWOg==:QlnPGxUUqPVSNs9rjHRoGou0xcl1vLytsxq1n0aZxwc=',  N'Lê Thị Hoa',             'lt.hoa@university.edu', 'ACTIVE'),
+('viewer01',  '310000:arM6JX5+O1ShygVJgWqqKQ==:6APl749vm3mVIl+VAxYo+oDCwIQ2qVq+lCUAD3fvLTw=',  N'Phạm Quốc Bảo',          'pq.bao@university.edu', 'ACTIVE'),
+('viewer02',  '310000:qH7ZmgojRhzL5Ub5jrPK7A==:7qGIjjHYidMDU/kWbAZq6TrYHOthUtcXdQVoQColo1c=',  N'Hoàng Thị Mai',          'ht.mai@university.edu', 'ACTIVE'),
+('viewer03',  '310000:V6Fzr1VjvWqF+ufEe/dG5Q==:OoJNYAu5F2psQcbCGowPmvBZ5YhxKU0Tk4Ksiv1WvQM=',  N'Vũ Thanh Long',          'vt.long@university.edu', 'ACTIVE'),
+('viewer04',  '310000:V2JLjQT88BfIbk9JkRG22A==:hDF0654t8uj11qGNXN10IoI6Zl7bypvb748tBFT1pjc=',  N'Đặng Thị Thu',           'dt.thu@university.edu', 'ACTIVE'),
+('viewer05',  '310000:Zlsc3KiXijq/IsDqOy/4Mw==:JI3LbGiIL3vUeOgU+Ql5ZCKntZ7ObZmLCAS+wIpMcMs=',  N'Bùi Văn Khánh',          'bv.khanh@university.edu', 'ACTIVE'),
+('viewer06',  '310000:5t5TjWbYCrRh4e+a8O6LMQ==:JRwQn+yacw5YsCTn9z9zkBm5rNF37VLDSlsVf3zvhOc=',  N'Ngô Thị Lan',            'nt.lan@university.edu', 'ACTIVE'),
+('tech04',    '310000:n0n6c4zs9l7A/d1c6KhGNA==:7nl0gbps9PF68Gj+VkmFm4mpiN9g587OYcui69J2wmU=',  N'Đinh Văn Phúc',          'dv.phuc@university.edu', 'ACTIVE'),
+('viewer07',  '310000:sv2YZ7jZ2sYxURmZqIxM9Q==:wAwgwyEwKsPKT+5cul9okPnpaRPNOf4trDk9XUhXOCg=',  N'Trương Thị Ngọc',        'tt.ngoc@university.edu', 'INACTIVE'),
+('viewer08',  '310000:lYcK74QivkKXpOXez4kZ8g==:HmFU3Bpnmpf6sTzy7+RZBqy902p36p4qUYLmON5erfI=',  N'Cao Văn Hiếu',           'cv.hieu@university.edu', 'ACTIVE'),
+('viewer09',  '310000:lfOFT2KomuqVYLknyQNZbw==:Fl6f2+THurDgB7XqhxIx14PyeNC9PCz53b24E1SWqHA=',  N'Lâm Thị Phương',         'lt.phuong@university.edu', 'ACTIVE'),
+('viewer10',  '310000:5ZCAYQV5XvU3CK2zriawIg==:ipjXSNDZdVPSe9Wy1wMTdmZ+ek/GZyO7ZjXohbLOrNc=',  N'Mai Văn Thành',          'mv.thanh@university.edu', 'INACTIVE');
 GO
 
 INSERT INTO UserRole (user_id, role_id) VALUES
