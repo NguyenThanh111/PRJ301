@@ -13,6 +13,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import javax.persistence.EntityManager;
+import javax.persistence.EntityTransaction;
 import javax.persistence.TypedQuery;
 
 public class IPAddressManagementDAO {
@@ -158,6 +159,88 @@ public class IPAddressManagementDAO {
         }
     }
 
+    public IPAddressManagementDTO findAvailableIP() {
+        ArrayList<IPAddressManagementDTO> availableIPs = findAvailableIPs();
+
+        if (availableIPs.isEmpty()) {
+            return null;
+        }
+
+        return availableIPs.get(0);
+    }
+
+    public boolean assignIP(int ipId, int deviceId) {
+        if (ipId <= 0 || deviceId <= 0) {
+            return false;
+        }
+
+        EntityManager em = JpaUtils.getEntityManager();
+        EntityTransaction transaction = em.getTransaction();
+
+        try {
+            transaction.begin();
+
+            IPAddressManagementDTO ip
+                    = em.find(IPAddressManagementDTO.class, ipId);
+
+            if (ip == null || ip.getDeviceId() != null) {
+                transaction.rollback();
+                return false;
+            }
+
+            ip.setDeviceId(deviceId);
+            ip.setStatus("ASSIGNED");
+
+            transaction.commit();
+            return true;
+        } catch (Exception e) {
+            if (transaction.isActive()) {
+                transaction.rollback();
+            }
+
+            e.printStackTrace();
+            return false;
+        } finally {
+            em.close();
+        }
+    }
+
+    public boolean releaseIP(int ipId) {
+        if (ipId <= 0) {
+            return false;
+        }
+
+        EntityManager em = JpaUtils.getEntityManager();
+        EntityTransaction transaction = em.getTransaction();
+
+        try {
+            transaction.begin();
+
+            IPAddressManagementDTO ip
+                    = em.find(IPAddressManagementDTO.class, ipId);
+
+            if (ip == null) {
+                transaction.rollback();
+                return false;
+            }
+
+            ip.setDeviceId(null);
+            ip.setStatus("AVAILABLE");
+
+            transaction.commit();
+            return true;
+        } catch (Exception e) {
+            if (transaction.isActive()) {
+                transaction.rollback();
+            }
+
+            e.printStackTrace();
+            return false;
+        } finally {
+            em.close();
+        }
+    }
+
     
     public IPAddressManagementDTO findByDevice(
             Integer deviceId) {
@@ -179,9 +262,14 @@ public class IPAddressManagementDAO {
 
             query.setParameter("deviceId", deviceId);
 
-            return query.getResultStream()
-                    .findFirst()
-                    .orElse(null);
+            ArrayList<IPAddressManagementDTO> result
+                    = new ArrayList<>(query.getResultList());
+
+            if (result.isEmpty()) {
+                return null;
+            }
+
+            return result.get(0);
 
         } catch (Exception e) {
             e.printStackTrace();

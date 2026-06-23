@@ -17,6 +17,8 @@
         <%@page import="Models.VLANDTO" %>
         <%@page import="Models_DAO.SupportTicketDAO" %>
         <%@page import="Models.SupportTicketDTO" %>
+        <%@page import="Models_DAO.IPAddressManagementDAO" %>
+        <%@page import="Models.IPAddressManagementDTO" %>
         <%@page import="java.util.ArrayList" %>
         <%@page import="java.util.HashMap" %>
         <%@page import="java.text.SimpleDateFormat" %>
@@ -59,6 +61,17 @@
         <% SupportTicketDAO ticketDAO = new SupportTicketDAO();
         ArrayList<SupportTicketDTO> ticketList = ticketDAO.ListAll();
         SimpleDateFormat ticketDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm"); %>
+        <% IPAddressManagementDAO ipDAO = new IPAddressManagementDAO();
+        ArrayList<IPAddressManagementDTO> ipList = ipDAO.ListAll();
+        ArrayList<NetworkDeviceDTO> availableIpDevices = new ArrayList<>();
+        ArrayList<NetworkDeviceDTO> allDevicesForIp = deviceDAO.ListAll();
+        for (NetworkDeviceDTO device : allDevicesForIp) {
+            if (device != null
+                    && device.getDeviceId() > 0
+                    && ipDAO.findByDevice(device.getDeviceId()) == null) {
+                availableIpDevices.add(device);
+            }
+        } %>
                 <!DOCTYPE html>
                 <html lang="en">
 
@@ -464,6 +477,20 @@
                         .rt-empty { padding:48px 24px; text-align:center; color:var(--text-muted); }
                         .rt-empty i { font-size:40px; color:var(--border); display:block; margin-bottom:10px; }
                         .rt-room { display:inline-flex; align-items:center; justify-content:center; background:rgba(139,92,246,.08); border:1px solid rgba(139,92,246,.22); color:#8b5cf6; border-radius:5px; padding:1px 8px; font-size:.72rem; font-weight:700; font-family:monospace; }
+                        .ipam-summary { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; padding:16px; border-bottom:1px solid var(--border); }
+                        .ipam-card { background:rgba(16,23,42,.72); border:1px solid rgba(42,53,85,.75); border-radius:8px; padding:14px 15px; }
+                        .ipam-card-label { color:var(--text-muted); font-size:.72rem; text-transform:uppercase; letter-spacing:.08em; }
+                        .ipam-card-value { font-size:1.55rem; font-weight:800; margin-top:4px; }
+                        .ipam-filterbar { display:flex; justify-content:space-between; align-items:center; gap:12px; padding:14px 16px; border-bottom:1px solid rgba(42,53,85,.55); flex-wrap:wrap; }
+                        .ipam-filterbar .btn { border-radius:7px; font-size:.78rem; font-weight:700; }
+                        .ipam-address { display:inline-flex; align-items:center; gap:7px; font-family:"Courier New",monospace; color:#22d3ee; background:rgba(34,211,238,.08); border:1px solid rgba(34,211,238,.23); border-radius:6px; padding:4px 9px; font-size:.82rem; font-weight:700; }
+                        .ipam-device { color:#dbeafe; font-size:.78rem; }
+                        .ipam-muted { color:var(--text-muted); font-size:.78rem; }
+                        .ipam-assign { display:flex; gap:6px; align-items:center; flex-wrap:wrap; }
+                        .ipam-input { width:112px; background:rgba(22,31,54,.9); border:1px solid var(--border); color:var(--text-primary); border-radius:6px; padding:4px 8px; font-size:.72rem; outline:none; }
+                        .ipam-input:focus { border-color:#22d3ee; box-shadow:0 0 0 2px rgba(34,211,238,.12); }
+                        .ipam-row[style*="display: none"] { display:none !important; }
+                        @media (max-width: 768px) { .ipam-summary { grid-template-columns:1fr; } }
                     </style>
                 </head>
 
@@ -799,7 +826,7 @@
                                 </div>
                             </div>
 
-                            <% String[][] infraPages={ {"devices","bi-laptop","Network Devices","Device name, MAC address, IP, owner, type, status"}, {"accesspoints","bi-reception-4","Access Points","AP name, SSID, IP, connected users, status, room"}, {"switches","bi-hdd-network","Switches","Switch name, total/used ports, IP, status"}, {"ipmanage","bi-globe","IP Address Management","IP address, assigned to, status"} }; %>
+                            <% String[][] infraPages={ {"devices","bi-laptop","Network Devices","Device name, MAC address, IP, owner, type, status"}, {"accesspoints","bi-reception-4","Access Points","AP name, SSID, IP, connected users, status, room"}, {"switches","bi-hdd-network","Switches","Switch name, total/used ports, IP, status"} }; %>
                                 <% for (String[] p : infraPages) { %>
                                     <div class="page-section" id="page-<%= p[0] %>">
                                         <div class="section-card">
@@ -822,6 +849,205 @@
                                         </div>
                                     </div>
                                     <% } %>
+
+                                        <div class="page-section" id="page-ipmanage">
+                                            <div class="section-card">
+                                                <div class="section-card-header">
+                                                    <h6><i class="bi bi-globe me-2"></i>IP Address Management</h6>
+                                                    <a class="btn-theme text-decoration-none"
+                                                       href="MainController?action=ipList">
+                                                        <i class="bi bi-box-arrow-up-right me-1"></i>
+                                                        Full View
+                                                    </a>
+                                                </div>
+                                                <div class="section-card-body" style="padding:0;">
+                                                    <%
+                                                        int totalIpCount = ipList == null ? 0 : ipList.size();
+                                                        int availableIpCount = 0;
+                                                        int assignedIpCount = 0;
+
+                                                        if (ipList != null) {
+                                                            for (IPAddressManagementDTO ip : ipList) {
+                                                                String ipStatus = ip.getStatus() == null
+                                                                        ? ""
+                                                                        : ip.getStatus().toUpperCase();
+
+                                                                if ("AVAILABLE".equals(ipStatus)
+                                                                        && ip.getDeviceId() == null) {
+                                                                    availableIpCount++;
+                                                                } else if ("ASSIGNED".equals(ipStatus)
+                                                                        || ip.getDeviceId() != null) {
+                                                                    assignedIpCount++;
+                                                                }
+                                                            }
+                                                        }
+                                                    %>
+                                                    <div class="ipam-summary">
+                                                        <div class="ipam-card">
+                                                            <div class="ipam-card-label">Total IPs</div>
+                                                            <div class="ipam-card-value" style="color:#e0f2fe;">
+                                                                <%= totalIpCount %>
+                                                            </div>
+                                                        </div>
+                                                        <div class="ipam-card">
+                                                            <div class="ipam-card-label">Available</div>
+                                                            <div class="ipam-card-value" style="color:#4ade80;">
+                                                                <%= availableIpCount %>
+                                                            </div>
+                                                        </div>
+                                                        <div class="ipam-card">
+                                                            <div class="ipam-card-label">Assigned</div>
+                                                            <div class="ipam-card-value" style="color:#60a5fa;">
+                                                                <%= assignedIpCount %>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="ipam-filterbar">
+                                                        <div class="ipam-muted">
+                                                            IPs are managed as assignable network resources.
+                                                        </div>
+                                                        <div class="btn-group" role="group" aria-label="IP filter">
+                                                            <button class="btn btn-sm btn-outline-light"
+                                                                    type="button"
+                                                                    onclick="filterIpam('ALL')">
+                                                                All
+                                                            </button>
+                                                            <button class="btn btn-sm btn-outline-success"
+                                                                    type="button"
+                                                                    onclick="filterIpam('AVAILABLE')">
+                                                                Available
+                                                            </button>
+                                                            <button class="btn btn-sm btn-outline-info"
+                                                                    type="button"
+                                                                    onclick="filterIpam('ASSIGNED')">
+                                                                Assigned
+                                                            </button>
+                                                        </div>
+                                                    </div>
+
+                                                    <div style="overflow-x:auto;">
+                                                        <table class="rt-table">
+                                                            <thead>
+                                                                <tr>
+                                                                    <th><i class="bi bi-globe2 me-1"></i>IP Address</th>
+                                                                    <th><i class="bi bi-activity me-1"></i>Status</th>
+                                                                    <th><i class="bi bi-cpu me-1"></i>Device</th>
+                                                                    <th><i class="bi bi-sliders me-1"></i>Actions</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                <% if (ipList != null && !ipList.isEmpty()) {
+                                                                    for (IPAddressManagementDTO ip : ipList) {
+                                                                        String status = ip.getStatus() == null
+                                                                                ? ""
+                                                                                : ip.getStatus().toUpperCase();
+                                                                        String filterStatus = ip.getDeviceId() == null
+                                                                                && "AVAILABLE".equals(status)
+                                                                                ? "AVAILABLE"
+                                                                                : "ASSIGNED";
+                                                                %>
+                                                                <tr class="ipam-row"
+                                                                    data-ip-status="<%= filterStatus %>">
+                                                                    <td>
+                                                                        <span class="ipam-address">
+                                                                            <i class="bi bi-router"></i>
+                                                                            <%= ip.getIpAddress() %>
+                                                                        </span>
+                                                                        <div class="ipam-muted mt-1">
+                                                                            Resource #<%= ip.getIpId() %>
+                                                                        </div>
+                                                                    </td>
+                                                                    <td>
+                                                                        <span class="rt-status <%= "AVAILABLE".equals(ip.getStatus())
+                                                                                ? "status-online"
+                                                                                : "status-maint" %>">
+                                                                            <%= ip.getStatus() %>
+                                                                        </span>
+                                                                    </td>
+                                                                    <td>
+                                                                        <% if (ip.getDeviceId() == null) { %>
+                                                                        <span class="ipam-muted">Not assigned</span>
+                                                                        <% } else { %>
+                                                                        <span class="ipam-device">
+                                                                            Device #<%= ip.getDeviceId() %>
+                                                                        </span>
+                                                                        <% } %>
+                                                                    </td>
+                                                                    <td>
+                                                                        <% if (ip.getDeviceId() == null) { %>
+                                                                        <form action="MainController"
+                                                                              method="post"
+                                                                              class="ipam-assign">
+                                                                            <input type="hidden"
+                                                                                   name="action"
+                                                                                   value="ipAssign">
+                                                                            <input type="hidden"
+                                                                                   name="ipId"
+                                                                                   value="<%= ip.getIpId() %>">
+                                                                            <input type="hidden"
+                                                                                   name="returnTo"
+                                                                                   value="dashboard">
+                                                                            <select class="ipam-input"
+                                                                                    name="deviceId"
+                                                                                    required>
+                                                                                <option value="">
+                                                                                    Select device
+                                                                                </option>
+                                                                                <% for (NetworkDeviceDTO device : availableIpDevices) { %>
+                                                                                <option value="<%= device.getDeviceId() %>">
+                                                                                    #<%= device.getDeviceId() %>
+                                                                                    -
+                                                                                    <%= device.getDeviceName() %>
+                                                                                </option>
+                                                                                <% } %>
+                                                                            </select>
+                                                                            <button class="rt-upd"
+                                                                                    type="submit">
+                                                                                Assign
+                                                                            </button>
+                                                                        </form>
+                                                                        <% } else { %>
+                                                                        <form action="MainController"
+                                                                              method="post"
+                                                                              onsubmit="return confirm('Release this IP address?');">
+                                                                            <input type="hidden"
+                                                                                   name="action"
+                                                                                   value="ipRelease">
+                                                                            <input type="hidden"
+                                                                                   name="ipId"
+                                                                                   value="<%= ip.getIpId() %>">
+                                                                            <input type="hidden"
+                                                                                   name="returnTo"
+                                                                                   value="dashboard">
+                                                                            <button class="btn btn-sm btn-outline-warning"
+                                                                                    type="submit">
+                                                                                <i class="bi bi-unlink me-1"></i>
+                                                                                Release
+                                                                            </button>
+                                                                        </form>
+                                                                        <% } %>
+                                                                    </td>
+                                                                </tr>
+                                                                <%
+                                                                    }
+                                                                } else {
+                                                                %>
+                                                                <tr>
+                                                                    <td colspan="5">
+                                                                        <div class="rt-empty">
+                                                                            <i class="bi bi-globe"></i>
+                                                                            No IP addresses found.
+                                                                        </div>
+                                                                    </td>
+                                                                </tr>
+                                                                <% } %>
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
 
                                         <div class="page-section" id="page-routers">
                                             <div class="section-card">
@@ -1918,6 +2144,15 @@
                             var breadEl = document.getElementById('pageBreadcrumb');
                             if (titleEl) titleEl.textContent = info.title;
                             if (breadEl) breadEl.textContent = info.breadcrumb;
+                        }
+
+                        function filterIpam(status) {
+                            document.querySelectorAll('.ipam-row').forEach(function(row) {
+                                var rowStatus = row.getAttribute('data-ip-status');
+                                row.style.display = status === 'ALL' || rowStatus === status
+                                        ? ''
+                                        : 'none';
+                            });
                         }
 
                         document.addEventListener('DOMContentLoaded', function() {

@@ -119,6 +119,24 @@
             border-color: #222c48;
             color: #5f6d91;
         }
+
+        .inline-device {
+            width: 120px;
+            background: #0d1728;
+            border-color: #30415f;
+            color: #f2f5ff;
+        }
+
+        .inline-device:focus {
+            background: #0d1728;
+            border-color: #22d3ee;
+            color: #f2f5ff;
+            box-shadow: 0 0 0 .15rem rgba(34, 211, 238, .18);
+        }
+
+        .action-cell {
+            min-width: 260px;
+        }
     </style>
 </head>
 
@@ -147,6 +165,12 @@
             Back to Dashboard
         </a>
     </div>
+
+    <c:if test="${not empty requestScope.error}">
+        <div class="alert alert-danger">
+            <c:out value="${requestScope.error}" />
+        </div>
+    </c:if>
 
     <!-- Summary -->
     <div class="row g-3 mb-4">
@@ -202,6 +226,7 @@
                         <th class="py-3">IP Address</th>
                         <th class="py-3">Status</th>
                         <th class="py-3">Assigned Device</th>
+                        <th class="py-3">Actions</th>
                     </tr>
                 </thead>
 
@@ -268,6 +293,77 @@
 
                                     </c:choose>
                                 </td>
+
+                                <td class="action-cell">
+                                    <c:choose>
+                                        <c:when test="${empty ip.deviceId}">
+                                            <form action="MainController"
+                                                  method="post"
+                                                  class="d-flex flex-wrap gap-2 align-items-center">
+
+                                                <input type="hidden"
+                                                       name="action"
+                                                       value="ipAssign">
+
+                                                <input type="hidden"
+                                                       name="ipId"
+                                                       value="${ip.ipId}">
+
+                                                <input type="hidden"
+                                                       name="page"
+                                                       value="${currentPage}">
+
+                                                <select class="form-select form-select-sm inline-device"
+                                                        name="deviceId"
+                                                        required>
+                                                    <option value="">
+                                                        Select device
+                                                    </option>
+                                                    <c:forEach var="device"
+                                                               items="${availableDevices}">
+                                                        <option value="${device.deviceId}">
+                                                            #<c:out value="${device.deviceId}" />
+                                                            -
+                                                            <c:out value="${device.deviceName}" />
+                                                        </option>
+                                                    </c:forEach>
+                                                </select>
+
+                                                <button class="btn btn-sm btn-outline-info"
+                                                        type="submit">
+                                                    <i class="bi bi-link-45deg me-1"></i>
+                                                    Assign
+                                                </button>
+                                            </form>
+                                        </c:when>
+
+                                        <c:otherwise>
+                                            <form action="MainController"
+                                                  method="post"
+                                                  class="d-inline"
+                                                  onsubmit="return confirm('Release this IP address?');">
+
+                                                <input type="hidden"
+                                                       name="action"
+                                                       value="ipRelease">
+
+                                                <input type="hidden"
+                                                       name="ipId"
+                                                       value="${ip.ipId}">
+
+                                                <input type="hidden"
+                                                       name="page"
+                                                       value="${currentPage}">
+
+                                                <button class="btn btn-sm btn-outline-warning"
+                                                        type="submit">
+                                                    <i class="bi bi-unlink me-1"></i>
+                                                    Release
+                                                </button>
+                                            </form>
+                                        </c:otherwise>
+                                    </c:choose>
+                                </td>
                             </tr>
 
                         </c:forEach>
@@ -277,7 +373,7 @@
                     <c:otherwise>
 
                         <tr>
-                            <td colspan="4"
+                            <td colspan="5"
                                 class="text-center
                                        text-secondary py-5">
 

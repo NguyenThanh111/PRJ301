@@ -2,7 +2,9 @@
 package Controller;
 
 import Models_DAO.IPAddressManagementDAO;
+import Models_DAO.NetworkDeviceDAO;
 import Models.IPAddressManagementDTO;
+import Models.NetworkDeviceDTO;
 import java.io.IOException;
 import java.util.ArrayList;
 import javax.servlet.RequestDispatcher;
@@ -20,6 +22,8 @@ public class IPServlet extends HttpServlet {
 
     private final IPAddressManagementDAO ipDAO
             = new IPAddressManagementDAO();
+    private final NetworkDeviceDAO deviceDAO
+            = new NetworkDeviceDAO();
 
     protected void processRequest(
             HttpServletRequest request,
@@ -40,6 +44,14 @@ public class IPServlet extends HttpServlet {
         switch (action) {
             case "ipList":
                 listIPs(request, response);
+                break;
+
+            case "ipAssign":
+                assignIP(request, response);
+                break;
+
+            case "ipRelease":
+                releaseIP(request, response);
                 break;
 
             default:
@@ -89,7 +101,14 @@ public class IPServlet extends HttpServlet {
         long assignedCount
                 = ipDAO.countByStatus("ASSIGNED");
 
+        ArrayList<NetworkDeviceDTO> availableDevices
+                = getAvailableDevices();
+
         request.setAttribute("ipList", ipList);
+        request.setAttribute(
+                "availableDevices",
+                availableDevices
+        );
         request.setAttribute(
                 "currentPage",
                 currentPage
@@ -117,6 +136,156 @@ public class IPServlet extends HttpServlet {
                 );
 
         rd.forward(request, response);
+    }
+
+    private void assignIP(
+            HttpServletRequest request,
+            HttpServletResponse response)
+            throws ServletException, IOException {
+
+        Integer ipId = parseInteger(
+                request.getParameter("ipId")
+        );
+
+        Integer deviceId = parseInteger(
+                request.getParameter("deviceId")
+        );
+
+        if (ipId == null || ipId <= 0) {
+            request.setAttribute(
+                    "error",
+                    "Invalid IP ID."
+            );
+            listIPs(request, response);
+            return;
+        }
+
+        if (deviceId == null || deviceId <= 0) {
+            request.setAttribute(
+                    "error",
+                    "Device ID must be a valid positive number."
+            );
+            listIPs(request, response);
+            return;
+        }
+
+        NetworkDeviceDTO device = deviceDAO.searchById(deviceId);
+
+        if (device == null) {
+            request.setAttribute(
+                    "error",
+                    "Selected device does not exist."
+            );
+            listIPs(request, response);
+            return;
+        }
+
+        if (ipDAO.findByDevice(deviceId) != null) {
+            request.setAttribute(
+                    "error",
+                    "Selected device already has an assigned IP."
+            );
+            listIPs(request, response);
+            return;
+        }
+
+        boolean success = ipDAO.assignIP(
+                ipId,
+                deviceId
+        );
+
+        if (!success) {
+            request.setAttribute(
+                    "error",
+                    "Cannot assign this IP. It may already be assigned, or the device may already have an IP."
+            );
+            listIPs(request, response);
+            return;
+        }
+
+        redirectToCurrentPage(request, response);
+    }
+
+    private void releaseIP(
+            HttpServletRequest request,
+            HttpServletResponse response)
+            throws ServletException, IOException {
+
+        Integer ipId = parseInteger(
+                request.getParameter("ipId")
+        );
+
+        if (ipId == null || ipId <= 0) {
+            request.setAttribute(
+                    "error",
+                    "Invalid IP ID."
+            );
+            listIPs(request, response);
+            return;
+        }
+
+        boolean success = ipDAO.releaseIP(ipId);
+
+        if (!success) {
+            request.setAttribute(
+                    "error",
+                    "Cannot release this IP."
+            );
+            listIPs(request, response);
+            return;
+        }
+
+        redirectToCurrentPage(request, response);
+    }
+
+    private void redirectToCurrentPage(
+            HttpServletRequest request,
+            HttpServletResponse response)
+            throws IOException {
+
+        if ("dashboard".equals(request.getParameter("returnTo"))) {
+            response.sendRedirect(
+                    request.getContextPath()
+                    + "/staffDashboard.jsp?page=ipmanage"
+            );
+            return;
+        }
+
+        Integer pageValue = parseInteger(
+                request.getParameter("page")
+        );
+
+        int page = 1;
+
+        if (pageValue != null && pageValue > 0) {
+            page = pageValue;
+        }
+
+        response.sendRedirect(
+                request.getContextPath()
+                + "/MainController?action=ipList&page="
+                + page
+        );
+    }
+
+    private ArrayList<NetworkDeviceDTO> getAvailableDevices() {
+        ArrayList<NetworkDeviceDTO> devices
+                = deviceDAO.ListAll();
+
+        ArrayList<NetworkDeviceDTO> availableDevices
+                = new ArrayList<>();
+
+        for (NetworkDeviceDTO device : devices) {
+            if (device == null || device.getDeviceId() <= 0) {
+                continue;
+            }
+
+            if (ipDAO.findByDevice(device.getDeviceId()) == null) {
+                availableDevices.add(device);
+            }
+        }
+
+        return availableDevices;
     }
 
     private Integer parseInteger(String value) {

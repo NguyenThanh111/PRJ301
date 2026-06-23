@@ -130,6 +130,8 @@ public class MainController extends HttpServlet {
                 break;
             //===============Id==================
             case "ipList":
+            case "ipAssign":
+            case "ipRelease":
                 url = "IPServlet";
                 break;
             //===============Support Ticket==================
