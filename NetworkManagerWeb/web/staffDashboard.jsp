@@ -15,8 +15,11 @@
         <%@page import="Models.RoomDTO" %>
         <%@page import="Models_DAO.VLANDAO" %> 
         <%@page import="Models.VLANDTO" %>
+        <%@page import="Models_DAO.SupportTicketDAO" %>
+        <%@page import="Models.SupportTicketDTO" %>
         <%@page import="java.util.ArrayList" %>
         <%@page import="java.util.HashMap" %>
+        <%@page import="java.text.SimpleDateFormat" %>
         <c:set var="currentUser" value="${sessionScope.user}" />
         <c:set var="role" value="${sessionScope.role}" />
         <c:set var="roleLower" value="${fn:toLowerCase(role)}" />
@@ -53,6 +56,9 @@
         %>
         <% VLANDAO vlanDAO = new VLANDAO();
         ArrayList<VLANDTO> vlanList = vlanDAO.ListAll(); %>
+        <% SupportTicketDAO ticketDAO = new SupportTicketDAO();
+        ArrayList<SupportTicketDTO> ticketList = ticketDAO.ListAll();
+        SimpleDateFormat ticketDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm"); %>
                 <!DOCTYPE html>
                 <html lang="en">
 
@@ -711,10 +717,62 @@
                                                     All</button>
                                             </div>
                                             <div class="section-card-body">
+                                                <%
+                                                    int openTicketShown = 0;
+                                                    if (ticketList != null) {
+                                                        for (SupportTicketDTO ticket : ticketList) {
+                                                            if (ticket == null || ticket.getStatus() == null) {
+                                                                continue;
+                                                            }
+
+                                                            if (!"OPEN".equals(ticket.getStatus())
+                                                                    && !"IN_PROGRESS".equals(ticket.getStatus())) {
+                                                                continue;
+                                                            }
+
+                                                            if (openTicketShown >= 3) {
+                                                                break;
+                                                            }
+
+                                                            openTicketShown++;
+                                                %>
+                                                <div class="alert-item">
+                                                    <div class="severity-dot <%= "OPEN".equals(ticket.getStatus())
+                                                            ? "severity-critical"
+                                                            : "severity-warning" %>"></div>
+                                                    <div class="flex-grow-1">
+                                                        <div class="d-flex justify-content-between gap-2">
+                                                            <div style="font-weight:600;font-size:13px;">
+                                                                <%= ticket.getTitle() %>
+                                                            </div>
+                                                            <span class="badge text-bg-secondary"
+                                                                  style="font-size:10px;">
+                                                                <%= ticket.getStatus() %>
+                                                            </span>
+                                                        </div>
+                                                        <div style="font-size:11px;color:#95a3c8;">
+                                                            User #<%= ticket.getCreatedBy() %>
+                                                            <% if (ticket.getDeviceId() != null) { %>
+                                                            &middot; Device #<%= ticket.getDeviceId() %>
+                                                            <% } else { %>
+                                                            &middot; No device
+                                                            <% } %>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <%
+                                                        }
+                                                    }
+
+                                                    if (openTicketShown == 0) {
+                                                %>
                                                 <div class="placeholder-box">
                                                     <i class="bi bi-ticket-perforated" style="font-size:26px;"></i><br>
-                                                    Support ticket queue will appear here
+                                                    No open support tickets.
                                                 </div>
+                                                <%
+                                                    }
+                                                %>
                                             </div>
                                         </div>
                                     </div>
@@ -1177,16 +1235,144 @@
                                             <div class="section-card">
                                                 <div class="section-card-header">
                                                     <h6><i class="bi bi-ticket-perforated me-2"></i>Support Tickets</h6>
-                                                    <select class="form-select form-select-sm"
-                                                        style="width:130px;background:#0f162b;border-color:var(--border);color:#dbe3ff;font-size:12px;">
-                                                        <option>All Status</option>
-                                                        <option>OPEN</option>
-                                                        <option>IN PROGRESS</option>
-                                                        <option>CLOSED</option>
-                                                    </select>
+                                                    <a class="btn-theme text-decoration-none"
+                                                       href="MainController?action=ticketAdd&returnTo=dashboard">
+                                                        <i class="bi bi-plus-lg me-1"></i>
+                                                        Add Ticket
+                                                    </a>
                                                 </div>
                                                 <div class="section-card-body">
-                                                    <div class="placeholder-box">All support tickets will appear here
+                                                    <div class="table-responsive">
+                                                        <table class="table table-dark table-striped table-hover align-middle mb-0">
+                                                            <thead>
+                                                                <tr>
+                                                                    <th>ID</th>
+                                                                    <th>Title</th>
+                                                                    <th>Status</th>
+                                                                    <th>Created Date</th>
+                                                                    <th>Created By</th>
+                                                                    <th>Device</th>
+                                                                    <th>Actions</th>
+                                                                </tr>
+                                                            </thead>
+
+                                                            <tbody>
+                                                                <% if (ticketList != null && !ticketList.isEmpty()) {
+                                                                    for (SupportTicketDTO ticket : ticketList) {
+                                                                %>
+
+                                                                <tr>
+                                                                    <td><%= ticket.getTicketId() %></td>
+                                                                    <td>
+                                                                        <div style="font-weight:600;">
+                                                                            <%= ticket.getTitle() %>
+                                                                        </div>
+                                                                        <% if (ticket.getDescription() != null
+                                                                                && !ticket.getDescription().trim().isEmpty()) { %>
+                                                                        <div style="font-size:12px;color:#95a3c8;">
+                                                                            <%= ticket.getDescription() %>
+                                                                        </div>
+                                                                        <% } %>
+                                                                    </td>
+                                                                    <td>
+                                                                        <span class="badge text-bg-secondary">
+                                                                            <%= ticket.getStatus() %>
+                                                                        </span>
+                                                                    </td>
+                                                                    <td>
+                                                                        <%= ticket.getCreatedDate() == null
+                                                                                ? "Not set"
+                                                                                : ticketDateFormat.format(ticket.getCreatedDate()) %>
+                                                                    </td>
+                                                                    <td>User #<%= ticket.getCreatedBy() %></td>
+                                                                    <td>
+                                                                        <%= ticket.getDeviceId() == null
+                                                                                ? "Not assigned"
+                                                                                : "Device #" + ticket.getDeviceId() %>
+                                                                    </td>
+                                                                    <td>
+                                                                        <div class="d-flex flex-wrap gap-2">
+                                                                            <a class="btn btn-sm btn-outline-light"
+                                                                               href="MainController?action=ticketEdit&id=<%= ticket.getTicketId() %>&returnTo=dashboard">
+                                                                                Edit
+                                                                            </a>
+
+                                                                            <form action="MainController"
+                                                                                  method="post">
+                                                                                <input type="hidden"
+                                                                                       name="action"
+                                                                                       value="ticketUpdateStatus">
+                                                                                <input type="hidden"
+                                                                                       name="ticketId"
+                                                                                       value="<%= ticket.getTicketId() %>">
+                                                                                <input type="hidden"
+                                                                                       name="returnTo"
+                                                                                       value="dashboard">
+                                                                                <select class="form-select form-select-sm"
+                                                                                        name="status"
+                                                                                        style="width:130px;background:#0f162b;border-color:var(--border);color:#dbe3ff;font-size:12px;"
+                                                                                        onchange="this.form.submit()">
+                                                                                    <option value="OPEN"
+                                                                                            <%= "OPEN".equals(ticket.getStatus()) ? "selected" : "" %>>
+                                                                                        OPEN
+                                                                                    </option>
+                                                                                    <option value="IN_PROGRESS"
+                                                                                            <%= "IN_PROGRESS".equals(ticket.getStatus()) ? "selected" : "" %>>
+                                                                                        IN_PROGRESS
+                                                                                    </option>
+                                                                                    <option value="RESOLVED"
+                                                                                            <%= "RESOLVED".equals(ticket.getStatus()) ? "selected" : "" %>>
+                                                                                        RESOLVED
+                                                                                    </option>
+                                                                                    <option value="CLOSED"
+                                                                                            <%= "CLOSED".equals(ticket.getStatus()) ? "selected" : "" %>>
+                                                                                        CLOSED
+                                                                                    </option>
+                                                                                </select>
+                                                                            </form>
+
+                                                                            <form action="MainController"
+                                                                                  method="post"
+                                                                                  onsubmit="return confirm('Are you sure you want to delete this ticket?');">
+                                                                                <input type="hidden"
+                                                                                       name="action"
+                                                                                       value="ticketDelete">
+                                                                                <input type="hidden"
+                                                                                       name="ticketId"
+                                                                                       value="<%= ticket.getTicketId() %>">
+                                                                                <input type="hidden"
+                                                                                       name="returnTo"
+                                                                                       value="dashboard">
+                                                                                <button class="btn btn-sm btn-outline-danger"
+                                                                                        type="submit">
+                                                                                    Delete
+                                                                                </button>
+                                                                            </form>
+                                                                        </div>
+                                                                    </td>
+                                                                </tr>
+
+                                                                <%
+                                                                    }
+                                                                } else {
+                                                                %>
+
+                                                                <tr>
+                                                                    <td colspan="7">
+                                                                        <div class="placeholder-box my-0">
+                                                                            <i class="bi bi-ticket-perforated"
+                                                                               style="font-size:26px;"></i>
+                                                                            <br>
+                                                                            No support tickets found.
+                                                                        </div>
+                                                                    </td>
+                                                                </tr>
+
+                                                                <%
+                                                                }
+                                                                %>
+                                                            </tbody>
+                                                        </table>
                                                     </div>
                                                 </div>
                                             </div>

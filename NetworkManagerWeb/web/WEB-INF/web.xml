@@ -45,10 +45,10 @@
         <servlet-class>Controller.MaintenanceServlet</servlet-class>
     </servlet>
     <servlet>
-
         <servlet-name>VLANServlet</servlet-name>
         <servlet-class>Controller.VLANServlet</servlet-class>
     </servlet>
+    <servlet>
         <servlet-name>WifiController</servlet-name>
         <servlet-class>Controller.WifiController</servlet-class>
     </servlet>
@@ -67,6 +67,8 @@
     <servlet>
         <servlet-name>VnpayIpnController</servlet-name>
         <servlet-class>Controller.VnpayIpnController</servlet-class>
+    </servlet>
+    <servlet>
         <servlet-name>IPServlet</servlet-name>
         <servlet-class>Controller.IPServlet</servlet-class>
     </servlet>
@@ -137,6 +139,8 @@
     <servlet-mapping>
         <servlet-name>VnpayIpnController</servlet-name>
         <url-pattern>/vnpay/ipn</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
         <servlet-name>IPServlet</servlet-name>
         <url-pattern>/IPServlet</url-pattern>
     </servlet-mapping>

@@ -132,6 +132,16 @@ public class MainController extends HttpServlet {
             case "ipList":
                 url = "IPServlet";
                 break;
+            //===============Support Ticket==================
+            case "ticketList":
+            case "ticketAdd":
+            case "ticketEdit":
+            case "ticketInsert":
+            case "ticketUpdate":
+            case "ticketUpdateStatus":
+            case "ticketDelete":
+                url = "TicketServlet";
+                break;
                 
                 //default is Login page!
             default:
