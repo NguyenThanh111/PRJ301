@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Network Alert</title>
+</head>
+<body style="margin:0; padding:0; background:#04060d; font-family:'Segoe UI',Arial,sans-serif;">
+    <table role="presentation" style="width:100%;border-collapse:collapse;">
+        <tr>
+            <td style="padding:40px 20px;text-align:center;">
+                <table role="presentation" style="max-width:560px;margin:0 auto;background:rgba(14,20,36,0.95);border-radius:16px;border:1px solid rgba(146,167,223,0.2);overflow:hidden;">
+                    <tr>
+                        <td style="padding:36px 32px 24px;text-align:center;background:{{ALERT_COLOR}};border-bottom:1px solid rgba(146,167,223,0.1);">
+                            <h1 style="margin:0;color:#fff;font-size:24px;font-weight:800;letter-spacing:-0.02em;">{{ALERT_TITLE}}</h1>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding:32px;">
+                            <p style="margin:0 0 16px;color:#d7def8;font-size:15px;line-height:1.6;">Hi <strong style="color:#f3f6ff;">{{USERNAME}}</strong>,</p>
+                            <table role="presentation" style="margin:0 0 20px;width:100%;">
+                                <tr>
+                                    <td style="padding:8px 14px;background:rgba(255,255,255,0.04);border-radius:8px;font-size:12px;color:#8ea0cd;text-transform:uppercase;letter-spacing:0.08em;border:1px solid rgba(146,167,223,0.1);">
+                                        Severity: <strong style="color:#d7def8;text-transform:none;">{{ALERT_SEVERITY}}</strong>
+                                    </td>
+                                </tr>
+                            </table>
+                            <p style="margin:0 0 8px;color:#a2b0d4;font-size:14px;line-height:1.7;padding:16px 20px;background:rgba(255,255,255,0.02);border-radius:10px;border-left:3px solid {{ALERT_COLOR}};">
+                                {{ALERT_DETAIL}}
+                            </p>
+                            <p style="margin:20px 0 0;color:#8ea0cd;font-size:13px;line-height:1.5;">
+                                Please check the system for more information.
+                            </p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding:20px 32px;text-align:center;border-top:1px solid rgba(146,167,223,0.08);">
+                            <p style="margin:0;color:#5a6888;font-size:11px;text-transform:uppercase;letter-spacing:0.08em;">University Network Management System</p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>

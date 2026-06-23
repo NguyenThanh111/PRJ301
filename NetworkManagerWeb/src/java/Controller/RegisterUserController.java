@@ -4,7 +4,14 @@ package Controller;
 import Models_DAO.UserDAO;
 import Models.UserDTO;
 import Models_DAO.UserRoleDAO;
+import Models.VerificationToken;
+import Models_DAO.VerificationTokenDAO;
+import Utils.EmailUtils;
+import Utils.PasswordUtils;
+import Utils.TokenUtils;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -67,7 +74,8 @@ public class RegisterUserController extends HttpServlet {
                 return;
             }
 
-            UserDTO newUser = new UserDTO(username, password, fullName, email);
+            String hashedPassword = PasswordUtils.hashPassword(password);
+            UserDTO newUser = new UserDTO(username, hashedPassword, fullName, email);
             boolean inserted = userDAO.insert(newUser);
 
             if (!inserted) {
@@ -84,11 +92,51 @@ public class RegisterUserController extends HttpServlet {
             }
 
             if (created != null) {
-                new UserRoleDAO().assignRole(created.getUserId(), roleId);
+                boolean roleAssigned = new UserRoleDAO().assignRole(created.getUserId(), roleId);
+                if (!roleAssigned) {
+                    request.setAttribute("error", "Cannot assign default role. Please contact administrator.");
+                    request.setAttribute("source", "normal");
+                    request.getRequestDispatcher(url).forward(request, response);
+                    return;
+                }
             }
 
-            request.setAttribute("success", "Register successfully. Please login.");
-            request.getRequestDispatcher("login.jsp").forward(request, response);
+            // Set user status to PENDING
+            created.setStatus("PENDING");
+            userDAO.update(created);
+
+            // Store user in session for resend feature
+            HttpSession sess = request.getSession();
+            sess.setAttribute("LOGIN_USER", created);
+
+            // Create verification token and send email
+            try {
+                String token = TokenUtils.generateToken();
+                VerificationToken vt = new VerificationToken(
+                    created.getUserId(), token, "VERIFICATION", TokenUtils.getExpiryDate(24));
+                new VerificationTokenDAO().save(vt);
+
+                String baseUrl = request.getScheme() + "://" + request.getServerName()
+                    + ":" + request.getServerPort() + request.getContextPath();
+                String verifyLink = baseUrl + "/VerifyEmailController?token=" + token;
+
+                Map<String, String> placeholders = new HashMap<>();
+                placeholders.put("USERNAME", username);
+                placeholders.put("VERIFY_LINK", verifyLink);
+                placeholders.put("EXPIRY_HOURS", "24");
+
+                String htmlBody = EmailUtils.loadTemplate(
+                    getServletContext(), "verify-email", placeholders);
+                EmailUtils.sendEmail(email, "Verify your account", htmlBody);
+            } catch (Exception e) {
+                e.printStackTrace();
+                request.setAttribute("error", "Cannot send verification email. Please use Resend Verification below.");
+                request.getRequestDispatcher("check-email.jsp").forward(request, response);
+                return;
+            }
+
+            request.setAttribute("success", "Register successfully. Please check your email to verify.");
+            request.getRequestDispatcher("check-email.jsp").forward(request, response);
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -142,7 +190,8 @@ public class RegisterUserController extends HttpServlet {
                 return;
             }
 
-            UserDTO newUser = new UserDTO(username, password, fullName, email);
+            String hashedPassword = PasswordUtils.hashPassword(password);
+            UserDTO newUser = new UserDTO(username, hashedPassword, fullName, email);
             boolean inserted = userDAO.insert(newUser);
 
             if (!inserted) {
@@ -154,10 +203,51 @@ public class RegisterUserController extends HttpServlet {
 
             UserDTO created = userDAO.searchByNameOrEmail(username);
             if (created != null) {
-                roleDAO.assignRole(created.getUserId(), 3);
+                boolean roleAssigned = roleDAO.assignRole(created.getUserId(), 3);
+                if (!roleAssigned) {
+                    request.setAttribute("error", "Cannot assign default role. Please contact administrator.");
+                    request.setAttribute("source", "google");
+                    request.getRequestDispatcher("user-form.jsp").forward(request, response);
+                    return;
+                }
             }
 
-            response.sendRedirect("GoogleLoginController?action=completeGoogleRegistration");
+            // Set user status to PENDING
+            created.setStatus("PENDING");
+            userDAO.update(created);
+
+            // Store user in session for resend feature
+            HttpSession sess = request.getSession();
+            sess.setAttribute("LOGIN_USER", created);
+
+            // Create verification token and send email
+            try {
+                String token = TokenUtils.generateToken();
+                VerificationToken vt = new VerificationToken(
+                    created.getUserId(), token, "VERIFICATION", TokenUtils.getExpiryDate(24));
+                new VerificationTokenDAO().save(vt);
+
+                String baseUrl = request.getScheme() + "://" + request.getServerName()
+                    + ":" + request.getServerPort() + request.getContextPath();
+                String verifyLink = baseUrl + "/VerifyEmailController?token=" + token;
+
+                Map<String, String> placeholders = new HashMap<>();
+                placeholders.put("USERNAME", username);
+                placeholders.put("VERIFY_LINK", verifyLink);
+                placeholders.put("EXPIRY_HOURS", "24");
+
+                String htmlBody = EmailUtils.loadTemplate(
+                    getServletContext(), "verify-email", placeholders);
+                EmailUtils.sendEmail(email, "Verify your account", htmlBody);
+            } catch (Exception e) {
+                e.printStackTrace();
+                request.setAttribute("error", "Cannot send verification email. Please use Resend Verification below.");
+                request.getRequestDispatcher("check-email.jsp").forward(request, response);
+                return;
+            }
+
+            request.setAttribute("success", "Register successfully. Please check your email to verify.");
+            request.getRequestDispatcher("check-email.jsp").forward(request, response);
         } catch (Exception e) {
             e.printStackTrace();
             request.setAttribute("error", "Unexpected error: " + e.getMessage());

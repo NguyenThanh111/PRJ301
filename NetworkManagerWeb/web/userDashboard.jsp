@@ -3,7 +3,7 @@
         <%@page import="Models.UserDTO" %>
             <% UserDTO currentUser=(UserDTO) session.getAttribute("user"); String role=(String)
                 session.getAttribute("role"); if (currentUser==null || role==null || !role.equalsIgnoreCase("Viewer")) {
-                response.sendRedirect("login.jsp"); return; } String displayName=currentUser.getFullName() !=null ?
+                session.removeAttribute("user"); session.removeAttribute("role"); response.sendRedirect("login.jsp"); return; } String displayName=currentUser.getFullName() !=null ?
                 currentUser.getFullName() : currentUser.getUserName(); %>
                 <!DOCTYPE html>
                 <html lang="en">

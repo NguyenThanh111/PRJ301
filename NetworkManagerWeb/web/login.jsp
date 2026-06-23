@@ -465,6 +465,12 @@
                                             <button type="submit" class="btn-login">
                                                 <i class="bi bi-box-arrow-in-right"></i> Sign In
                                             </button>
+
+                                            <div style="text-align: center; margin-top: 10px;">
+                                                <a href="ForgotPasswordController" style="color: #caa7ff; font-size: 13px; text-decoration: none; font-weight: 500;">
+                                                    Forgot Password?
+                                                </a>
+                                            </div>
                                         </form>
 
                                         <div class="divider">or</div>

@@ -5,6 +5,7 @@ import Models.RoleDTO;
 import Models_DAO.UserDAO;
 import Models.UserDTO;
 import Models_DAO.UserRoleDAO;
+import Utils.PasswordUtils;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -111,7 +112,8 @@ public class UserController extends HttpServlet {
         String password = request.getParameter("password");
         String roleIdStr = request.getParameter("roleId");
 
-        UserDTO user = new UserDTO(username, password, fullName, email);
+        String hashed = PasswordUtils.hashPassword(password);
+        UserDTO user = new UserDTO(username, hashed, fullName, email);
         UserDAO dao = new UserDAO();
         dao.insert(user);
 
@@ -132,6 +134,13 @@ public class UserController extends HttpServlet {
         String password = request.getParameter("password");
         boolean status = request.getParameter("status") != null;
         String roleIdStr = request.getParameter("roleId");
+
+        if (password == null || password.trim().isEmpty()) {
+            UserDTO existing = new UserDAO().searchById(userId);
+            password = existing != null ? existing.getPassword() : null;
+        } else {
+            password = PasswordUtils.hashPassword(password);
+        }
 
         UserDTO user = new UserDTO(username, password, fullName, email);
         user.setUserId(userId);
