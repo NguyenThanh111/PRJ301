@@ -1,7 +1,11 @@
 package Controller;
 
+import Models.NetworkDeviceDTO;
 import Models.SupportTicketDTO;
+import Models.UserDTO;
+import Models_DAO.NetworkDeviceDAO;
 import Models_DAO.SupportTicketDAO;
+import Models_DAO.UserDAO;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
@@ -19,6 +23,8 @@ import javax.servlet.http.HttpServletResponse;
 public class TicketServlet extends HttpServlet {
 
     private final SupportTicketDAO ticketDAO = new SupportTicketDAO();
+    private final UserDAO userDAO = new UserDAO();
+    private final NetworkDeviceDAO deviceDAO = new NetworkDeviceDAO();
 
     protected void processRequest(HttpServletRequest request,
             HttpServletResponse response)
@@ -86,6 +92,7 @@ public class TicketServlet extends HttpServlet {
             throws ServletException, IOException {
 
         request.setAttribute("returnTo", request.getParameter("returnTo"));
+        loadTicketFormOptions(request);
 
         RequestDispatcher rd
                 = request.getRequestDispatcher("ticket-form.jsp");
@@ -115,6 +122,7 @@ public class TicketServlet extends HttpServlet {
 
         request.setAttribute("ticket", ticket);
         request.setAttribute("returnTo", request.getParameter("returnTo"));
+        loadTicketFormOptions(request);
 
         RequestDispatcher rd
                 = request.getRequestDispatcher("ticket-form.jsp");
@@ -308,11 +316,25 @@ public class TicketServlet extends HttpServlet {
         }
 
         if (createdBy == null || createdBy <= 0) {
-            return "Created By must be a valid User ID.";
+            return "Please choose a valid user.";
         }
 
         if (deviceId != null && deviceId <= 0) {
-            return "Device ID must be a positive number.";
+            return "Please choose a valid device.";
+        }
+
+        UserDTO user = userDAO.searchById(createdBy);
+
+        if (user == null) {
+            return "Selected user does not exist.";
+        }
+
+        if (deviceId != null) {
+            NetworkDeviceDTO device = deviceDAO.searchById(deviceId);
+
+            if (device == null) {
+                return "Selected device does not exist.";
+            }
         }
 
         return null;
@@ -344,6 +366,7 @@ public class TicketServlet extends HttpServlet {
         request.setAttribute("error", error);
         request.setAttribute("formTicket", formTicket);
         request.setAttribute("returnTo", request.getParameter("returnTo"));
+        loadTicketFormOptions(request);
 
         RequestDispatcher rd
                 = request.getRequestDispatcher("ticket-form.jsp");
@@ -394,6 +417,11 @@ public class TicketServlet extends HttpServlet {
         }
 
         return cleanedValue;
+    }
+
+    private void loadTicketFormOptions(HttpServletRequest request) {
+        request.setAttribute("users", userDAO.ListAll());
+        request.setAttribute("devices", deviceDAO.ListAll());
     }
 
     @Override

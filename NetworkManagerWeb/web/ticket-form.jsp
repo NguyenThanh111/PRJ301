@@ -272,29 +272,58 @@
                         </div>
 
                         <div class="col-md-6">
-                            <label class="form-label">Created By User ID</label>
-                            <input class="form-control"
-                                   type="number"
-                                   name="createdBy"
-                                   min="1"
-                                   value="${valueTicket.createdBy > 0
-                                            ? valueTicket.createdBy
-                                            : ''}"
-                                   required>
-                            <div class="hint">Must match an existing user.</div>
+                            <label class="form-label">Created By</label>
+                            <select class="form-select"
+                                    name="createdBy"
+                                    required>
+                                <option value=""
+                                        ${empty valueTicket.createdBy
+                                          or valueTicket.createdBy <= 0
+                                          ? 'selected'
+                                          : ''}>
+                                    Choose a user
+                                </option>
+                                <c:forEach var="user"
+                                           items="${users}">
+                                    <option value="${user.userId}"
+                                            ${valueTicket.createdBy eq user.userId
+                                              ? 'selected'
+                                              : ''}>
+                                        #${user.userId} - ${fn:escapeXml(user.fullName)}
+                                        (${fn:escapeXml(user.username)})
+                                    </option>
+                                </c:forEach>
+                            </select>
+                            <div class="hint">Pick the user who created or reported this ticket.</div>
                         </div>
 
                         <div class="col-md-6">
-                            <label class="form-label">Device ID</label>
-                            <input class="form-control"
-                                   type="number"
-                                   name="deviceId"
-                                   min="1"
-                                   value="${empty valueTicket.deviceId
-                                            ? ''
-                                            : valueTicket.deviceId}"
-                                   placeholder="Optional">
-                            <div class="hint">Leave blank when the ticket is not tied to a device.</div>
+                            <label class="form-label">Related Device</label>
+                            <select class="form-select"
+                                    name="deviceId">
+                                <option value=""
+                                        ${empty valueTicket.deviceId
+                                          ? 'selected'
+                                          : ''}>
+                                    No device assigned
+                                </option>
+                                <c:forEach var="device"
+                                           items="${devices}">
+                                    <option value="${device.deviceId}"
+                                            ${valueTicket.deviceId eq device.deviceId
+                                              ? 'selected'
+                                              : ''}>
+                                        #${device.deviceId} - ${fn:escapeXml(device.deviceName)}
+                                        <c:if test="${not empty device.deviceType}">
+                                            - ${fn:escapeXml(device.deviceType)}
+                                        </c:if>
+                                        <c:if test="${not empty device.ipAddress}">
+                                            - ${fn:escapeXml(device.ipAddress)}
+                                        </c:if>
+                                    </option>
+                                </c:forEach>
+                            </select>
+                            <div class="hint">Leave it unassigned when the ticket is not tied to a device.</div>
                         </div>
                     </div>
 
