@@ -37,7 +37,8 @@ public final class PasswordUtils {
         }
         String[] parts = storedHash.split(SEPARATOR);
         if (parts.length != 3) {
-            return false;
+            // Fallback: If the stored password is not a valid hash, compare as plaintext
+            return password.equals(storedHash);
         }
         try {
             int iterations = Integer.parseInt(parts[0]);
