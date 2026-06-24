@@ -165,4 +165,21 @@ public class NetworkDeviceDAO implements IDAO<NetworkDeviceDTO, Integer> {
         }
         return false;
     }
+
+    public ArrayList<NetworkDeviceDTO> findByOwner(String ownerName) {
+        ArrayList<NetworkDeviceDTO> list = new ArrayList<>();
+        String sql = "SELECT * FROM NetworkDevice WHERE owner = ?";
+        try {
+            Connection connect = DbUtils.getConnection();
+            PreparedStatement ps = connect.prepareStatement(sql);
+            ps.setString(1, ownerName);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                list.add(mapRow(rs));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
 }
