@@ -69,24 +69,61 @@ public class IPAddressManagementDAO {
             int page,
             int pageSize) {
 
+        return getIPsByPage(page, pageSize, null);
+    }
+
+    public ArrayList<IPAddressManagementDTO> getIPsByPage(
+            int page,
+            int pageSize,
+            String keyword) {
+
         if (page < 1) {
             page = 1;
         }
 
         if (pageSize < 1) {
-            pageSize = 8;
+            pageSize = 9;
         }
 
         EntityManager em = JpaUtils.getEntityManager();
 
         try {
+            boolean hasKeyword = hasText(keyword);
+            Integer numericKeyword = parseInteger(keyword);
+            String jpql = "SELECT ip "
+                    + "FROM IPAddressManagementDTO ip ";
+
+            if (hasKeyword) {
+                jpql += "WHERE LOWER(ip.ipAddress) LIKE :keyword "
+                        + "OR LOWER(ip.status) LIKE :keyword ";
+
+                if (numericKeyword != null) {
+                    jpql += "OR ip.ipId = :numberKeyword "
+                            + "OR ip.deviceId = :numberKeyword ";
+                }
+            }
+
+            jpql += "ORDER BY ip.ipId";
+
             TypedQuery<IPAddressManagementDTO> query
                     = em.createQuery(
-                            "SELECT ip "
-                            + "FROM IPAddressManagementDTO ip "
-                            + "ORDER BY ip.ipId",
+                            jpql,
                             IPAddressManagementDTO.class
                     );
+
+            if (hasKeyword) {
+                query.setParameter(
+                        "keyword",
+                        "%" + keyword.trim().toLowerCase() + "%"
+                );
+
+                if (numericKeyword != null) {
+                    query.setParameter(
+                            "numberKeyword",
+                            numericKeyword
+                    );
+                }
+            }
 
             int firstResult = (page - 1) * pageSize;
 
@@ -108,14 +145,47 @@ public class IPAddressManagementDAO {
 
     public long countAllIPs() {
 
+        return countIPs(null);
+    }
+
+    public long countIPs(String keyword) {
+
         EntityManager em = JpaUtils.getEntityManager();
 
         try {
+            boolean hasKeyword = hasText(keyword);
+            Integer numericKeyword = parseInteger(keyword);
+            String jpql = "SELECT COUNT(ip) "
+                    + "FROM IPAddressManagementDTO ip";
+
+            if (hasKeyword) {
+                jpql += " WHERE LOWER(ip.ipAddress) LIKE :keyword "
+                        + "OR LOWER(ip.status) LIKE :keyword";
+
+                if (numericKeyword != null) {
+                    jpql += " OR ip.ipId = :numberKeyword "
+                            + "OR ip.deviceId = :numberKeyword";
+                }
+            }
+
             TypedQuery<Long> query = em.createQuery(
-                    "SELECT COUNT(ip) "
-                    + "FROM IPAddressManagementDTO ip",
+                    jpql,
                     Long.class
             );
+
+            if (hasKeyword) {
+                query.setParameter(
+                        "keyword",
+                        "%" + keyword.trim().toLowerCase() + "%"
+                );
+
+                if (numericKeyword != null) {
+                    query.setParameter(
+                            "numberKeyword",
+                            numericKeyword
+                    );
+                }
+            }
 
             return query.getSingleResult();
 
@@ -125,6 +195,22 @@ public class IPAddressManagementDAO {
 
         } finally {
             em.close();
+        }
+    }
+
+    private boolean hasText(String value) {
+        return value != null && !value.trim().isEmpty();
+    }
+
+    private Integer parseInteger(String value) {
+        if (!hasText(value)) {
+            return null;
+        }
+
+        try {
+            return Integer.valueOf(value.trim());
+        } catch (NumberFormatException e) {
+            return null;
         }
     }
 

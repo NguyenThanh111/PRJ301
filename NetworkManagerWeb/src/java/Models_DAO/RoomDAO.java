@@ -211,22 +211,46 @@ public class RoomDAO implements IDAO<RoomDTO, Integer> {
             int page,
             int pageSize) {
 
+        return getRoomsByPage(page, pageSize, null);
+    }
+
+    public ArrayList<RoomDTO> getRoomsByPage(
+            int page,
+            int pageSize,
+            String keyword) {
+
         if (page < 1) {
             page = 1;
         }
 
         if (pageSize < 1) {
-            pageSize = 5;
+            pageSize = 9;
         }
 
         EntityManager em = JpaUtils.getEntityManager();
 
         try {
+            boolean hasKeyword = hasText(keyword);
+            String jpql = "SELECT r FROM Room r ";
+
+            if (hasKeyword) {
+                jpql += "WHERE LOWER(r.roomName) LIKE :keyword "
+                        + "OR LOWER(r.building) LIKE :keyword ";
+            }
+
+            jpql += "ORDER BY r.roomId";
+
             TypedQuery<RoomDTO> query = em.createQuery(
-                    "SELECT r FROM Room r "
-                    + "ORDER BY r.roomId",
+                    jpql,
                     RoomDTO.class
             );
+
+            if (hasKeyword) {
+                query.setParameter(
+                        "keyword",
+                        "%" + keyword.trim().toLowerCase() + "%"
+                );
+            }
 
             int firstResult = (page - 1) * pageSize;
 
@@ -251,13 +275,33 @@ public class RoomDAO implements IDAO<RoomDTO, Integer> {
     // =========================
     public long countAllRooms() {
 
+        return countRooms(null);
+    }
+
+    public long countRooms(String keyword) {
+
         EntityManager em = JpaUtils.getEntityManager();
 
         try {
+            boolean hasKeyword = hasText(keyword);
+            String jpql = "SELECT COUNT(r) FROM Room r";
+
+            if (hasKeyword) {
+                jpql += " WHERE LOWER(r.roomName) LIKE :keyword "
+                        + "OR LOWER(r.building) LIKE :keyword";
+            }
+
             TypedQuery<Long> query = em.createQuery(
-                    "SELECT COUNT(r) FROM Room r",
+                    jpql,
                     Long.class
             );
+
+            if (hasKeyword) {
+                query.setParameter(
+                        "keyword",
+                        "%" + keyword.trim().toLowerCase() + "%"
+                );
+            }
 
             return query.getSingleResult();
 
@@ -268,5 +312,9 @@ public class RoomDAO implements IDAO<RoomDTO, Integer> {
         } finally {
             em.close();
         }
+    }
+
+    private boolean hasText(String value) {
+        return value != null && !value.trim().isEmpty();
     }
 }

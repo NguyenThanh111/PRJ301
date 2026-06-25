@@ -14,6 +14,7 @@ import javax.servlet.http.HttpServletResponse;
 
 public class VLANServlet extends HttpServlet {
 
+    private static final int PAGE_SIZE = 9;
     private final VLANDAO vlanDAO = new VLANDAO();
     private final RoomDAO roomDAO = new RoomDAO();
 
@@ -67,7 +68,7 @@ public class VLANServlet extends HttpServlet {
             HttpServletResponse response)
             throws ServletException, IOException {
 
-        int pageSize = 5;
+        String keyword = cleanText(request.getParameter("keyword"));
 
         Integer pageValue = parseInteger(
                 request.getParameter("page")
@@ -81,23 +82,21 @@ public class VLANServlet extends HttpServlet {
             currentPage = pageValue;
         }
 
-        long totalRecords = vlanDAO.countAllVLANs();
+        long totalRecords = vlanDAO.countVLANs(keyword);
 
         int totalPages = (int) Math.ceil(
-                (double) totalRecords / pageSize
+                (double) totalRecords / PAGE_SIZE
         );
-
-        if (totalPages > 0 && currentPage > totalPages) {
-            currentPage = totalPages;
-        }
 
         ArrayList<VLANDTO> vlans
                 = vlanDAO.getVLANsByPage(
                         currentPage,
-                        pageSize
+                        PAGE_SIZE,
+                        keyword
                 );
 
         request.setAttribute("vlans", vlans);
+        request.setAttribute("keyword", keyword);
         request.setAttribute("currentPage", currentPage);
         request.setAttribute("totalPages", totalPages);
         request.setAttribute("totalRecords", totalRecords);

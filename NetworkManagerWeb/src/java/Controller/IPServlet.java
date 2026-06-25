@@ -20,6 +20,7 @@ import javax.servlet.http.HttpServletResponse;
 )
 public class IPServlet extends HttpServlet {
 
+    private static final int PAGE_SIZE = 9;
     private final IPAddressManagementDAO ipDAO
             = new IPAddressManagementDAO();
     private final NetworkDeviceDAO deviceDAO
@@ -65,7 +66,9 @@ public class IPServlet extends HttpServlet {
             HttpServletResponse response)
             throws ServletException, IOException {
 
-        final int pageSize = 8;
+        String keyword = cleanText(
+                request.getParameter("keyword")
+        );
 
         Integer pageValue = parseInteger(
                 request.getParameter("page")
@@ -77,22 +80,17 @@ public class IPServlet extends HttpServlet {
             currentPage = pageValue;
         }
 
-        long totalRecords = ipDAO.countAllIPs();
+        long totalRecords = ipDAO.countIPs(keyword);
 
         int totalPages = (int) Math.ceil(
-                (double) totalRecords / pageSize
+                (double) totalRecords / PAGE_SIZE
         );
-
-        if (totalPages > 0
-                && currentPage > totalPages) {
-
-            currentPage = totalPages;
-        }
 
         ArrayList<IPAddressManagementDTO> ipList
                 = ipDAO.getIPsByPage(
                         currentPage,
-                        pageSize
+                        PAGE_SIZE,
+                        keyword
                 );
 
         long availableCount
@@ -105,6 +103,7 @@ public class IPServlet extends HttpServlet {
                 = getAvailableDevices();
 
         request.setAttribute("ipList", ipList);
+        request.setAttribute("keyword", keyword);
         request.setAttribute(
                 "availableDevices",
                 availableDevices
@@ -265,6 +264,7 @@ public class IPServlet extends HttpServlet {
                 request.getContextPath()
                 + "/MainController?action=ipList&page="
                 + page
+                + buildKeywordParameter(request)
         );
     }
 
@@ -302,6 +302,35 @@ public class IPServlet extends HttpServlet {
         } catch (NumberFormatException e) {
             return null;
         }
+    }
+
+    private String cleanText(String value) {
+        if (value == null) {
+            return null;
+        }
+
+        String cleanedValue = value.trim();
+
+        if (cleanedValue.isEmpty()) {
+            return null;
+        }
+
+        return cleanedValue;
+    }
+
+    private String buildKeywordParameter(HttpServletRequest request)
+            throws IOException {
+
+        String keyword = cleanText(request.getParameter("keyword"));
+
+        if (keyword == null) {
+            return "";
+        }
+
+        return "&keyword=" + java.net.URLEncoder.encode(
+                keyword,
+                "UTF-8"
+        );
     }
 
     @Override

@@ -9,6 +9,8 @@
 
 <%@taglib prefix="c"
           uri="http://java.sun.com/jsp/jstl/core"%>
+<%@taglib prefix="fn"
+          uri="http://java.sun.com/jsp/jstl/functions"%>
 
 <!DOCTYPE html>
 <html lang="en">
@@ -137,6 +139,39 @@
         .action-cell {
             min-width: 260px;
         }
+
+        .search-panel {
+            border-bottom: 1px solid #2a3555;
+            padding: 16px;
+        }
+
+        .search-input {
+            background: #0d1728;
+            border-color: #30415f;
+            color: #f2f5ff;
+        }
+
+        .search-input:focus {
+            background: #0d1728;
+            border-color: #22d3ee;
+            color: #f2f5ff;
+            box-shadow: 0 0 0 .15rem rgba(34, 211, 238, .18);
+        }
+
+        .search-input::placeholder {
+            color: #7180a6;
+        }
+
+        .modal-content {
+            background: #10172a;
+            border: 1px solid #2a3555;
+            color: #f2f5ff;
+        }
+
+        .modal-header,
+        .modal-footer {
+            border-color: #2a3555;
+        }
     </style>
 </head>
 
@@ -214,6 +249,37 @@
     </div>
 
     <div class="ip-card">
+
+        <div class="search-panel">
+            <form action="MainController"
+                  method="get"
+                  class="row g-2 align-items-center">
+                <input type="hidden"
+                       name="action"
+                       value="ipList">
+
+                <div class="col-md-8">
+                    <input class="form-control search-input"
+                           type="search"
+                           name="keyword"
+                           value="${fn:escapeXml(keyword)}"
+                           placeholder="Search by IP address, status, IP ID, or device ID">
+                </div>
+
+                <div class="col-md-4 d-flex gap-2">
+                    <button class="btn btn-info flex-fill"
+                            type="submit">
+                        <i class="bi bi-search me-1"></i>
+                        Search
+                    </button>
+
+                    <a class="btn btn-outline-light"
+                       href="MainController?action=ipList">
+                        Clear
+                    </a>
+                </div>
+            </form>
+        </div>
 
         <div class="table-responsive">
 
@@ -313,6 +379,12 @@
                                                        name="page"
                                                        value="${currentPage}">
 
+                                                <c:if test="${not empty keyword}">
+                                                    <input type="hidden"
+                                                           name="keyword"
+                                                           value="${fn:escapeXml(keyword)}">
+                                                </c:if>
+
                                                 <select class="form-select form-select-sm inline-device"
                                                         name="deviceId"
                                                         required>
@@ -338,29 +410,15 @@
                                         </c:when>
 
                                         <c:otherwise>
-                                            <form action="MainController"
-                                                  method="post"
-                                                  class="d-inline"
-                                                  onsubmit="return confirm('Release this IP address?');">
-
-                                                <input type="hidden"
-                                                       name="action"
-                                                       value="ipRelease">
-
-                                                <input type="hidden"
-                                                       name="ipId"
-                                                       value="${ip.ipId}">
-
-                                                <input type="hidden"
-                                                       name="page"
-                                                       value="${currentPage}">
-
-                                                <button class="btn btn-sm btn-outline-warning"
-                                                        type="submit">
-                                                    <i class="bi bi-unlink me-1"></i>
-                                                    Release
-                                                </button>
-                                            </form>
+                                            <button class="btn btn-sm btn-outline-warning release-ip-button"
+                                                    type="button"
+                                                    data-bs-toggle="modal"
+                                                    data-bs-target="#releaseIpModal"
+                                                    data-ip-id="${ip.ipId}"
+                                                    data-ip-address="${fn:escapeXml(ip.ipAddress)}">
+                                                <i class="bi bi-unlink me-1"></i>
+                                                Release
+                                            </button>
                                         </c:otherwise>
                                     </c:choose>
                                 </td>
@@ -396,7 +454,7 @@
     </div>
 
     <!-- Pagination -->
-    <c:if test="${totalPages > 1}">
+    <c:if test="${totalPages > 0}">
 
         <nav class="mt-4"
              aria-label="IP pagination">
@@ -409,8 +467,15 @@
                              ? 'disabled'
                              : ''}">
 
+                    <c:url var="ipPrevUrl" value="MainController">
+                        <c:param name="action" value="ipList" />
+                        <c:param name="page" value="${currentPage - 1}" />
+                        <c:if test="${not empty keyword}">
+                            <c:param name="keyword" value="${keyword}" />
+                        </c:if>
+                    </c:url>
                     <a class="page-link"
-                       href="MainController?action=ipList&page=${currentPage - 1}">
+                       href="${ipPrevUrl}">
                         Previous
                     </a>
                 </li>
@@ -424,8 +489,15 @@
                                  ? 'active'
                                  : ''}">
 
+                        <c:url var="ipPageUrl" value="MainController">
+                            <c:param name="action" value="ipList" />
+                            <c:param name="page" value="${pageNumber}" />
+                            <c:if test="${not empty keyword}">
+                                <c:param name="keyword" value="${keyword}" />
+                            </c:if>
+                        </c:url>
                         <a class="page-link"
-                           href="MainController?action=ipList&page=${pageNumber}">
+                           href="${ipPageUrl}">
 
                             <c:out value="${pageNumber}"/>
                         </a>
@@ -438,8 +510,15 @@
                              ? 'disabled'
                              : ''}">
 
+                    <c:url var="ipNextUrl" value="MainController">
+                        <c:param name="action" value="ipList" />
+                        <c:param name="page" value="${currentPage + 1}" />
+                        <c:if test="${not empty keyword}">
+                            <c:param name="keyword" value="${keyword}" />
+                        </c:if>
+                    </c:url>
                     <a class="page-link"
-                       href="MainController?action=ipList&page=${currentPage + 1}">
+                       href="${ipNextUrl}">
                         Next
                     </a>
                 </li>
@@ -450,6 +529,81 @@
     </c:if>
 
 </div>
+
+<div class="modal fade"
+     id="releaseIpModal"
+     tabindex="-1"
+     aria-labelledby="releaseIpModalLabel"
+     aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <form action="MainController"
+                  method="post">
+                <div class="modal-header">
+                    <h5 class="modal-title"
+                        id="releaseIpModalLabel">
+                        Release IP address?
+                    </h5>
+                    <button type="button"
+                            class="btn-close btn-close-white"
+                            data-bs-dismiss="modal"
+                            aria-label="Close"></button>
+                </div>
+
+                <div class="modal-body">
+                    <input type="hidden"
+                           name="action"
+                           value="ipRelease">
+                    <input type="hidden"
+                           name="ipId"
+                           id="releaseIpId">
+                    <input type="hidden"
+                           name="page"
+                           value="${currentPage}">
+                    <c:if test="${not empty keyword}">
+                        <input type="hidden"
+                               name="keyword"
+                               value="${fn:escapeXml(keyword)}">
+                    </c:if>
+
+                    <p class="mb-2">
+                        Are you sure you want to release
+                        <span class="ip-address"
+                              id="releaseIpAddress"></span>?
+                    </p>
+                    <p class="text-secondary mb-0">
+                        The device will no longer keep this assigned IP.
+                    </p>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button"
+                            class="btn btn-outline-light"
+                            data-bs-dismiss="modal">
+                        Cancel
+                    </button>
+                    <button type="submit"
+                            class="btn btn-warning">
+                        <i class="bi bi-unlink me-1"></i>
+                        Release
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    document.querySelectorAll('.release-ip-button').forEach(function (button) {
+        button.addEventListener('click', function () {
+            document.getElementById('releaseIpId').value =
+                    button.getAttribute('data-ip-id');
+            document.getElementById('releaseIpAddress').textContent =
+                    button.getAttribute('data-ip-address');
+        });
+    });
+</script>
 
 </body>
 </html>

@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityTransaction;
+import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
@@ -124,25 +125,108 @@ public class SupportTicketDAO implements IDAO<SupportTicketDTO, Integer> {
 
     @Override
     public ArrayList<SupportTicketDTO> ListAll() {
+        return getTicketsByPage(1, Integer.MAX_VALUE, null);
+    }
+
+    public ArrayList<SupportTicketDTO> getTicketsByPage(
+            int page,
+            int pageSize,
+            String keyword) {
+
+        if (page < 1) {
+            page = 1;
+        }
+
+        if (pageSize < 1) {
+            pageSize = 9;
+        }
+
         EntityManager em = JpaUtils.getEntityManager();
 
         try {
-            CriteriaBuilder builder = em.getCriteriaBuilder();
-            CriteriaQuery<SupportTicketDTO> query
-                    = builder.createQuery(SupportTicketDTO.class);
-            Root<SupportTicketDTO> root
-                    = query.from(SupportTicketDTO.class);
+            boolean hasKeyword = hasText(keyword);
+            Integer numericKeyword = parseInteger(keyword);
+            String jpql = "SELECT t FROM SupportTicket t ";
 
-            query.select(root);
-            query.orderBy(builder.desc(root.get("ticketId")));
+            if (hasKeyword) {
+                jpql += "WHERE LOWER(t.title) LIKE :keyword "
+                        + "OR LOWER(t.description) LIKE :keyword "
+                        + "OR LOWER(t.status) LIKE :keyword ";
 
-            List<SupportTicketDTO> result
-                    = em.createQuery(query).getResultList();
+                if (numericKeyword != null) {
+                    jpql += "OR t.ticketId = :numberKeyword "
+                            + "OR t.createdBy = :numberKeyword "
+                            + "OR t.deviceId = :numberKeyword ";
+                }
+            }
+
+            jpql += "ORDER BY t.ticketId DESC";
+
+            TypedQuery<SupportTicketDTO> query
+                    = em.createQuery(jpql, SupportTicketDTO.class);
+
+            if (hasKeyword) {
+                query.setParameter(
+                        "keyword",
+                        "%" + keyword.trim().toLowerCase() + "%"
+                );
+
+                if (numericKeyword != null) {
+                    query.setParameter("numberKeyword", numericKeyword);
+                }
+            }
+
+            query.setFirstResult((page - 1) * pageSize);
+            query.setMaxResults(pageSize);
+
+            List<SupportTicketDTO> result = query.getResultList();
 
             return new ArrayList<>(result);
         } catch (Exception e) {
             e.printStackTrace();
             return new ArrayList<>();
+        } finally {
+            em.close();
+        }
+    }
+
+    public long countTickets(String keyword) {
+        EntityManager em = JpaUtils.getEntityManager();
+
+        try {
+            boolean hasKeyword = hasText(keyword);
+            Integer numericKeyword = parseInteger(keyword);
+            String jpql = "SELECT COUNT(t) FROM SupportTicket t";
+
+            if (hasKeyword) {
+                jpql += " WHERE LOWER(t.title) LIKE :keyword "
+                        + "OR LOWER(t.description) LIKE :keyword "
+                        + "OR LOWER(t.status) LIKE :keyword";
+
+                if (numericKeyword != null) {
+                    jpql += " OR t.ticketId = :numberKeyword "
+                            + "OR t.createdBy = :numberKeyword "
+                            + "OR t.deviceId = :numberKeyword";
+                }
+            }
+
+            TypedQuery<Long> query = em.createQuery(jpql, Long.class);
+
+            if (hasKeyword) {
+                query.setParameter(
+                        "keyword",
+                        "%" + keyword.trim().toLowerCase() + "%"
+                );
+
+                if (numericKeyword != null) {
+                    query.setParameter("numberKeyword", numericKeyword);
+                }
+            }
+
+            return query.getSingleResult();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return 0;
         } finally {
             em.close();
         }
@@ -291,6 +375,22 @@ public class SupportTicketDAO implements IDAO<SupportTicketDTO, Integer> {
             return new ArrayList<>();
         } finally {
             em.close();
+        }
+    }
+
+    private boolean hasText(String value) {
+        return value != null && !value.trim().isEmpty();
+    }
+
+    private Integer parseInteger(String value) {
+        if (!hasText(value)) {
+            return null;
+        }
+
+        try {
+            return Integer.valueOf(value.trim());
+        } catch (NumberFormatException e) {
+            return null;
         }
     }
 }

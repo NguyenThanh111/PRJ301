@@ -13,6 +13,7 @@ import javax.servlet.http.HttpServletResponse;
 
 public class RoomServlet extends HttpServlet {
 
+    private static final int PAGE_SIZE = 9;
     private final RoomDAO roomDAO = new RoomDAO();
 
     protected void processRequest(HttpServletRequest request,
@@ -65,9 +66,30 @@ public class RoomServlet extends HttpServlet {
             HttpServletResponse response)
             throws ServletException, IOException {
 
-        ArrayList<RoomDTO> rooms = roomDAO.ListAll();
+        String keyword = cleanText(request.getParameter("keyword"));
+        Integer pageValue = parseInteger(request.getParameter("page"));
+        int currentPage = 1;
 
+        if (pageValue != null && pageValue > 0) {
+            currentPage = pageValue;
+        }
+
+        long totalRecords = roomDAO.countRooms(keyword);
+        int totalPages = (int) Math.ceil(
+                (double) totalRecords / PAGE_SIZE
+        );
+
+        ArrayList<RoomDTO> rooms = roomDAO.getRoomsByPage(
+                currentPage,
+                PAGE_SIZE,
+                keyword
+        );
+
+        request.setAttribute("keyword", keyword);
         request.setAttribute("rooms", rooms);
+        request.setAttribute("currentPage", currentPage);
+        request.setAttribute("totalPages", totalPages);
+        request.setAttribute("totalRecords", totalRecords);
 
         RequestDispatcher rd
                 = request.getRequestDispatcher("room-list.jsp");

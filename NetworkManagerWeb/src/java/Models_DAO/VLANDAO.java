@@ -214,22 +214,47 @@ public class VLANDAO implements IDAO<VLANDTO, Integer> {
             int page,
             int pageSize) {
 
+        return getVLANsByPage(page, pageSize, null);
+    }
+
+    public ArrayList<VLANDTO> getVLANsByPage(
+            int page,
+            int pageSize,
+            String keyword) {
+
         if (page < 1) {
             page = 1;
         }
 
         if (pageSize < 1) {
-            pageSize = 5;
+            pageSize = 9;
         }
 
         EntityManager em = JpaUtils.getEntityManager();
 
         try {
+            boolean hasKeyword = hasText(keyword);
+            String jpql = "SELECT v FROM VLAN v ";
+
+            if (hasKeyword) {
+                jpql += "WHERE LOWER(v.vlanName) LIKE :keyword "
+                        + "OR LOWER(v.subnet) LIKE :keyword "
+                        + "OR LOWER(v.purpose) LIKE :keyword ";
+            }
+
+            jpql += "ORDER BY v.vlanId";
+
             TypedQuery<VLANDTO> query = em.createQuery(
-                    "SELECT v FROM VLAN v "
-                    + "ORDER BY v.vlanId",
+                    jpql,
                     VLANDTO.class
             );
+
+            if (hasKeyword) {
+                query.setParameter(
+                        "keyword",
+                        "%" + keyword.trim().toLowerCase() + "%"
+                );
+            }
 
             int firstResult = (page - 1) * pageSize;
 
@@ -251,13 +276,34 @@ public class VLANDAO implements IDAO<VLANDTO, Integer> {
 
     public long countAllVLANs() {
 
+        return countVLANs(null);
+    }
+
+    public long countVLANs(String keyword) {
+
         EntityManager em = JpaUtils.getEntityManager();
 
         try {
+            boolean hasKeyword = hasText(keyword);
+            String jpql = "SELECT COUNT(v) FROM VLAN v";
+
+            if (hasKeyword) {
+                jpql += " WHERE LOWER(v.vlanName) LIKE :keyword "
+                        + "OR LOWER(v.subnet) LIKE :keyword "
+                        + "OR LOWER(v.purpose) LIKE :keyword";
+            }
+
             TypedQuery<Long> query = em.createQuery(
-                    "SELECT COUNT(v) FROM VLAN v",
+                    jpql,
                     Long.class
             );
+
+            if (hasKeyword) {
+                query.setParameter(
+                        "keyword",
+                        "%" + keyword.trim().toLowerCase() + "%"
+                );
+            }
 
             return query.getSingleResult();
 
@@ -268,6 +314,10 @@ public class VLANDAO implements IDAO<VLANDTO, Integer> {
         } finally {
             em.close();
         }
+    }
+
+    private boolean hasText(String value) {
+        return value != null && !value.trim().isEmpty();
     }
 
     public boolean roomExists(Integer roomId) {

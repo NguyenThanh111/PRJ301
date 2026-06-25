@@ -492,6 +492,25 @@
                         .ipam-input { width:112px; background:rgba(22,31,54,.9); border:1px solid var(--border); color:var(--text-primary); border-radius:6px; padding:4px 8px; font-size:.72rem; outline:none; }
                         .ipam-input:focus { border-color:#22d3ee; box-shadow:0 0 0 2px rgba(34,211,238,.12); }
                         .ipam-row[style*="display: none"] { display:none !important; }
+                        .module-tools { display:flex; justify-content:space-between; align-items:center; gap:12px; padding:14px 16px; border-bottom:1px solid rgba(42,53,85,.55); flex-wrap:wrap; }
+                        .module-search { min-width:260px; flex:1; background:#0f162b; border:1px solid var(--border); color:var(--text-primary); border-radius:7px; padding:8px 11px; font-size:.82rem; outline:none; }
+                        .module-search:focus { border-color:#8b5cf6; box-shadow:0 0 0 .16rem rgba(139,92,246,.16); }
+                        .module-search::placeholder { color:var(--text-muted); }
+                        .module-pager { display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+                        .module-page-btn { border:1px solid rgba(139,92,246,.42); background:rgba(139,92,246,.12); color:#d8b4fe; border-radius:7px; min-width:32px; height:32px; padding:0 9px; font-size:.78rem; font-weight:700; }
+                        .module-page-btn.active { background:#8b5cf6; color:white; }
+                        .module-page-btn:disabled { opacity:.42; cursor:not-allowed; }
+                        .module-page-ellipsis { color:var(--text-muted); padding:0 2px; font-weight:700; }
+                        .module-count { color:var(--text-muted); font-size:.78rem; white-space:nowrap; }
+                        .ticket-title { font-weight:700; color:var(--text-primary); }
+                        .ticket-desc { font-size:.75rem; color:var(--text-muted); margin-top:3px; max-width:360px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+                        .ticket-status { display:inline-flex; align-items:center; border-radius:999px; padding:4px 9px; font-size:.7rem; font-weight:800; border:1px solid rgba(148,163,184,.28); background:rgba(148,163,184,.12); color:#cbd5e1; }
+                        .ticket-status.status-open { border-color:rgba(52,211,153,.32); background:rgba(52,211,153,.12); color:#86efac; }
+                        .ticket-status.status-progress { border-color:rgba(96,165,250,.32); background:rgba(96,165,250,.12); color:#bfdbfe; }
+                        .ticket-status.status-resolved { border-color:rgba(168,85,247,.32); background:rgba(168,85,247,.12); color:#d8b4fe; }
+                        .room-name-cell { display:flex; align-items:center; gap:9px; font-weight:700; }
+                        .room-icon { width:30px; height:30px; border-radius:8px; display:flex; align-items:center; justify-content:center; background:rgba(34,211,238,.1); color:#67e8f9; border:1px solid rgba(34,211,238,.24); }
+                        .room-chip { display:inline-flex; align-items:center; border-radius:6px; padding:2px 8px; background:rgba(139,92,246,.08); color:#c4b5fd; border:1px solid rgba(139,92,246,.22); font-size:.74rem; font-weight:700; }
                         @media (max-width: 768px) { .ipam-summary { grid-template-columns:1fr; } }
                     </style>
                 </head>
@@ -928,6 +947,18 @@
                                                         </div>
                                                     </div>
 
+                                                    <div class="module-tools"
+                                                         data-module-tools="ipmanage">
+                                                        <input class="module-search"
+                                                               type="search"
+                                                               data-module-search="ipmanage"
+                                                               placeholder="Search by IP address, status, IP ID, or device ID">
+                                                        <span class="module-count"
+                                                              data-module-count="ipmanage"></span>
+                                                        <div class="module-pager"
+                                                             data-module-pager="ipmanage"></div>
+                                                    </div>
+
                                                     <div style="overflow-x:auto;">
                                                         <table class="rt-table">
                                                             <thead>
@@ -950,7 +981,9 @@
                                                                                 : "ASSIGNED";
                                                                 %>
                                                                 <tr class="ipam-row"
-                                                                    data-ip-status="<%= filterStatus %>">
+                                                                    data-module-row="ipmanage"
+                                                                    data-ip-status="<%= filterStatus %>"
+                                                                    data-search="<%= ip.getIpId() %> <%= ip.getIpAddress() %> <%= ip.getStatus() %> <%= ip.getDeviceId() == null ? "" : ip.getDeviceId() %>">
                                                                     <td>
                                                                         <span class="ipam-address">
                                                                             <i class="bi bi-router"></i>
@@ -1010,24 +1043,15 @@
                                                                             </button>
                                                                         </form>
                                                                         <% } else { %>
-                                                                        <form action="MainController"
-                                                                              method="post"
-                                                                              onsubmit="return confirm('Release this IP address?');">
-                                                                            <input type="hidden"
-                                                                                   name="action"
-                                                                                   value="ipRelease">
-                                                                            <input type="hidden"
-                                                                                   name="ipId"
-                                                                                   value="<%= ip.getIpId() %>">
-                                                                            <input type="hidden"
-                                                                                   name="returnTo"
-                                                                                   value="dashboard">
-                                                                            <button class="btn btn-sm btn-outline-warning"
-                                                                                    type="submit">
-                                                                                <i class="bi bi-unlink me-1"></i>
-                                                                                Release
-                                                                            </button>
-                                                                        </form>
+                                                                        <button class="btn btn-sm btn-outline-warning dashboard-release-ip"
+                                                                                type="button"
+                                                                                data-bs-toggle="modal"
+                                                                                data-bs-target="#dashboardReleaseIpModal"
+                                                                                data-ip-id="<%= ip.getIpId() %>"
+                                                                                data-ip-address="<%= ip.getIpAddress() %>">
+                                                                            <i class="bi bi-unlink me-1"></i>
+                                                                            Release
+                                                                        </button>
                                                                         <% } %>
                                                                     </td>
                                                                 </tr>
@@ -1163,6 +1187,18 @@
 
                                                  <div class="section-card-body" style="padding:0;">
 
+                                                     <div class="module-tools"
+                                                          data-module-tools="vlan">
+                                                         <input class="module-search"
+                                                                type="search"
+                                                                data-module-search="vlan"
+                                                                placeholder="Search by VLAN name, subnet, purpose, or room">
+                                                         <span class="module-count"
+                                                               data-module-count="vlan"></span>
+                                                         <div class="module-pager"
+                                                              data-module-pager="vlan"></div>
+                                                     </div>
+
                                                      <div style="overflow-x:auto;">
 
                                                          <table class="rt-table">
@@ -1210,7 +1246,8 @@
                                                                          for (VLANDTO vlan : vlanList) {
                                                                  %>
 
-                                                                 <tr>
+                                                                 <tr data-module-row="vlan"
+                                                                     data-search="<%= vlan.getVlanId() %> <%= vlan.getVlanName() %> <%= vlan.getSubnet() == null ? "" : vlan.getSubnet() %> <%= vlan.getPurpose() == null ? "" : vlan.getPurpose() %> <%= vlan.getRoomId() == null ? "" : vlan.getRoomId() %>">
                                                                      <td>
                                                                          <span class="rt-id">
                                                                              #<%= vlan.getVlanId() %>
@@ -1469,18 +1506,29 @@
                                                         Add Ticket
                                                     </a>
                                                 </div>
-                                                <div class="section-card-body">
-                                                    <div class="table-responsive">
-                                                        <table class="table table-dark table-striped table-hover align-middle mb-0">
+                                                <div class="section-card-body" style="padding:0;">
+                                                    <div class="module-tools"
+                                                         data-module-tools="tickets">
+                                                        <input class="module-search"
+                                                               type="search"
+                                                               data-module-search="tickets"
+                                                               placeholder="Search by title, status, user id, or device id">
+                                                        <span class="module-count"
+                                                              data-module-count="tickets"></span>
+                                                        <div class="module-pager"
+                                                             data-module-pager="tickets"></div>
+                                                    </div>
+                                                    <div style="overflow-x:auto;">
+                                                        <table class="rt-table">
                                                             <thead>
                                                                 <tr>
-                                                                    <th>ID</th>
-                                                                    <th>Title</th>
-                                                                    <th>Status</th>
-                                                                    <th>Created Date</th>
-                                                                    <th>Created By</th>
-                                                                    <th>Device</th>
-                                                                    <th>Actions</th>
+                                                                    <th><i class="bi bi-hash me-1"></i>ID</th>
+                                                                    <th><i class="bi bi-ticket-perforated me-1"></i>Title</th>
+                                                                    <th><i class="bi bi-activity me-1"></i>Status</th>
+                                                                    <th><i class="bi bi-calendar3 me-1"></i>Created Date</th>
+                                                                    <th><i class="bi bi-person me-1"></i>Created By</th>
+                                                                    <th><i class="bi bi-cpu me-1"></i>Device</th>
+                                                                    <th><i class="bi bi-three-dots me-1"></i>Actions</th>
                                                                 </tr>
                                                             </thead>
 
@@ -1489,21 +1537,32 @@
                                                                     for (SupportTicketDTO ticket : ticketList) {
                                                                 %>
 
-                                                                <tr>
-                                                                    <td><%= ticket.getTicketId() %></td>
+                                                                <tr data-module-row="tickets"
+                                                                    data-search="<%= ticket.getTicketId() %> <%= ticket.getTitle() %> <%= ticket.getDescription() == null ? "" : ticket.getDescription() %> <%= ticket.getStatus() %> <%= ticket.getCreatedBy() %> <%= ticket.getDeviceId() == null ? "" : ticket.getDeviceId() %>">
                                                                     <td>
-                                                                        <div style="font-weight:600;">
+                                                                        <span class="rt-id">
+                                                                            #<%= ticket.getTicketId() %>
+                                                                        </span>
+                                                                    </td>
+                                                                    <td>
+                                                                        <div class="ticket-title">
                                                                             <%= ticket.getTitle() %>
                                                                         </div>
                                                                         <% if (ticket.getDescription() != null
                                                                                 && !ticket.getDescription().trim().isEmpty()) { %>
-                                                                        <div style="font-size:12px;color:#95a3c8;">
+                                                                        <div class="ticket-desc">
                                                                             <%= ticket.getDescription() %>
                                                                         </div>
                                                                         <% } %>
                                                                     </td>
                                                                     <td>
-                                                                        <span class="badge text-bg-secondary">
+                                                                        <span class="ticket-status <%= "OPEN".equals(ticket.getStatus())
+                                                                                ? "status-open"
+                                                                                : ("IN_PROGRESS".equals(ticket.getStatus())
+                                                                                        ? "status-progress"
+                                                                                        : ("RESOLVED".equals(ticket.getStatus())
+                                                                                                ? "status-resolved"
+                                                                                                : "")) %>">
                                                                             <%= ticket.getStatus() %>
                                                                         </span>
                                                                     </td>
@@ -1512,17 +1571,26 @@
                                                                                 ? "Not set"
                                                                                 : ticketDateFormat.format(ticket.getCreatedDate()) %>
                                                                     </td>
-                                                                    <td>User #<%= ticket.getCreatedBy() %></td>
                                                                     <td>
-                                                                        <%= ticket.getDeviceId() == null
-                                                                                ? "Not assigned"
-                                                                                : "Device #" + ticket.getDeviceId() %>
+                                                                        <span class="room-chip">
+                                                                            User #<%= ticket.getCreatedBy() %>
+                                                                        </span>
                                                                     </td>
                                                                     <td>
-                                                                        <div class="d-flex flex-wrap gap-2">
-                                                                            <a class="btn btn-sm btn-outline-light"
-                                                                               href="MainController?action=ticketEdit&id=<%= ticket.getTicketId() %>&returnTo=dashboard">
-                                                                                Edit
+                                                                        <% if (ticket.getDeviceId() == null) { %>
+                                                                        <span style="color:var(--text-muted);">Not assigned</span>
+                                                                        <% } else { %>
+                                                                        <span class="room-chip">
+                                                                            Device #<%= ticket.getDeviceId() %>
+                                                                        </span>
+                                                                        <% } %>
+                                                                    </td>
+                                                                    <td>
+                                                                        <div class="rt-actions">
+                                                                            <a class="rt-btn rt-btn-edit"
+                                                                               href="MainController?action=ticketEdit&id=<%= ticket.getTicketId() %>&returnTo=dashboard"
+                                                                               title="Edit Ticket">
+                                                                                <i class="bi bi-pencil-fill"></i>
                                                                             </a>
 
                                                                             <form action="MainController"
@@ -1538,7 +1606,7 @@
                                                                                        value="dashboard">
                                                                                 <select class="form-select form-select-sm"
                                                                                         name="status"
-                                                                                        style="width:130px;background:#0f162b;border-color:var(--border);color:#dbe3ff;font-size:12px;"
+                                                                                        style="width:128px;background:#0f162b;border-color:var(--border);color:#dbe3ff;font-size:12px;"
                                                                                         onchange="this.form.submit()">
                                                                                     <option value="OPEN"
                                                                                             <%= "OPEN".equals(ticket.getStatus()) ? "selected" : "" %>>
@@ -1572,8 +1640,9 @@
                                                                                        name="returnTo"
                                                                                        value="dashboard">
                                                                                 <button class="btn btn-sm btn-outline-danger"
-                                                                                        type="submit">
-                                                                                    Delete
+                                                                                        type="submit"
+                                                                                        title="Delete Ticket">
+                                                                                    <i class="bi bi-trash3-fill"></i>
                                                                                 </button>
                                                                             </form>
                                                                         </div>
@@ -1967,18 +2036,29 @@
                                                     </a>
                                                 </div>
 
-                                                <div class="section-card-body">
-                                                    <div class="table-responsive">
+                                                <div class="section-card-body" style="padding:0;">
+                                                    <div class="module-tools"
+                                                         data-module-tools="rooms">
+                                                        <input class="module-search"
+                                                               type="search"
+                                                               data-module-search="rooms"
+                                                               placeholder="Search by room name or building">
+                                                        <span class="module-count"
+                                                              data-module-count="rooms"></span>
+                                                        <div class="module-pager"
+                                                             data-module-pager="rooms"></div>
+                                                    </div>
+                                                    <div style="overflow-x:auto;">
 
-                                                        <table class="table table-dark table-striped table-hover align-middle mb-0">
+                                                        <table class="rt-table">
                                                             <thead>
                                                                 <tr>
-                                                                    <th>ID</th>
-                                                                    <th>Room Name</th>
-                                                                    <th>Building</th>
-                                                                    <th>Floor</th>
-                                                                    <th>Capacity</th>
-                                                                    <th>Actions</th>
+                                                                    <th><i class="bi bi-hash me-1"></i>ID</th>
+                                                                    <th><i class="bi bi-building me-1"></i>Room Name</th>
+                                                                    <th><i class="bi bi-bank me-1"></i>Building</th>
+                                                                    <th><i class="bi bi-layers me-1"></i>Floor</th>
+                                                                    <th><i class="bi bi-people me-1"></i>Capacity</th>
+                                                                    <th><i class="bi bi-three-dots me-1"></i>Actions</th>
                                                                 </tr>
                                                             </thead>
 
@@ -1987,21 +2067,51 @@
                                                                     for (RoomDTO room : roomList) {
                                                                 %>
 
-                                                                <tr>
-                                                                    <td><%= room.getRoomId() %></td>
-                                                                    <td><%= room.getRoomName() %></td>
-                                                                    <td><%= room.getBuilding() == null
-                                                                            ? "Not specified"
-                                                                            : room.getBuilding() %></td>
-                                                                    <td><%= room.getFloor() %></td>
-                                                                    <td><%= room.getCapacity() %></td>
+                                                                <tr data-module-row="rooms"
+                                                                    data-search="<%= room.getRoomId() %> <%= room.getRoomName() %> <%= room.getBuilding() == null ? "" : room.getBuilding() %> <%= room.getFloor() %> <%= room.getCapacity() %>">
+                                                                    <td>
+                                                                        <span class="rt-id">
+                                                                            #<%= room.getRoomId() %>
+                                                                        </span>
+                                                                    </td>
+                                                                    <td>
+                                                                        <div class="room-name-cell">
+                                                                            <span class="room-icon">
+                                                                                <i class="bi bi-door-open"></i>
+                                                                            </span>
+                                                                            <span><%= room.getRoomName() %></span>
+                                                                        </div>
+                                                                    </td>
+                                                                    <td>
+                                                                        <% if (room.getBuilding() == null
+                                                                                || room.getBuilding().trim().isEmpty()) { %>
+                                                                        <span style="color:var(--text-muted);">
+                                                                            Not specified
+                                                                        </span>
+                                                                        <% } else { %>
+                                                                        <span class="room-chip">
+                                                                            <%= room.getBuilding() %>
+                                                                        </span>
+                                                                        <% } %>
+                                                                    </td>
+                                                                    <td>
+                                                                        <span class="room-chip">
+                                                                            Floor <%= room.getFloor() %>
+                                                                        </span>
+                                                                    </td>
+                                                                    <td>
+                                                                        <span class="room-chip">
+                                                                            <%= room.getCapacity() %> seats
+                                                                        </span>
+                                                                    </td>
 
                                                                     <td>
-                                                                        <div class="d-flex gap-2">
+                                                                        <div class="rt-actions">
 
-                                                                            <a class="btn btn-sm btn-outline-light"
-                                                                               href="MainController?action=roomEdit&id=<%= room.getRoomId() %>&returnTo=dashboard">
-                                                                                Edit
+                                                                            <a class="rt-btn rt-btn-edit"
+                                                                               href="MainController?action=roomEdit&id=<%= room.getRoomId() %>&returnTo=dashboard"
+                                                                               title="Edit Room">
+                                                                                <i class="bi bi-pencil-fill"></i>
                                                                             </a>
 
                                                                             <form action="MainController"
@@ -2020,9 +2130,10 @@
                                                                                        name="returnTo"
                                                                                        value="dashboard">
 
-                                                                                <button class="btn btn-sm btn-outline-danger"
-                                                                                        type="submit">
-                                                                                    Delete
+                                                                                <button class="rt-btn rt-btn-del"
+                                                                                        type="submit"
+                                                                                        title="Delete Room">
+                                                                                    <i class="bi bi-trash3-fill"></i>
                                                                                 </button>
                                                                             </form>
 
@@ -2100,6 +2211,65 @@
                         </div>
                     </div>
 
+                    <div class="modal fade"
+                         id="dashboardReleaseIpModal"
+                         tabindex="-1"
+                         aria-labelledby="dashboardReleaseIpModalLabel"
+                         aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered">
+                            <div class="modal-content"
+                                 style="background:#10172a;border:1px solid var(--border);color:var(--text-primary);">
+                                <form action="MainController"
+                                      method="post">
+                                    <div class="modal-header"
+                                         style="border-color:var(--border);">
+                                        <h5 class="modal-title"
+                                            id="dashboardReleaseIpModalLabel">
+                                            Release IP address?
+                                        </h5>
+                                        <button type="button"
+                                                class="btn-close btn-close-white"
+                                                data-bs-dismiss="modal"
+                                                aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <input type="hidden"
+                                               name="action"
+                                               value="ipRelease">
+                                        <input type="hidden"
+                                               name="ipId"
+                                               id="dashboardReleaseIpId">
+                                        <input type="hidden"
+                                               name="returnTo"
+                                               value="dashboard">
+
+                                        <p class="mb-2">
+                                            Are you sure you want to release
+                                            <strong id="dashboardReleaseIpAddress"></strong>?
+                                        </p>
+                                        <p class="text-secondary mb-0">
+                                            The device will no longer keep this assigned IP.
+                                        </p>
+                                    </div>
+                                    <div class="modal-footer"
+                                         style="border-color:var(--border);">
+                                        <button type="button"
+                                                class="btn btn-outline-light"
+                                                data-bs-dismiss="modal">
+                                            Cancel
+                                        </button>
+                                        <button type="submit"
+                                                class="btn btn-warning">
+                                            <i class="bi bi-unlink me-1"></i>
+                                            Release
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
                     <script>
                         const pageTitles = {
                             dashboard:     { title: 'Dashboard',             breadcrumb: '/ Overview' },
@@ -2148,16 +2318,153 @@
                             if (breadEl) breadEl.textContent = info.breadcrumb;
                         }
 
-                        function filterIpam(status) {
-                            document.querySelectorAll('.ipam-row').forEach(function(row) {
-                                var rowStatus = row.getAttribute('data-ip-status');
-                                row.style.display = status === 'ALL' || rowStatus === status
-                                        ? ''
-                                        : 'none';
+                        var modulePageSize = 9;
+                        var moduleState = {
+                            ipmanage: { page: 1, keyword: '', status: 'ALL' },
+                            vlan: { page: 1, keyword: '', status: 'ALL' },
+                            tickets: { page: 1, keyword: '', status: 'ALL' },
+                            rooms: { page: 1, keyword: '', status: 'ALL' }
+                        };
+
+                        function getModuleRows(moduleKey) {
+                            return Array.prototype.slice.call(
+                                    document.querySelectorAll('[data-module-row="' + moduleKey + '"]')
+                            );
+                        }
+
+                        function rowMatchesModule(row, state) {
+                            var text = (row.getAttribute('data-search') || row.textContent || '').toLowerCase();
+                            var keywordOk = !state.keyword || text.indexOf(state.keyword) >= 0;
+                            var statusOk = state.status === 'ALL'
+                                    || row.getAttribute('data-ip-status') === state.status;
+                            return keywordOk && statusOk;
+                        }
+
+                        function renderModuleTable(moduleKey) {
+                            var state = moduleState[moduleKey];
+                            if (!state) return;
+
+                            var rows = getModuleRows(moduleKey);
+                            var matchedRows = rows.filter(function(row) {
+                                return rowMatchesModule(row, state);
                             });
+
+                            var totalPages = Math.ceil(matchedRows.length / modulePageSize);
+                            var start = (state.page - 1) * modulePageSize;
+                            var end = start + modulePageSize;
+
+                            rows.forEach(function(row) {
+                                row.style.display = 'none';
+                            });
+
+                            matchedRows.slice(start, end).forEach(function(row) {
+                                row.style.display = '';
+                            });
+
+                            var countEl = document.querySelector('[data-module-count="' + moduleKey + '"]');
+                            if (countEl) {
+                                countEl.textContent = matchedRows.length + ' records';
+                            }
+
+                            renderModulePager(moduleKey, totalPages);
+                        }
+
+                        function renderModulePager(moduleKey, totalPages) {
+                            var state = moduleState[moduleKey];
+                            var pager = document.querySelector('[data-module-pager="' + moduleKey + '"]');
+                            if (!pager) return;
+
+                            pager.innerHTML = '';
+
+                            if (totalPages <= 0) {
+                                return;
+                            }
+
+                            var prev = createModulePageButton('Prev', state.page - 1, moduleKey);
+                            prev.disabled = state.page <= 1;
+                            pager.appendChild(prev);
+
+                            getVisibleModulePages(state.page, totalPages).forEach(function(page) {
+                                if (page === '...') {
+                                    var ellipsis = document.createElement('span');
+                                    ellipsis.className = 'module-page-ellipsis';
+                                    ellipsis.textContent = '...';
+                                    pager.appendChild(ellipsis);
+                                    return;
+                                }
+
+                                var btn = createModulePageButton(page, page, moduleKey);
+                                if (page === state.page) {
+                                    btn.classList.add('active');
+                                }
+                                pager.appendChild(btn);
+                            });
+
+                            var next = createModulePageButton('Next', state.page + 1, moduleKey);
+                            next.disabled = state.page >= totalPages;
+                            pager.appendChild(next);
+                        }
+
+                        function getVisibleModulePages(currentPage, totalPages) {
+                            if (totalPages <= 5) {
+                                var allPages = [];
+                                for (var i = 1; i <= totalPages; i++) {
+                                    allPages.push(i);
+                                }
+                                return allPages;
+                            }
+
+                            if (currentPage <= 3) {
+                                return [1, 2, 3, '...', totalPages];
+                            }
+
+                            if (currentPage >= totalPages - 2) {
+                                return [1, '...', totalPages - 2, totalPages - 1, totalPages];
+                            }
+
+                            return [1, '...', currentPage - 1, currentPage, currentPage + 1, '...', totalPages];
+                        }
+
+                        function createModulePageButton(label, page, moduleKey) {
+                            var button = document.createElement('button');
+                            button.type = 'button';
+                            button.className = 'module-page-btn';
+                            button.textContent = label;
+                            button.addEventListener('click', function() {
+                                moduleState[moduleKey].page = page;
+                                renderModuleTable(moduleKey);
+                            });
+                            return button;
+                        }
+
+                        function filterIpam(status) {
+                            moduleState.ipmanage.status = status;
+                            moduleState.ipmanage.page = 1;
+                            renderModuleTable('ipmanage');
                         }
 
                         document.addEventListener('DOMContentLoaded', function() {
+                            Object.keys(moduleState).forEach(function(moduleKey) {
+                                var input = document.querySelector('[data-module-search="' + moduleKey + '"]');
+                                if (input) {
+                                    input.addEventListener('input', function() {
+                                        moduleState[moduleKey].keyword = input.value.trim().toLowerCase();
+                                        moduleState[moduleKey].page = 1;
+                                        renderModuleTable(moduleKey);
+                                    });
+                                }
+                                renderModuleTable(moduleKey);
+                            });
+
+                            document.querySelectorAll('.dashboard-release-ip').forEach(function(button) {
+                                button.addEventListener('click', function() {
+                                    var ipId = button.getAttribute('data-ip-id');
+                                    var ipAddress = button.getAttribute('data-ip-address');
+                                    document.getElementById('dashboardReleaseIpId').value = ipId;
+                                    document.getElementById('dashboardReleaseIpAddress').textContent = ipAddress;
+                                });
+                            });
+
                             var params = new URLSearchParams(window.location.search);
                             var page = params.get('page');
                             if (page && pageTitles[page]) {

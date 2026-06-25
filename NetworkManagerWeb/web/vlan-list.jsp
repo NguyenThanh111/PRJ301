@@ -1,6 +1,7 @@
 
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%@taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions"%>
 
 <!DOCTYPE html>
 <html>
@@ -53,6 +54,35 @@
         </c:if>
 
         <div class="card shadow-sm">
+            <div class="card-body border-bottom">
+                <form action="MainController"
+                      method="get"
+                      class="row g-2 align-items-center">
+                    <input type="hidden"
+                           name="action"
+                           value="vlanList">
+
+                    <div class="col-md-9">
+                        <input class="form-control"
+                               type="search"
+                               name="keyword"
+                               value="${fn:escapeXml(keyword)}"
+                               placeholder="Search by VLAN name, subnet, or purpose">
+                    </div>
+
+                    <div class="col-md-3 d-flex gap-2">
+                        <button class="btn btn-primary flex-fill"
+                                type="submit">
+                            Search
+                        </button>
+
+                        <a class="btn btn-outline-secondary"
+                           href="MainController?action=vlanList">
+                            Clear
+                        </a>
+                    </div>
+                </form>
+            </div>
 
             <div class="table-responsive">
 
@@ -195,7 +225,7 @@
         </div>
 
         <!-- Pagination -->
-        <c:if test="${totalPages > 1}">
+        <c:if test="${totalPages > 0}">
 
             <nav class="mt-4"
                  aria-label="VLAN pagination">
@@ -206,8 +236,15 @@
                     <c:choose>
                         <c:when test="${currentPage > 1}">
                             <li class="page-item">
+                                <c:url var="vlanPrevUrl" value="MainController">
+                                    <c:param name="action" value="vlanList" />
+                                    <c:param name="page" value="${currentPage - 1}" />
+                                    <c:if test="${not empty keyword}">
+                                        <c:param name="keyword" value="${keyword}" />
+                                    </c:if>
+                                </c:url>
                                 <a class="page-link"
-                                   href="MainController?action=vlanList&page=${currentPage - 1}">
+                                   href="${vlanPrevUrl}">
                                     Previous
                                 </a>
                             </li>
@@ -229,8 +266,15 @@
 
                         <li class="page-item ${pageNumber eq currentPage ? 'active' : ''}">
 
+                            <c:url var="vlanPageUrl" value="MainController">
+                                <c:param name="action" value="vlanList" />
+                                <c:param name="page" value="${pageNumber}" />
+                                <c:if test="${not empty keyword}">
+                                    <c:param name="keyword" value="${keyword}" />
+                                </c:if>
+                            </c:url>
                             <a class="page-link"
-                               href="MainController?action=vlanList&page=${pageNumber}">
+                               href="${vlanPageUrl}">
 
                                 <c:out value="${pageNumber}" />
                             </a>
@@ -242,8 +286,15 @@
                     <c:choose>
                         <c:when test="${currentPage < totalPages}">
                             <li class="page-item">
+                                <c:url var="vlanNextUrl" value="MainController">
+                                    <c:param name="action" value="vlanList" />
+                                    <c:param name="page" value="${currentPage + 1}" />
+                                    <c:if test="${not empty keyword}">
+                                        <c:param name="keyword" value="${keyword}" />
+                                    </c:if>
+                                </c:url>
                                 <a class="page-link"
-                                   href="MainController?action=vlanList&page=${currentPage + 1}">
+                                   href="${vlanNextUrl}">
                                     Next
                                 </a>
                             </li>

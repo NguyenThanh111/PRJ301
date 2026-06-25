@@ -22,6 +22,7 @@ import javax.servlet.http.HttpServletResponse;
 )
 public class TicketServlet extends HttpServlet {
 
+    private static final int PAGE_SIZE = 9;
     private final SupportTicketDAO ticketDAO = new SupportTicketDAO();
     private final UserDAO userDAO = new UserDAO();
     private final NetworkDeviceDAO deviceDAO = new NetworkDeviceDAO();
@@ -78,8 +79,30 @@ public class TicketServlet extends HttpServlet {
             HttpServletResponse response)
             throws ServletException, IOException {
 
-        ArrayList<SupportTicketDTO> tickets = ticketDAO.ListAll();
+        String keyword = cleanText(request.getParameter("keyword"));
+        Integer pageValue = parseInteger(request.getParameter("page"));
+        int currentPage = 1;
+
+        if (pageValue != null && pageValue > 0) {
+            currentPage = pageValue;
+        }
+
+        long totalRecords = ticketDAO.countTickets(keyword);
+        int totalPages = (int) Math.ceil(
+                (double) totalRecords / PAGE_SIZE
+        );
+
+        ArrayList<SupportTicketDTO> tickets = ticketDAO.getTicketsByPage(
+                currentPage,
+                PAGE_SIZE,
+                keyword
+        );
+
         request.setAttribute("tickets", tickets);
+        request.setAttribute("keyword", keyword);
+        request.setAttribute("currentPage", currentPage);
+        request.setAttribute("totalPages", totalPages);
+        request.setAttribute("totalRecords", totalRecords);
 
         RequestDispatcher rd
                 = request.getRequestDispatcher("ticket-list.jsp");
