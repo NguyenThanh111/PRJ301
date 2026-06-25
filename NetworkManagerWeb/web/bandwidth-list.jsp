@@ -1,4 +1,4 @@
-<%@page contentType="text/html" pageEncoding="UTF-8"%>
+﻿<%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
 <%@taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions"%>
 <%@taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt"%>
@@ -60,10 +60,64 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bandwidth Usage — Network Manager</title>
+    <title>Bandwidth Usage â€” Network Manager</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Pagination logic
+        const PAGE_SIZE = 10;
+        const paginationState = {};
+
+        function initPagination(tableId) {
+            const tbody = document.querySelector('#' + tableId + ' tbody');
+            if (!tbody) return;
+            // skip empty message row if any
+            const rows = Array.from(tbody.querySelectorAll('tr')).filter(r => !r.id || !r.id.startsWith('empty'));
+            if(rows.length === 0) return;
+
+            const total = Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
+            paginationState[tableId] = { current: 1, total: total, rows: rows };
+            showPageForTable(tableId);
+        }
+
+        function showPageForTable(tableId) {
+            const state = paginationState[tableId];
+            if (!state) return;
+
+            const tbody = document.querySelector('#' + tableId + ' tbody');
+            if (tbody) {
+                Array.from(tbody.querySelectorAll('tr')).filter(r => !r.id || !r.id.startsWith('empty')).forEach(r => r.style.display = 'none');
+            }
+
+            const start = (state.current - 1) * PAGE_SIZE;
+            const end = start + PAGE_SIZE;
+            state.rows.forEach(function(r, i) {
+                r.style.display = (i >= start && i < end) ? '' : 'none';
+            });
+            const infoEl = document.getElementById(tableId + '-page-info');
+            if(infoEl) infoEl.textContent = 'Page ' + state.current + ' of ' + state.total;
+            const prevBtn = document.getElementById(tableId + '-prev');
+            if(prevBtn) prevBtn.disabled = state.current <= 1;
+            const nextBtn = document.getElementById(tableId + '-next');
+            if(nextBtn) nextBtn.disabled = state.current >= state.total;
+        }
+
+        function prevPage(tableId) {
+            const state = paginationState[tableId];
+            if (state && state.current > 1) { state.current--; showPageForTable(tableId); }
+        }
+
+        function nextPage(tableId) {
+            const state = paginationState[tableId];
+            if (state && state.current < state.total) { state.current++; showPageForTable(tableId); }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initPagination('bandwidth-table');
+        });
+    </script>
     <style>
         :root {
             --bg-0: #05070d;
@@ -93,6 +147,172 @@
                         url('theme/original-d5209459af4999984ad44693bbcb28f7.webp') center/cover fixed no-repeat;
             color: var(--text-primary); min-height: 100vh; font-family: "Segoe UI", Arial, sans-serif;
         }
+
+                                    /* â”€â”€â”€ Sidebar â”€â”€â”€ */
+                            .sidebar {
+                                position: fixed;
+                                inset: 0 auto 0 0;
+                                width: var(--sidebar-w);
+                                background: linear-gradient(180deg, rgba(16, 23, 42, .96), rgba(10, 14, 28, .98));
+                                border-right: 1px solid var(--border);
+                                display: flex;
+                                flex-direction: column;
+                                z-index: 100;
+                                overflow-y: auto;
+                            }
+
+                            .sidebar-brand {
+                                display: flex;
+                                align-items: center;
+                                gap: 10px;
+                                padding: 16px 18px;
+                                border-bottom: 1px solid var(--border);
+                            }
+
+                            .sidebar-brand-icon {
+                                width: 38px;
+                                height: 38px;
+                                border-radius: 11px;
+                                display: flex;
+                                align-items: center;
+                                justify-content: center;
+                                color: white;
+                                background: linear-gradient(135deg, var(--neon-purple), var(--neon-pink));
+                                box-shadow: var(--glow);
+                            }
+
+                            .brand-title {
+                                font-size: 13px;
+                                font-weight: 700;
+                                letter-spacing: .04em;
+                                text-transform: uppercase;
+                                color: #d8c9ff;
+                                line-height: 1.1;
+                            }
+
+                            .sidebar-section-label {
+                                font-size: 11px;
+                                letter-spacing: .12em;
+                                text-transform: uppercase;
+                                color: #7f8db4;
+                                padding: 14px 18px 6px;
+                                font-weight: 600;
+                            }
+
+                            .nav-item-link {
+                                border: none;
+                                background: transparent;
+                                width: 100%;
+                                text-align: left;
+                                color: #a5b2d8;
+                                font-size: 14px;
+                                padding: 10px 18px;
+                                display: flex;
+                                align-items: center;
+                                gap: 10px;
+                                cursor: pointer;
+                                transition: .18s ease;
+                                text-decoration: none;
+                            }
+
+                            .nav-item-link i {
+                                width: 16px;
+                                text-align: center;
+                            }
+
+                            .nav-item-link:hover {
+                                background: rgba(139, 92, 246, .12);
+                                color: #e5ddff;
+                            }
+
+                            .nav-item-link.active {
+                                background: linear-gradient(90deg, rgba(139, 92, 246, .3), rgba(217, 70, 239, .08));
+                                color: #f2ecff;
+                                border-right: 3px solid var(--neon-purple);
+                                font-weight: 600;
+                            }
+
+                            .sidebar-footer {
+                                margin-top: auto;
+                                padding: 14px 18px;
+                                border-top: 1px solid var(--border);
+                            }
+
+                            .user-avatar {
+                                width: 34px;
+                                height: 34px;
+                                border-radius: 50%;
+                                display: flex;
+                                align-items: center;
+                                justify-content: center;
+                                font-size: 14px;
+                                color: white;
+                                font-weight: 700;
+                            }
+
+                            .admin-avatar {
+                                background: linear-gradient(135deg, #ef4444, #f97316);
+                            }
+
+                            .tech-avatar {
+                                background: linear-gradient(135deg, #8b5cf6, #60a5fa);
+                            }
+
+                            /* â”€â”€â”€ Layout â”€â”€â”€ */
+                            .main-content {
+                                margin-left: var(--sidebar-w);
+                                min-height: 100vh;
+                            }
+
+                            .topbar {
+                                position: sticky;
+                                top: 0;
+                                z-index: 60;
+                                padding: 14px 24px;
+                                border-bottom: 1px solid var(--border);
+                                background: rgba(12, 17, 32, .9);
+                                backdrop-filter: blur(8px);
+                                display: flex;
+                                align-items: center;
+                                justify-content: space-between;
+                            }
+
+                            .topbar-title {
+                                font-size: 18px;
+                                font-weight: 700;
+                            }
+
+                            .topbar-breadcrumb {
+                                font-size: 12px;
+                                color: var(--text-muted);
+                                margin-left: 8px;
+                            }
+
+                            .role-badge-admin,
+                            .role-badge-tech {
+                                border-radius: 999px;
+                                padding: 4px 10px;
+                                font-size: 11px;
+                                letter-spacing: .08em;
+                                text-transform: uppercase;
+                                font-weight: 700;
+                            }
+
+                            .role-badge-admin {
+                                color: #fecaca;
+                                background: rgba(239, 68, 68, .16);
+                                border: 1px solid rgba(239, 68, 68, .4);
+                            }
+
+                            .role-badge-tech {
+                                color: #ddd6fe;
+                                background: rgba(139, 92, 246, .16);
+                                border: 1px solid rgba(139, 92, 246, .4);
+                            }
+
+                            .page-body {
+                                padding: 22px;
+                            }
 
         .main-content { margin-left: var(--sidebar-w); min-height: 100vh; }
 
@@ -169,6 +389,13 @@
             border-radius: 6px; padding: 4px 8px; cursor: pointer; transition: 0.2s;
         }
         .btn-icon-delete:hover { background: rgba(248,113,113,0.2); box-shadow: 0 0 10px rgba(248,113,113,0.3); }
+
+        /* Pagination Controls */
+        .pagination-controls { display: flex; align-items: center; gap: 8px; }
+        .pagination-controls .page-btn { width: 32px; height: 32px; border-radius: 8px; border: 1px solid var(--border); background: rgba(139, 92, 246, 0.15); color: #e8ddff; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.15s ease; font-size: 14px; }
+        .pagination-controls .page-btn:hover { background: rgba(139, 92, 246, 0.3); border-color: rgba(139, 92, 246, 0.6); }
+        .pagination-controls .page-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+        .pagination-controls .page-info { font-size: 12px; color: var(--text-muted); min-width: 70px; text-align: center; }
 
         @media (max-width: 900px) { .sidebar { display: none; } .main-content { margin-left: 0; } }
     </style>
@@ -247,10 +474,17 @@
             <div class="section-card">
                 <div class="section-card-header">
                     <h6><i class="bi bi-table me-2" style="color:var(--neon-purple);"></i>Detailed Speed Records</h6>
-                    <a href="bandwidth-form.jsp" class="btn-theme"><i class="bi bi-plus-lg"></i> Run Test</a>
+                    <div style="display:flex; align-items:center; gap:15px;">
+                        <div class="pagination-controls">
+                            <button class="page-btn" onclick="prevPage('bandwidth-table')" id="bandwidth-table-prev"><i class="bi bi-chevron-left"></i></button>
+                            <span class="page-info" id="bandwidth-table-page-info">Page 1 of 1</span>
+                            <button class="page-btn" onclick="nextPage('bandwidth-table')" id="bandwidth-table-next"><i class="bi bi-chevron-right"></i></button>
+                        </div>
+                        <a href="bandwidth-form.jsp" class="btn-theme"><i class="bi bi-plus-lg"></i> Run Test</a>
+                    </div>
                 </div>
                 <div class="section-card-body p-0" style="overflow-x:auto;">
-                    <table class="rt-table">
+                    <table class="rt-table" id="bandwidth-table">
                         <thead>
                             <tr>
                                 <th>ID</th>
@@ -396,3 +630,5 @@
     </script>
 </body>
 </html>
+
+

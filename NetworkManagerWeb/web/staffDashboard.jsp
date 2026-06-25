@@ -1391,7 +1391,12 @@
                                             <div class="section-card">
                                                 <div class="section-card-header">
                                                     <h6><i class="bi bi-bar-chart-line me-2"></i>Bandwidth Usage</h6>
-                                                    <div class="d-flex gap-2">
+                                                    <div class="d-flex gap-2 align-items-center" style="flex-wrap:wrap;">
+                                                        <div class="pagination-controls">
+                                                            <button class="page-btn" onclick="prevPage('dash-bandwidth-table')" id="dash-bandwidth-table-prev"><i class="bi bi-chevron-left"></i></button>
+                                                            <span class="page-info" id="dash-bandwidth-table-page-info">Page 1 of 1</span>
+                                                            <button class="page-btn" onclick="nextPage('dash-bandwidth-table')" id="dash-bandwidth-table-next"><i class="bi bi-chevron-right"></i></button>
+                                                        </div>
                                                         <a class="btn-theme text-decoration-none" href="MainController?action=bandwidthAdd&returnTo=dashboard">
                                                             <i class="bi bi-plus-lg me-1"></i>Run Speed Test
                                                         </a>
@@ -1402,7 +1407,7 @@
                                                 </div>
                                                 <div class="section-card-body" style="padding:0;">
                                                     <div style="overflow-x:auto;">
-                                                        <table class="rt-table">
+                                                        <table class="rt-table" id="dash-bandwidth-table">
                                                             <thead>
                                                                 <tr>
                                                                     <th><i class="bi bi-hash me-1"></i>ID</th>
@@ -1750,6 +1755,9 @@
                                                 .desc-box { font-size:0.75rem; color:var(--text-muted); margin-top:6px; line-height:1.5; white-space:pre-wrap; word-wrap:break-word; background:rgba(15,23,42,0.6); padding:8px 12px; border-radius:6px; border-left: 2px solid rgba(139,92,246,0.4); }
                                                 .btn-icon { display:inline-flex; align-items:center; justify-content:center; width:32px; height:32px; border-radius:8px; border:1px solid transparent; transition:all .2s; background:transparent; cursor:pointer; }
                                                 .btn-icon:hover { filter: brightness(1.2); }
+                                                .page-btn { background:rgba(15,23,42,0.6); border:1px solid var(--border); color:#fff; padding:5px 10px; border-radius:6px; cursor:pointer; }
+                                                .page-btn:disabled { opacity:0.5; cursor:not-allowed; }
+                                                .page-info { color:var(--text-muted); font-size:0.85rem; padding:0 10px; }
                                             </style>
                                             <div class="section-card">
                                                 <div class="section-card-header" style="flex-wrap: wrap; gap: 15px;">
@@ -1758,6 +1766,11 @@
                                                         <div class="search-wrap" style="position:relative; width: 220px;">
                                                             <i class="bi bi-search" style="position:absolute; left:12px; top:50%; transform:translateY(-50%); color:var(--text-muted); font-size:14px;"></i>
                                                             <input type="text" id="dash-maintenance-search" class="form-control" placeholder="Search tasks..." style="background:rgba(15,23,42,0.6); border:1px solid var(--border); color:#fff; border-radius:8px; padding-left:36px; height:36px; font-size:0.85rem;" onkeyup="applyMaintenanceFilter()">
+                                                        </div>
+                                                        <div class="pagination-controls">
+                                                            <button class="page-btn" onclick="prevPage('dash-maintenance-table')" id="dash-maintenance-table-prev"><i class="bi bi-chevron-left"></i></button>
+                                                            <span class="page-info" id="dash-maintenance-table-page-info">Page 1 of 1</span>
+                                                            <button class="page-btn" onclick="nextPage('dash-maintenance-table')" id="dash-maintenance-table-next"><i class="bi bi-chevron-right"></i></button>
                                                         </div>
                                                         <a class="btn-theme text-decoration-none" href="MainController?action=maintenanceAdd&returnTo=dashboard">
                                                             <i class="bi bi-plus-lg me-1"></i>Schedule
@@ -1979,12 +1992,13 @@
                                                         else if(activeTab.classList.contains('tab-completed')) status = 'COMPLETED';
                                                     }
 
-                                                    const rows = document.querySelectorAll('#dash-maintenance-table .task-row');
+                                                    const allRows = Array.from(document.querySelectorAll('#dash-maintenance-table .task-row'));
                                                     const searchInput = document.getElementById('dash-maintenance-search');
                                                     const searchQuery = searchInput ? searchInput.value.toLowerCase().trim() : '';
-                                                    let visibleCount = 0;
+                                                    let matchingRows = [];
                                                     
-                                                    rows.forEach(row => {
+                                                    allRows.forEach(row => {
+                                                        row.style.display = 'none'; // hide initially
                                                         let rowStatus = row.getAttribute('data-status');
                                                         let textContent = row.innerText.toLowerCase();
                                                         
@@ -1996,15 +2010,12 @@
                                                         let searchMatch = searchQuery === '' || textContent.includes(searchQuery);
 
                                                         if (statusMatch && searchMatch) {
-                                                            row.style.display = '';
-                                                            visibleCount++;
-                                                        } else {
-                                                            row.style.display = 'none';
+                                                            matchingRows.push(row);
                                                         }
                                                     });
 
                                                     let emptyMsg = document.getElementById('empty-dash-msg');
-                                                    if(visibleCount === 0) {
+                                                    if(matchingRows.length === 0) {
                                                         if(!emptyMsg) {
                                                             const tbody = document.querySelector('#dash-maintenance-table tbody');
                                                             const tr = document.createElement('tr');
@@ -2012,8 +2023,13 @@
                                                             tr.innerHTML = `<td colspan="6" style="text-align:center; padding: 40px; color:var(--text-muted);"><i class="bi bi-search fs-1 mb-2 d-block text-secondary" style="opacity:0.5;"></i> No tasks match your search or filter.</td>`;
                                                             if(tbody) tbody.appendChild(tr);
                                                         }
+                                                        let pag = document.querySelector('#dash-maintenance-table').closest('.section-card').querySelector('.pagination-controls');
+                                                        if(pag) pag.style.display = 'none';
                                                     } else {
                                                         if(emptyMsg) emptyMsg.remove();
+                                                        let pag = document.querySelector('#dash-maintenance-table').closest('.section-card').querySelector('.pagination-controls');
+                                                        if(pag) pag.style.display = 'flex';
+                                                        initPagination('dash-maintenance-table', matchingRows);
                                                     }
                                                 }
 
@@ -2482,7 +2498,70 @@
                                 if (breadEl) breadEl.textContent = info.breadcrumb;
                             }
                         });
+
+                        // Pagination
+                        const PAGE_SIZE = 10;
+                        const paginationState = {};
+
+                        function initPagination(tableId, rowsArray) {
+                            let rows = rowsArray;
+                            if (!rows) {
+                                const tbody = document.querySelector('#' + tableId + ' tbody');
+                                if (!tbody) return;
+                                // skip empty message rows
+                                rows = Array.from(tbody.querySelectorAll('tr')).filter(r => !r.id || !r.id.startsWith('empty'));
+                            }
+                            const total = Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
+                            paginationState[tableId] = { current: 1, total: total, rows: rows };
+                            showPageForTable(tableId);
+                        }
+
+                        function showPageForTable(tableId) {
+                            const state = paginationState[tableId];
+                            if (!state) return;
+                            
+                            // First hide all rows
+                            const tbody = document.querySelector('#' + tableId + ' tbody');
+                            if (tbody) {
+                                Array.from(tbody.querySelectorAll('tr')).filter(r => !r.id || !r.id.startsWith('empty')).forEach(r => r.style.display = 'none');
+                            }
+
+                            const start = (state.current - 1) * PAGE_SIZE;
+                            const end = start + PAGE_SIZE;
+                            state.rows.forEach(function(r, i) {
+                                r.style.display = (i >= start && i < end) ? '' : 'none';
+                            });
+                            const infoEl = document.getElementById(tableId + '-page-info');
+                            if(infoEl) infoEl.textContent = 'Page ' + state.current + ' of ' + state.total;
+                            const prevBtn = document.getElementById(tableId + '-prev');
+                            if(prevBtn) prevBtn.disabled = state.current <= 1;
+                            const nextBtn = document.getElementById(tableId + '-next');
+                            if(nextBtn) nextBtn.disabled = state.current >= state.total;
+                        }
+
+                        function prevPage(tableId) {
+                            const state = paginationState[tableId];
+                            if (state && state.current > 1) { state.current--; showPageForTable(tableId); }
+                        }
+
+                        function nextPage(tableId) {
+                            const state = paginationState[tableId];
+                            if (state && state.current < state.total) { state.current++; showPageForTable(tableId); }
+                        }
+
+                        document.addEventListener('DOMContentLoaded', () => {
+                            initPagination('dash-bandwidth-table');
+                            applyMaintenanceFilter(); // This will init dash-maintenance-table pagination
+                        });
                     </script>
+                    <style>
+                        /* Pagination Controls */
+                        .pagination-controls { display: flex; align-items: center; gap: 8px; }
+                        .pagination-controls .page-btn { width: 32px; height: 32px; border-radius: 8px; border: 1px solid var(--border); background: rgba(139, 92, 246, 0.15); color: #e8ddff; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.15s ease; font-size: 14px; }
+                        .pagination-controls .page-btn:hover { background: rgba(139, 92, 246, 0.3); border-color: rgba(139, 92, 246, 0.6); }
+                        .pagination-controls .page-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+                        .pagination-controls .page-info { font-size: 12px; color: var(--text-muted); min-width: 70px; text-align: center; }
+                    </style>
                 </body>
 
                 </html>

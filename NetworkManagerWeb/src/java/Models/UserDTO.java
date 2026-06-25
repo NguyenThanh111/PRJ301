@@ -34,6 +34,9 @@ public class UserDTO implements Serializable {
     @Column(name = "status", length = 20, nullable = false)
     private String status = "ACTIVE";
 
+    @Column(name = "avatar", length = 255)
+    private String avatar;
+
     public UserDTO() {
     }
 
@@ -108,6 +111,14 @@ public class UserDTO implements Serializable {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public String getAvatar() {
+        return avatar;
+    }
+
+    public void setAvatar(String avatar) {
+        this.avatar = avatar;
     }
 
     public void setStatus(boolean status) {

@@ -177,6 +177,7 @@ public class UserDAO implements IDAO<UserDTO, Integer> {
         target.setFullName(source.getFullName());
         target.setEmail(source.getEmail());
         target.setStatus(source.getStatus());
+        target.setAvatar(source.getAvatar());
     }
 
     private boolean hasText(String value) {
